@@ -1,0 +1,82 @@
+@using LegalConnect.Client.Models.Cases
+
+<div class="card shadow-sm h-100 case-card">
+    <!-- Status ribbon -->
+    <div class="card-header d-flex justify-content-between align-items-start py-2 px-3 bg-white border-bottom">
+        <span class="@Case.StatusBadgeClass">@Case.Status</span>
+        @if (Case.NextHearingDate.HasValue)
+        {
+            var isOverdue = Case.NextHearingDate < DateTime.Today;
+            <span class="small @(isOverdue ? "text-danger fw-semibold" : "text-muted")">
+                <i class="bi bi-calendar2-event me-1"></i>@Case.NextHearingDate.Value.ToString("d MMM yyyy")
+            </span>
+        }
+    </div>
+
+    <div class="card-body d-flex flex-column gap-2 p-3">
+        <!-- Title -->
+        <h6 class="mb-0 fw-semibold text-truncate" title="@Case.CaseTitle">@Case.CaseTitle</h6>
+
+        @if (!string.IsNullOrEmpty(Case.CaseNumber))
+        {
+            <span class="text-muted small"><i class="bi bi-hash me-1"></i>@Case.CaseNumber</span>
+        }
+
+        <!-- Meta badges -->
+        <div class="d-flex flex-wrap gap-1">
+            <span class="badge bg-light text-secondary border" style="font-size:.72rem">
+                <i class="bi bi-tag me-1"></i>@Case.CaseType
+            </span>
+            <span class="badge bg-light text-secondary border" style="font-size:.72rem">
+                <i class="bi bi-building me-1"></i>@Case.Court
+            </span>
+        </div>
+
+        <!-- People -->
+        <div class="text-muted small">
+            <span class="me-3"><i class="bi bi-person-circle me-1"></i>@Case.ClientName</span>
+            <span><i class="bi bi-briefcase me-1"></i>@Case.LawyerName</span>
+        </div>
+
+        @if (Case.FilingDate.HasValue)
+        {
+            <div class="text-muted small">
+                <i class="bi bi-calendar-date me-1"></i>Filed @Case.FilingDate.Value.ToString("d MMM yyyy")
+            </div>
+        }
+
+        <!-- Stats -->
+        <div class="d-flex gap-2 mt-auto pt-1">
+            <span class="badge bg-light text-secondary border">
+                <i class="bi bi-files me-1"></i>@Case.DocumentCount docs
+            </span>
+            <span class="badge bg-light text-secondary border">
+                <i class="bi bi-activity me-1"></i>@Case.ActivityCount events
+            </span>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card-footer bg-white border-top d-flex gap-2 px-3 py-2">
+        <button class="btn btn-sm btn-primary flex-grow-1" @onclick="OnViewDetails">
+            <i class="bi bi-eye me-1"></i>View
+        </button>
+        @if (ShowEditDelete)
+        {
+            <button class="btn btn-sm btn-outline-secondary" @onclick="OnEdit" title="Edit">
+                <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" @onclick="OnDelete" title="Delete">
+                <i class="bi bi-trash"></i>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public CaseSummaryDto Case { get; set; } = default!;
+    [Parameter] public EventCallback OnViewDetails { get; set; }
+    [Parameter] public EventCallback OnEdit { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter] public bool ShowEditDelete { get; set; } = true;
+}

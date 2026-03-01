@@ -1,0 +1,197 @@
+@page "/login"
+@layout MinimalLayout
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject ToastService Toast
+@inject IJSRuntime JS
+@inject IConfiguration Config
+
+<PageTitle>Login &mdash; LegalConnect</PageTitle>
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-light py-5">
+    <div class="card shadow-sm border-0" style="width:100%;max-width:440px;">
+        <div class="card-body p-4 p-md-5">
+
+            <!-- Logo -->
+            <div class="text-center mb-4">
+                <a href="/" class="lc-brand justify-content-center">
+                    <img src="image/logo.jpeg" alt="LegalConnect" class="lc-brand-logo-lg" />
+                </a>
+                <p class="text-muted mt-2 mb-0">Welcome back &mdash; sign in to continue</p>
+            </div>
+
+            <EditForm Model="@_model" OnValidSubmit="HandleLogin">
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrWhiteSpace(_error))
+                {
+                    <div class="alert alert-danger py-2">
+                        <i class="bi bi-exclamation-circle me-2"></i>@_error
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Email address</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <InputText @bind-Value="_model.Email"
+                                   class="form-control" placeholder="you@example.com"
+                                   autocomplete="email" />
+                    </div>
+                    <ValidationMessage For="@(() => _model.Email)" class="text-danger small" />
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <label class="form-label fw-medium">Password</label>
+                        <a href="/forgot-password" class="small">Forgot password?</a>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <InputText @bind-Value="_model.Password"
+                                   type="@(_showPassword ? "text" : "password")"
+                                   class="form-control" placeholder="••••••••"
+                                   autocomplete="current-password" />
+                        <button type="button" class="btn btn-outline-secondary"
+                                @onclick="() => _showPassword = !_showPassword">
+                            <i class="bi @(_showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                        </button>
+                    </div>
+                    <ValidationMessage For="@(() => _model.Password)" class="text-danger small" />
+                </div>
+
+                <div class="mb-4 form-check">
+                    <InputCheckbox @bind-Value="_model.RememberMe" class="form-check-input" id="rememberMe" />
+                    <label class="form-check-label small" for="rememberMe">Remember me</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2" disabled="@_loading">
+                    @if (_loading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Sign In
+                </button>
+            </EditForm>
+
+            <!-- Google Sign-In (Client Only) -->
+            <div class="d-flex align-items-center my-3">
+                <hr class="flex-grow-1" />
+                <span class="px-3 text-muted small">or</span>
+                <hr class="flex-grow-1" />
+            </div>
+
+            @if (_googleLoading)
+            {
+                <div class="text-center py-2">
+                    <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+                    <span class="text-muted small">Signing in with Google...</span>
+                </div>
+            }
+
+            <div id="google-signin-btn" class="d-flex justify-content-center"></div>
+
+            <hr class="my-4" />
+
+            <p class="text-center mb-2">
+                New client?
+                <a href="/register-client" class="fw-semibold">Create account</a>
+            </p>
+            <p class="text-center mb-0 small text-muted">
+                Are you a lawyer?
+                <a href="/register-lawyer">Register as Lawyer</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly LoginDto _model = new();
+    private bool _loading;
+    private bool _showPassword;
+    private bool _googleLoading;
+    private string? _error;
+    private DotNetObjectReference<Login>? _dotNetRef;
+
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (await AuthService.IsAuthenticatedAsync())
+            RedirectByRole(await AuthService.GetCurrentUserRoleAsync());
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            var clientId = Config["Google:ClientId"] ?? "";
+            await JS.InvokeVoidAsync("googleAuth.initialize", clientId, _dotNetRef, "google-signin-btn");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnGoogleSignIn(string credential)
+    {
+        _googleLoading = true;
+        _error = null;
+        StateHasChanged();
+
+        var (success, error) = await AuthService.GoogleLoginAsync(credential);
+
+        if (success)
+        {
+            Toast.ShowSuccess("Welcome!");
+            if (!string.IsNullOrWhiteSpace(ReturnUrl))
+                Navigation.NavigateTo(Uri.UnescapeDataString(ReturnUrl));
+            else
+                Navigation.NavigateTo("/client/dashboard");
+        }
+        else
+        {
+            _error = error;
+        }
+
+        _googleLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleLogin()
+    {
+        _loading = true;
+        _error = null;
+        StateHasChanged();
+
+        var (success, error) = await AuthService.LoginAsync(_model);
+
+        if (success)
+        {
+            Toast.ShowSuccess("Welcome back!");
+            var role = await AuthService.GetCurrentUserRoleAsync();
+
+            if (!string.IsNullOrWhiteSpace(ReturnUrl))
+                Navigation.NavigateTo(Uri.UnescapeDataString(ReturnUrl));
+            else
+                RedirectByRole(role);
+        }
+        else
+        {
+            _error = error;
+        }
+
+        _loading = false;
+    }
+
+    private void RedirectByRole(string? role) => Navigation.NavigateTo(role switch
+    {
+        "Admin"  => "/admin/dashboard",
+        "Lawyer" => "/lawyer/dashboard",
+        _        => "/client/dashboard"
+    });
+
+    public void Dispose()
+    {
+        _dotNetRef?.Dispose();
+    }
+}

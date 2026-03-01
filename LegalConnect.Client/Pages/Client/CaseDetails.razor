@@ -1,0 +1,389 @@
+@page "/client/cases/{Id:int}"
+@attribute [Authorize(Roles = "Client")]
+@inject ICaseService CaseService
+@inject ToastService Toast
+@inject NavigationManager Nav
+
+<PageTitle>Case Details — LegalConnect</PageTitle>
+
+@if (_loading)
+{
+    <div class="container py-5"><LoadingSpinner Message="Loading case..." /></div>
+}
+else if (_case == null)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-folder-x display-1 text-muted"></i>
+        <h4 class="mt-3">Case not found</h4>
+        <a href="/client/my-cases" class="btn btn-primary mt-2">Back to My Cases</a>
+    </div>
+}
+else
+{
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+            <div class="d-flex align-items-center">
+                <a href="/client/my-cases" class="btn btn-outline-secondary btn-sm me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h2 class="mb-0">@_case.CaseTitle</h2>
+                        <span class="@_case.StatusBadgeClass fs-6">@_case.Status</span>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        @if (!string.IsNullOrEmpty(_case.CaseNumber))
+                        {
+                            <span class="me-3"><i class="bi bi-hash me-1"></i>@_case.CaseNumber</span>
+                        }
+                        <span class="me-3"><i class="bi bi-building me-1"></i>@_case.Court</span>
+                        <span><i class="bi bi-tag me-1"></i>@_case.CaseType</span>
+                    </div>
+                </div>
+            </div>
+            @if (_case.Status != CaseStatus.Closed)
+            {
+                <button class="btn btn-outline-primary btn-sm" @onclick="() => _showUploadModal = true">
+                    <i class="bi bi-upload me-1"></i>Upload Document
+                </button>
+            }
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column: Case Info + Lawyers + Documents -->
+            <div class="col-lg-4">
+                <!-- Case Info Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Case Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            @if (_case.FilingDate.HasValue)
+                            {
+                                <dt class="col-5 text-muted small">Filed</dt>
+                                <dd class="col-7">@_case.FilingDate.Value.ToString("d MMM yyyy")</dd>
+                            }
+                            @if (_case.NextHearingDate.HasValue)
+                            {
+                                <dt class="col-5 text-muted small">Next Hearing</dt>
+                                <dd class="col-7 @(_case.NextHearingDate < DateTime.Today ? "text-danger fw-bold" : "text-success")">
+                                    @_case.NextHearingDate.Value.ToString("d MMM yyyy")
+                                </dd>
+                            }
+                            <dt class="col-5 text-muted small">Status</dt>
+                            <dd class="col-7"><span class="@_case.StatusBadgeClass">@_case.Status</span></dd>
+                            <dt class="col-5 text-muted small">Opened</dt>
+                            <dd class="col-7">@_case.CreatedDate.ToString("d MMM yyyy")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Assigned Lawyers -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-briefcase me-2"></i>Lawyers
+                            <span class="badge bg-secondary ms-1">@_case.AssignedLawyers.Count</span>
+                        </h6>
+                        @if (_case.Status != CaseStatus.Closed)
+                        {
+                            <button class="btn btn-sm btn-outline-primary" @onclick="ShowAddLawyerModal">
+                                <i class="bi bi-plus-lg me-1"></i>Add
+                            </button>
+                        }
+                    </div>
+                    <div class="card-body p-0">
+                        @if (!_case.AssignedLawyers.Any())
+                        {
+                            <div class="text-center py-3">
+                                <div class="text-muted small">No lawyers assigned yet</div>
+                                <a href="/client/hire-lawyers" class="btn btn-sm btn-outline-primary mt-2">
+                                    <i class="bi bi-search me-1"></i>Find a Lawyer
+                                </a>
+                            </div>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var lawyer in _case.AssignedLawyers)
+                                {
+                                    <li class="list-group-item d-flex align-items-center gap-2 py-2">
+                                        <img src="@(lawyer.ProfilePictureUrl ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(lawyer.LawyerFullName)}&background=1a56db&color=fff&size=36")"
+                                             alt="@lawyer.LawyerFullName"
+                                             class="rounded-circle flex-shrink-0"
+                                             style="width:36px;height:36px;object-fit:cover;" />
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <div class="fw-medium small text-truncate">@lawyer.LawyerFullName</div>
+                                            @if (!string.IsNullOrEmpty(lawyer.CategoryName))
+                                            {
+                                                <div class="text-muted" style="font-size:.75rem">@lawyer.CategoryName</div>
+                                            }
+                                        </div>
+                                        @if (_case.Status != CaseStatus.Closed)
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger p-1"
+                                                    @onclick="() => RemoveLawyerAsync(lawyer)"
+                                                    disabled="@(_removingId == lawyer.LawyerProfileId)"
+                                                    title="Remove from case">
+                                                @if (_removingId == lawyer.LawyerProfileId)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm" style="width:14px;height:14px;"></span>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-x-lg" style="font-size:.75rem;"></i>
+                                                }
+                                            </button>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-card-text me-2"></i>Description</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0" style="white-space: pre-wrap;">@_case.Description</p>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_case.Outcome))
+                {
+                    <div class="card shadow-sm mb-4 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="bi bi-trophy me-2"></i>Outcome</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0" style="white-space: pre-wrap;">@_case.Outcome</p>
+                        </div>
+                    </div>
+                }
+
+                <!-- Documents -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-folder2 me-2"></i>Documents (@_case.Documents.Count)
+                        </h6>
+                        @if (_case.Status != CaseStatus.Closed)
+                        {
+                            <button class="btn btn-sm btn-outline-primary"
+                                    @onclick="() => _showUploadModal = true">
+                                <i class="bi bi-upload me-1"></i>Upload
+                            </button>
+                        }
+                    </div>
+                    <div class="card-body p-0">
+                        @if (!_case.Documents.Any())
+                        {
+                            <div class="text-center py-3 text-muted small">No documents yet</div>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var doc in _case.Documents)
+                                {
+                                    <li class="list-group-item d-flex align-items-center gap-2 py-2">
+                                        <i class="@doc.FileIcon fs-5"></i>
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <div class="text-truncate small fw-medium">@doc.FileName</div>
+                                            <div class="text-muted" style="font-size:.75rem">
+                                                @doc.FileSizeDisplay · @doc.DocumentType · @doc.UploadedByName
+                                                @if (doc.IsPrivate)
+                                                {
+                                                    <span class="badge bg-warning text-dark ms-1">Private</span>
+                                                }
+                                                else if (!doc.SharedWithAllLawyers && doc.SharedWithLawyerIds.Count > 0)
+                                                {
+                                                    <span class="badge bg-info text-white ms-1">@doc.SharedWithLawyerIds.Count lawyer(s)</span>
+                                                }
+                                            </div>
+                                        </div>
+                                        <a href="/api/case-documents/@doc.Id/download"
+                                           target="_blank"
+                                           class="btn btn-sm btn-outline-secondary"
+                                           title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Activity Timeline -->
+            <div class="col-lg-8">
+                <CaseTimeline Activities="_activities" IsLoading="_loadingActivities" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Document Modal -->
+    @if (_showUploadModal)
+    {
+        <DocumentUploadComponent CaseId="Id"
+                                 IsLawyer="false"
+                                 AssignedLawyers="_case.AssignedLawyers"
+                                 OnUploadSuccess="OnDocumentUploaded"
+                                 OnClose="() => _showUploadModal = false" />
+    }
+
+    <!-- Add Lawyer Modal -->
+    @if (_showAddLawyerModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-person-plus text-primary me-2"></i>Add Lawyer to Case</h5>
+                        <button class="btn-close" @onclick="() => _showAddLawyerModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (_availableLawyers == null)
+                        {
+                            <div class="text-center py-3"><span class="spinner-border spinner-border-sm"></span></div>
+                        }
+                        else if (_availableLawyers.Count == 0)
+                        {
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                All your hired lawyers are already on this case, or you haven't hired any yet.
+                                <a href="/client/hire-lawyers" class="alert-link">Find a lawyer</a>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="list-group">
+                                @foreach (var lawyer in _availableLawyers)
+                                {
+                                    <button class="list-group-item list-group-item-action d-flex align-items-center gap-3"
+                                            @onclick="() => AddLawyerAsync(lawyer)"
+                                            disabled="@(_addingId == lawyer.LawyerProfileId)">
+                                        <img src="@(lawyer.ProfilePictureUrl ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(lawyer.LawyerFullName)}&background=1a56db&color=fff&size=40")"
+                                             class="rounded-circle flex-shrink-0"
+                                             style="width:40px;height:40px;object-fit:cover;" />
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold">@lawyer.LawyerFullName</div>
+                                            <div class="text-muted small">@lawyer.CategoryName @(string.IsNullOrEmpty(lawyer.City) ? "" : $"· {lawyer.City}")</div>
+                                        </div>
+                                        @if (_addingId == lawyer.LawyerProfileId)
+                                        {
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-plus-lg text-primary"></i>
+                                        }
+                                    </button>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="() => _showAddLawyerModal = false">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CaseDto? _case;
+    private List<CaseActivityDto> _activities = [];
+    private bool _loading = true;
+    private bool _loadingActivities = true;
+    private bool _showUploadModal;
+    private bool _showAddLawyerModal;
+    private List<HiredLawyerDto>? _availableLawyers;
+    private int _removingId;
+    private int _addingId;
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadCaseAsync(), LoadActivitiesAsync());
+    }
+
+    private async Task LoadCaseAsync()
+    {
+        _loading = true;
+        var resp = await CaseService.GetCaseByIdAsync(Id);
+        _case = resp?.Data;
+        _loading = false;
+    }
+
+    private async Task LoadActivitiesAsync()
+    {
+        _loadingActivities = true;
+        var resp = await CaseService.GetActivitiesAsync(Id);
+        _activities = resp?.Data ?? [];
+        _loadingActivities = false;
+    }
+
+    private async Task OnDocumentUploaded()
+    {
+        _showUploadModal = false;
+        Toast.ShowSuccess("Document uploaded successfully.");
+        await LoadCaseAsync();
+    }
+
+    private async Task RemoveLawyerAsync(CaseLawyerDto lawyer)
+    {
+        _removingId = lawyer.LawyerProfileId;
+        var resp = await CaseService.RemoveLawyerFromCaseAsync(Id, lawyer.LawyerProfileId);
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess($"{lawyer.LawyerFullName} removed from case.");
+            await LoadCaseAsync();
+        }
+        else
+        {
+            Toast.ShowError(resp?.Message ?? "Failed to remove lawyer.");
+        }
+        _removingId = 0;
+    }
+
+    private async Task ShowAddLawyerModal()
+    {
+        _showAddLawyerModal = true;
+        if (_availableLawyers == null)
+            await LoadAvailableLawyersAsync();
+    }
+
+    private async Task LoadAvailableLawyersAsync()
+    {
+        var resp = await CaseService.GetMyLawyersAsync();
+        var allLawyers = resp?.Data ?? [];
+        var assignedIds = _case?.AssignedLawyers.Select(l => l.LawyerProfileId).ToHashSet() ?? [];
+        _availableLawyers = allLawyers.Where(l => !assignedIds.Contains(l.LawyerProfileId)).ToList();
+    }
+
+    private async Task AddLawyerAsync(HiredLawyerDto lawyer)
+    {
+        _addingId = lawyer.LawyerProfileId;
+        var resp = await CaseService.AddLawyerToCaseAsync(Id, lawyer.LawyerProfileId);
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess($"{lawyer.LawyerFullName} added to case.");
+            _showAddLawyerModal = false;
+            _availableLawyers = null;
+            await LoadCaseAsync();
+        }
+        else
+        {
+            Toast.ShowError(resp?.Message ?? "Failed to add lawyer.");
+        }
+        _addingId = 0;
+    }
+
+}

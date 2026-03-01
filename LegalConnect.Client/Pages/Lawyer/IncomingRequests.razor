@@ -1,0 +1,212 @@
+@page "/lawyer/client-requests"
+@attribute [Authorize(Roles = "Lawyer")]
+@inject IClientLawyerRequestService RequestService
+@inject ToastService Toast
+
+<PageTitle>Client Requests — LegalConnect</PageTitle>
+
+<div class="container py-4" style="max-width: 900px;">
+    <div class="mb-4">
+        <h2 class="mb-0"><i class="bi bi-inbox text-primary me-2"></i>Client Hire Requests</h2>
+        <p class="text-muted mb-0">Clients who want to work with you</p>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><span class="spinner-border text-primary"></span></div>
+    }
+    else if (_requests.Count == 0)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">No incoming requests</h5>
+            <p class="text-muted">When clients send you hire requests, they'll appear here.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Filter tabs -->
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <button class="nav-link @(_filter == null ? "active" : "")" @onclick='() => _filter = null'>
+                    All <span class="badge bg-secondary ms-1">@_requests.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_filter == "Pending" ? "active" : "")" @onclick='() => _filter = "Pending"'>
+                    Pending <span class="badge bg-warning text-dark ms-1">@_requests.Count(r => r.Status == "Pending")</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_filter == "Accepted" ? "active" : "")" @onclick='() => _filter = "Accepted"'>
+                    Accepted <span class="badge bg-success ms-1">@_requests.Count(r => r.Status == "Accepted")</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_filter == "Rejected" ? "active" : "")" @onclick='() => _filter = "Rejected"'>
+                    Rejected <span class="badge bg-danger ms-1">@_requests.Count(r => r.Status == "Rejected")</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="row g-3">
+            @foreach (var req in FilteredRequests)
+            {
+                <div class="col-12">
+                    <div class="card shadow-sm @(req.Status == "Pending" ? "border-warning" : "")">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <img src="@(req.ClientPictureUrl ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(req.ClientFullName)}&background=6366f1&color=fff&size=56")"
+                                     alt="@req.ClientFullName"
+                                     class="rounded-circle flex-shrink-0"
+                                     style="width:56px;height:56px;object-fit:cover;" />
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="fw-semibold fs-6">@req.ClientFullName</span>
+                                        <span class="@req.StatusBadgeClass">@req.Status</span>
+                                    </div>
+                                    <div class="text-muted small">@req.ClientEmail</div>
+                                    @if (!string.IsNullOrEmpty(req.Message))
+                                    {
+                                        <div class="mt-2 p-2 bg-light rounded small">
+                                            <i class="bi bi-chat-left-quote me-1 text-primary"></i>@req.Message
+                                        </div>
+                                    }
+                                    <div class="text-muted" style="font-size:.75rem; margin-top:.25rem">
+                                        Received @req.CreatedAt.ToString("d MMM yyyy")
+                                    </div>
+                                </div>
+
+                                @if (req.Status == "Pending")
+                                {
+                                    <div class="d-flex gap-2 flex-shrink-0">
+                                        <button class="btn btn-sm btn-success"
+                                                @onclick="() => OpenRespond(req, true)"
+                                                disabled="@(_actingId == req.Id)">
+                                            <i class="bi bi-check-lg me-1"></i>Accept
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                @onclick="() => OpenRespond(req, false)"
+                                                disabled="@(_actingId == req.Id)">
+                                            <i class="bi bi-x-lg me-1"></i>Reject
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Respond Modal -->
+@if (_respondTarget != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @if (_accepting)
+                        {
+                            <i class="bi bi-check-circle text-success me-2"></i>@("Accept Request from " + _respondTarget.ClientFullName)
+                        }
+                        else
+                        {
+                            <i class="bi bi-x-circle text-danger me-2"></i>@("Reject Request from " + _respondTarget.ClientFullName)
+                        }
+                    </h5>
+                    <button class="btn-close" @onclick="CloseRespond" disabled="@_acting"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Note for client <span class="text-muted">(optional)</span></label>
+                        <textarea class="form-control" rows="3" @bind="_note"
+                                  placeholder="@(_accepting ? "e.g. Looking forward to working with you!" : "e.g. Currently at full capacity, please try again later.")"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CloseRespond" disabled="@_acting">Cancel</button>
+                    <button class="btn @(_accepting ? "btn-success" : "btn-danger")" @onclick="SubmitResponseAsync" disabled="@_acting">
+                        @if (_acting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        @(_accepting ? "Accept" : "Reject")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ClientLawyerRequestDto> _requests = [];
+    private bool _loading = true;
+    private string? _filter = "Pending";
+    private int _actingId;
+
+    private ClientLawyerRequestDto? _respondTarget;
+    private bool _accepting;
+    private string _note = "";
+    private bool _acting;
+
+    private IEnumerable<ClientLawyerRequestDto> FilteredRequests =>
+        _filter == null ? _requests : _requests.Where(r => r.Status == _filter);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        var resp = await RequestService.GetIncomingRequestsAsync();
+        _requests = resp?.Data ?? [];
+        _loading = false;
+    }
+
+    private void OpenRespond(ClientLawyerRequestDto req, bool accept)
+    {
+        _respondTarget = req;
+        _accepting = accept;
+        _note = "";
+    }
+
+    private void CloseRespond()
+    {
+        _respondTarget = null;
+    }
+
+    private async Task SubmitResponseAsync()
+    {
+        if (_respondTarget == null) return;
+        _acting = true;
+        _actingId = _respondTarget.Id;
+        var dto = new RespondToRequestDto { Accept = _accepting, Note = string.IsNullOrWhiteSpace(_note) ? null : _note };
+
+        ApiResponse? resp;
+        if (_accepting)
+            resp = await RequestService.AcceptRequestAsync(_respondTarget.Id, dto);
+        else
+            resp = await RequestService.RejectRequestAsync(_respondTarget.Id, dto);
+
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess(_accepting ? "Request accepted. Client added to your list." : "Request rejected.");
+            var target = _respondTarget;
+            target.Status = _accepting ? "Accepted" : "Rejected";
+            target.LawyerNote = dto.Note;
+            CloseRespond();
+        }
+        else
+        {
+            Toast.ShowError(resp?.Message ?? "Failed to respond.");
+        }
+        _acting = false;
+        _actingId = 0;
+    }
+}

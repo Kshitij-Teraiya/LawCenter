@@ -1,0 +1,243 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = false
+build_property.IncludeAllContentForSelfExtract = 
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = LegalConnect.Client
+build_property.RootNamespace = LegalConnect.Client
+build_property.ProjectDir = C:\Project\Lawyer_Claude\LegalConnect.Client\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = false
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Project\Lawyer_Claude\LegalConnect.Client
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/CaseCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDYXNlQ2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/CaseTimeline.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDYXNlVGltZWxpbmUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/ClientCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDbGllbnRDYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/ConfirmationModal.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xDb25maXJtYXRpb25Nb2RhbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/DocumentUploadComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xEb2N1bWVudFVwbG9hZENvbXBvbmVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/HireRequestChat.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xIaXJlUmVxdWVzdENoYXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/LawyerCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMYXd5ZXJDYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/LoadingSpinner.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xMb2FkaW5nU3Bpbm5lci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/Pagination.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdpbmF0aW9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/RatingStars.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xSYXRpbmdTdGFycy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Components/ToastContainer.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xUb2FzdENvbnRhaW5lci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Helpers/RedirectToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = SGVscGVyc1xSZWRpcmVjdFRvTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Admin/AdminDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cQWRtaW5EYXNoYm9hcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Admin/ApproveLawyers.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cQXBwcm92ZUxhd3llcnMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Admin/CommissionSettings.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cQ29tbWlzc2lvblNldHRpbmdzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Admin/ManageCategories.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cTWFuYWdlQ2F0ZWdvcmllcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Admin/RevenueStats.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cUmV2ZW51ZVN0YXRzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/AppointmentBooking.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXBwb2ludG1lbnRCb29raW5nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Auth/ForgotPassword.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aFxGb3Jnb3RQYXNzd29yZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Auth/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aFxMb2dpbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Auth/RegisterClient.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aFxSZWdpc3RlckNsaWVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Auth/RegisterLawyer.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aFxSZWdpc3Rlckxhd3llci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/CaseCreate.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XENhc2VDcmVhdGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/CaseDetails.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XENhc2VEZXRhaWxzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/ClientDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XENsaWVudERhc2hib2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/FindLawyers.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XEZpbmRMYXd5ZXJzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/HireRequestDetail.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XEhpcmVSZXF1ZXN0RGV0YWlsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/MyAppointments.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XE15QXBwb2ludG1lbnRzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/MyCases.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XE15Q2FzZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/MyDeals.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XE15RGVhbHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/MyRequests.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XE15UmVxdWVzdHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/PaymentHistory.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XFBheW1lbnRIaXN0b3J5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Client/Profile.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpZW50XFByb2ZpbGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/LawyerListing.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyTGlzdGluZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/LawyerProfilePage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyUHJvZmlsZVBhZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/CaseCreate.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXENhc2VDcmVhdGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/CaseDetails.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXENhc2VEZXRhaWxzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/CaseEdit.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXENhc2VFZGl0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/Cases.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXENhc2VzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/Documents.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXERvY3VtZW50cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/EarningsSummary.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXEVhcm5pbmdzU3VtbWFyeS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/HireRequestDetail.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXEhpcmVSZXF1ZXN0RGV0YWlsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/HireRequests.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXEhpcmVSZXF1ZXN0cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/IncomingRequests.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXEluY29taW5nUmVxdWVzdHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/LawyerAppointments.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXExhd3llckFwcG9pbnRtZW50cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/LawyerDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXExhd3llckRhc2hib2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/ManageProfile.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXE1hbmFnZVByb2ZpbGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Pages/Lawyer/MyClients.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGF3eWVyXE15Q2xpZW50cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Shared/AppFooter.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEFwcEZvb3Rlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Shared/MinimalLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1pbmltYWxMYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Project/Lawyer_Claude/LegalConnect.Client/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 

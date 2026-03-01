@@ -1,0 +1,15 @@
+<div class="lc-loading">
+    <div class="spinner-border text-primary" role="status"
+         style="width:@(Size)rem;height:@(Size)rem;">
+        <span class="visually-hidden">Loading…</span>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <p class="mb-0">@Message</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = "Loading…";
+    [Parameter] public double Size    { get; set; } = 2.5;
+}

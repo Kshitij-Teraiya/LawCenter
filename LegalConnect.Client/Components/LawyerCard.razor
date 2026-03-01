@@ -1,0 +1,55 @@
+@using LegalConnect.Client.Models.Lawyer
+
+<div class="lawyer-card h-100">
+    <div class="p-3">
+        <!-- Header -->
+        <div class="d-flex align-items-start gap-3 mb-3">
+            <img src="@(Lawyer.ProfilePictureUrl ?? "https://ui-avatars.com/api/?name=" + Uri.EscapeDataString(Lawyer.FullName) + "&background=1a56db&color=fff&size=72")"
+                 alt="@Lawyer.FullName" class="avatar" />
+            <div class="flex-grow-1 min-w-0">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h6 class="mb-0 fw-semibold text-truncate">@Lawyer.FullName</h6>
+                    @if (Lawyer.IsVerified)
+                    {
+                        <span class="badge-verified">
+                            <i class="bi bi-patch-check-fill me-1"></i>Verified
+                        </span>
+                    }
+                </div>
+                <p class="mb-0 text-muted small">@Lawyer.CategoryName</p>
+                <div class="d-flex align-items-center gap-1 mt-1">
+                    <RatingStars Rating="@Lawyer.AverageRating" />
+                    <span class="text-muted small">(@Lawyer.TotalReviews)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge bg-light text-secondary border small">
+                <i class="bi bi-geo-alt me-1"></i>@Lawyer.City
+            </span>
+            <span class="badge bg-light text-secondary border small">
+                <i class="bi bi-building me-1"></i>@Lawyer.Court
+            </span>
+            <span class="badge bg-light text-secondary border small">
+                <i class="bi bi-clock me-1"></i>@Lawyer.YearsOfExperience yrs exp.
+            </span>
+        </div>
+
+        <!-- Fee + CTA -->
+        <div class="d-flex align-items-center justify-content-between mt-auto pt-2 border-top">
+            <div>
+                <span class="text-muted small d-block">Consultation fee</span>
+                <span class="fw-bold text-primary">৳@Lawyer.ConsultationFee.ToString("N0")</span>
+            </div>
+            <a href="/lawyers/@Lawyer.Id" class="btn btn-primary btn-sm">
+                View Profile
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public LawyerSummaryDto Lawyer { get; set; } = default!;
+}

@@ -1,0 +1,158 @@
+@page "/register-lawyer"
+@layout MinimalLayout
+@inject IAuthService AuthService
+@inject ILawyerService LawyerService
+@inject NavigationManager Navigation
+@inject ToastService Toast
+
+<PageTitle>Register as Lawyer – LegalConnect</PageTitle>
+
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-light py-5">
+    <div class="card shadow-sm border-0" style="width:100%;max-width:600px;">
+        <div class="card-body p-4 p-md-5">
+
+            <div class="text-center mb-4">
+                <a href="/" class="lc-brand justify-content-center">
+                    <img src="image/logo.jpeg" alt="LegalConnect" class="lc-brand-logo-lg" />
+                </a>
+                <p class="text-muted mt-2 mb-0">Register your lawyer profile</p>
+            </div>
+
+            @if (_submitted)
+            {
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size:3rem;"></i>
+                    <h5 class="mt-3 fw-semibold">Application Submitted!</h5>
+                    <p class="text-muted">
+                        Your registration is under review. We'll notify you once your profile is approved.
+                    </p>
+                    <a href="/login" class="btn btn-primary">Go to Login</a>
+                </div>
+            }
+            else
+            {
+                <EditForm Model="@_model" OnValidSubmit="HandleRegister">
+                    <DataAnnotationsValidator />
+
+                    @if (!string.IsNullOrWhiteSpace(_error))
+                    {
+                        <div class="alert alert-danger py-2">
+                            <i class="bi bi-exclamation-circle me-2"></i>@_error
+                        </div>
+                    }
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label fw-medium">First Name</label>
+                            <InputText @bind-Value="_model.FirstName" class="form-control" />
+                            <ValidationMessage For="@(() => _model.FirstName)" class="text-danger small" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-medium">Last Name</label>
+                            <InputText @bind-Value="_model.LastName" class="form-control" />
+                            <ValidationMessage For="@(() => _model.LastName)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Email</label>
+                            <InputText @bind-Value="_model.Email" class="form-control"
+                                       placeholder="you@example.com" autocomplete="email" />
+                            <ValidationMessage For="@(() => _model.Email)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Phone Number</label>
+                            <InputText @bind-Value="_model.PhoneNumber" class="form-control" />
+                            <ValidationMessage For="@(() => _model.PhoneNumber)" class="text-danger small" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Bar Council Registration No.</label>
+                            <InputText @bind-Value="_model.BarCouncilNumber" class="form-control"
+                                       placeholder="e.g. BBA/12345" />
+                            <ValidationMessage For="@(() => _model.BarCouncilNumber)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Specialization</label>
+                            <InputSelect @bind-Value="_model.CategoryId" class="form-select">
+                                <option value="0">— Select —</option>
+                                @foreach (var cat in _categories)
+                                {
+                                    <option value="@cat.Id">@cat.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => _model.CategoryId)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">City</label>
+                            <InputText @bind-Value="_model.City" class="form-control" placeholder="Dhaka" />
+                            <ValidationMessage For="@(() => _model.City)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Court</label>
+                            <InputText @bind-Value="_model.Court" class="form-control"
+                                       placeholder="e.g. Dhaka High Court" />
+                            <ValidationMessage For="@(() => _model.Court)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Years of Experience</label>
+                            <InputNumber @bind-Value="_model.YearsOfExperience" class="form-control" min="0" max="50" />
+                            <ValidationMessage For="@(() => _model.YearsOfExperience)" class="text-danger small" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Consultation Fee (৳)</label>
+                            <InputNumber @bind-Value="_model.ConsultationFee" class="form-control"
+                                         placeholder="0.00" />
+                            <ValidationMessage For="@(() => _model.ConsultationFee)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Password</label>
+                            <InputText @bind-Value="_model.Password" type="password"
+                                       class="form-control" autocomplete="new-password" />
+                            <ValidationMessage For="@(() => _model.Password)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Confirm Password</label>
+                            <InputText @bind-Value="_model.ConfirmPassword" type="password"
+                                       class="form-control" autocomplete="new-password" />
+                            <ValidationMessage For="@(() => _model.ConfirmPassword)" class="text-danger small" />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 mt-4" disabled="@_loading">
+                        @if (_loading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Submit Application
+                    </button>
+                </EditForm>
+            }
+
+            <p class="text-center mt-3 mb-0">
+                Already registered? <a href="/login">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly RegisterLawyerDto _model = new();
+    private List<CategoryDto> _categories = [];
+    private bool _loading;
+    private bool _submitted;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+        => _categories = await LawyerService.GetCategoriesAsync();
+
+    private async Task HandleRegister()
+    {
+        _loading = true; _error = null;
+        var (success, error) = await AuthService.RegisterLawyerAsync(_model);
+
+        if (success)
+            _submitted = true;
+        else
+            _error = error;
+
+        _loading = false;
+    }
+}

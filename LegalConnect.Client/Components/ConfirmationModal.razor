@@ -1,0 +1,70 @@
+<!-- Bootstrap 5 Modal Markup -->
+@if (_isVisible)
+{
+    <!-- Backdrop -->
+    <div class="modal-backdrop fade show" style="z-index:1040;"></div>
+
+    <div class="modal fade show d-block" tabindex="-1" style="z-index:1050;"
+         role="dialog" aria-modal="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title">
+                        <i class="bi @IconClass me-2 @TitleColorClass"></i>@Title
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="OnCancel"></button>
+                </div>
+
+                <div class="modal-body pt-2">
+                    <p class="text-secondary">@Message</p>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" @onclick="OnCancel">
+                        @CancelText
+                    </button>
+                    <button type="button" class="btn @ConfirmButtonClass"
+                            @onclick="OnConfirm" disabled="@_busy">
+                        @if (_busy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        @ConfirmText
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Title             { get; set; } = "Confirm Action";
+    [Parameter] public string Message           { get; set; } = "Are you sure?";
+    [Parameter] public string ConfirmText       { get; set; } = "Confirm";
+    [Parameter] public string CancelText        { get; set; } = "Cancel";
+    [Parameter] public string ConfirmButtonClass { get; set; } = "btn-danger";
+    [Parameter] public string IconClass          { get; set; } = "bi-exclamation-triangle-fill";
+    [Parameter] public string TitleColorClass    { get; set; } = "text-danger";
+    [Parameter] public EventCallback OnConfirmed { get; set; }
+    [Parameter] public EventCallback OnCancelled { get; set; }
+
+    private bool _isVisible;
+    private bool _busy;
+
+    public void Show() { _isVisible = true; StateHasChanged(); }
+    public void Hide() { _isVisible = false; _busy = false; StateHasChanged(); }
+
+    private async Task OnConfirm()
+    {
+        _busy = true;
+        StateHasChanged();
+        await OnConfirmed.InvokeAsync();
+        Hide();
+    }
+
+    private async Task OnCancel()
+    {
+        Hide();
+        await OnCancelled.InvokeAsync();
+    }
+}

@@ -1,0 +1,137 @@
+@page "/admin/dashboard"
+@attribute [Authorize(Roles = "Admin")]
+@inject IAdminService AdminService
+
+<PageTitle>Admin Dashboard – LegalConnect</PageTitle>
+
+<div class="container-fluid">
+    <h4 class="fw-bold mb-4">
+        <i class="bi bi-speedometer2 me-2 text-primary"></i>Admin Dashboard
+    </h4>
+
+    @if (_loading)
+    {
+        <LoadingSpinner />
+    }
+    else if (_stats is not null)
+    {
+        <!-- Stats Grid -->
+        <div class="row g-3 mb-4">
+            @foreach (var (icon, label, value, color) in GetStats())
+            {
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="stat-card flex-column text-center py-3">
+                        <div class="stat-icon @color mx-auto mb-2">
+                            <i class="@icon"></i>
+                        </div>
+                        <div class="stat-value">@value</div>
+                        <div class="stat-label">@label</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <a href="/admin/approve-lawyers"
+                   class="lc-card d-flex align-items-center gap-3 text-decoration-none">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-person-check"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Pending Approvals</div>
+                        <div class="small text-muted">@_stats.PendingApprovals lawyers awaiting</div>
+                    </div>
+                    @if (_stats.PendingApprovals > 0)
+                    {
+                        <span class="badge bg-danger ms-auto">@_stats.PendingApprovals</span>
+                    }
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="/admin/commission"
+                   class="lc-card d-flex align-items-center gap-3 text-decoration-none">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-percent"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Commission Settings</div>
+                        <div class="small text-muted">Manage platform fee</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="/admin/categories"
+                   class="lc-card d-flex align-items-center gap-3 text-decoration-none">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Manage Categories</div>
+                        <div class="small text-muted">Add/edit practice areas</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Monthly Revenue -->
+        <div class="lc-card">
+            <h6 class="fw-bold mb-3">Monthly Revenue</h6>
+            @if (_stats.MonthlyBreakdown.Count == 0)
+            {
+                <p class="text-muted text-center py-3">No revenue data yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle small table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Month</th>
+                                <th>Appointments</th>
+                                <th>Gross Revenue</th>
+                                <th>Platform Commission</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in _stats.MonthlyBreakdown)
+                            {
+                                <tr>
+                                    <td>@m.Month</td>
+                                    <td>@m.AppointmentCount</td>
+                                    <td>৳@m.Revenue.ToString("N2")</td>
+                                    <td class="text-success fw-semibold">
+                                        ৳@(m.Revenue * 0.05m).ToString("N2")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private RevenueStatsDto? _stats;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _stats   = await AdminService.GetRevenueStatsAsync();
+        _loading = false;
+    }
+
+    private IEnumerable<(string, string, string, string)> GetStats()
+    {
+        if (_stats is null) yield break;
+        yield return ("bi bi-cash-stack",       "Total Revenue",  $"৳{_stats.TotalRevenue:N0}",     "bg-success bg-opacity-10 text-success");
+        yield return ("bi bi-calendar-month",   "Monthly",        $"৳{_stats.MonthlyRevenue:N0}",   "bg-primary bg-opacity-10 text-primary");
+        yield return ("bi bi-percent",          "Commission",     $"৳{_stats.PlatformCommission:N0}","bg-warning bg-opacity-10 text-warning");
+        yield return ("bi bi-calendar-check",   "Appointments",   _stats.TotalAppointments.ToString(),"bg-info bg-opacity-10 text-info");
+        yield return ("bi bi-person-badge",     "Lawyers",        _stats.TotalLawyers.ToString(),    "bg-purple bg-opacity-10" );
+        yield return ("bi bi-people",           "Clients",        _stats.TotalClients.ToString(),    "bg-secondary bg-opacity-10 text-secondary");
+    }
+}

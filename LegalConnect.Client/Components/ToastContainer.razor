@@ -1,0 +1,31 @@
+@inject ToastService Toast
+@implements IDisposable
+
+<div class="lc-toast-container" aria-live="polite" aria-atomic="true">
+    @foreach (var toast in Toast.Toasts)
+    {
+        var t = toast;
+        <div class="lc-toast @t.Type.ToString().ToLower()" role="alert">
+            <i class="bi @GetIcon(t.Type) flex-shrink-0 mt-1"></i>
+            <div class="flex-grow-1">@t.Message</div>
+            <button type="button" class="btn-close btn-close-white btn-sm ms-2"
+                    @onclick="() => Toast.Remove(t.Id)" aria-label="Close"></button>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized() => Toast.OnChange += OnToastChange;
+
+    private void OnToastChange() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Toast.OnChange -= OnToastChange;
+
+    private static string GetIcon(ToastType type) => type switch
+    {
+        ToastType.Success => "bi-check-circle-fill",
+        ToastType.Error   => "bi-x-circle-fill",
+        ToastType.Warning => "bi-exclamation-triangle-fill",
+        _                 => "bi-info-circle-fill"
+    };
+}

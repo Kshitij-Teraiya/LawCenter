@@ -1,0 +1,162 @@
+@page "/client/my-requests"
+@attribute [Authorize(Roles = "Client")]
+@inject IClientLawyerRequestService RequestService
+@inject ToastService Toast
+
+<PageTitle>My Lawyer Requests — LegalConnect</PageTitle>
+
+<div class="container py-4" style="max-width: 900px;">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-0"><i class="bi bi-send text-primary me-2"></i>My Lawyer Requests</h2>
+            <p class="text-muted mb-0">Hire requests you've sent to lawyers</p>
+        </div>
+        <a href="/client/hire-lawyers" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Find More Lawyers
+        </a>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><span class="spinner-border text-primary"></span></div>
+    }
+    else if (_requests.Count == 0)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-send display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">No requests sent yet</h5>
+            <p class="text-muted">Browse lawyers and send a hire request to get started.</p>
+            <a href="/client/hire-lawyers" class="btn btn-primary">Find Lawyers</a>
+        </div>
+    }
+    else
+    {
+        <!-- Filter tabs -->
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <button class="nav-link @(_filter == null ? "active" : "")" @onclick='() => _filter = null'>
+                    All <span class="badge bg-secondary ms-1">@_requests.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_filter == "Pending" ? "active" : "")" @onclick='() => _filter = "Pending"'>
+                    Pending <span class="badge bg-warning text-dark ms-1">@_requests.Count(r => r.Status == "Pending")</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_filter == "Accepted" ? "active" : "")" @onclick='() => _filter = "Accepted"'>
+                    Accepted <span class="badge bg-success ms-1">@_requests.Count(r => r.Status == "Accepted")</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_filter == "Rejected" ? "active" : "")" @onclick='() => _filter = "Rejected"'>
+                    Rejected <span class="badge bg-danger ms-1">@_requests.Count(r => r.Status == "Rejected")</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="row g-3">
+            @foreach (var req in FilteredRequests)
+            {
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <img src="@(req.LawyerPictureUrl ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(req.LawyerFullName)}&background=1a56db&color=fff&size=56")"
+                                     alt="@req.LawyerFullName"
+                                     class="rounded-circle flex-shrink-0"
+                                     style="width:56px;height:56px;object-fit:cover;" />
+                                <div class="flex-grow-1 min-w-0">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="fw-semibold fs-6">@req.LawyerFullName</span>
+                                        <span class="@req.StatusBadgeClass">@req.Status</span>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(req.LawyerCategoryName))
+                                    {
+                                        <div class="text-muted small"><i class="bi bi-briefcase me-1"></i>@req.LawyerCategoryName</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(req.LawyerCity))
+                                    {
+                                        <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>@req.LawyerCity</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(req.Message))
+                                    {
+                                        <div class="text-muted small mt-1"><i class="bi bi-chat-left-text me-1"></i>@req.Message</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(req.LawyerNote))
+                                    {
+                                        <div class="mt-1 p-2 rounded @(req.Status == "Accepted" ? "bg-success bg-opacity-10 text-success" : "bg-danger bg-opacity-10 text-danger")" style="font-size:.85rem">
+                                            <i class="bi bi-reply me-1"></i><strong>Lawyer's note:</strong> @req.LawyerNote
+                                        </div>
+                                    }
+                                    <div class="text-muted" style="font-size:.75rem">
+                                        Sent @req.CreatedAt.ToString("d MMM yyyy")
+                                        @if (req.Status != "Pending")
+                                        {
+                                            <span> · Updated @req.UpdatedAt.ToString("d MMM yyyy")</span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (req.Status == "Pending")
+                                {
+                                    <button class="btn btn-sm btn-outline-danger flex-shrink-0"
+                                            @onclick="() => CancelAsync(req)"
+                                            disabled="@_cancellingId == req.Id">
+                                        @if (_cancellingId == req.Id)
+                                        {
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-x-circle me-1"></i>
+                                        }
+                                        Cancel
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<ClientLawyerRequestDto> _requests = [];
+    private bool _loading = true;
+    private string? _filter;
+    private int _cancellingId;
+
+    private IEnumerable<ClientLawyerRequestDto> FilteredRequests =>
+        _filter == null ? _requests : _requests.Where(r => r.Status == _filter);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        var resp = await RequestService.GetMyRequestsAsync();
+        _requests = resp?.Data ?? [];
+        _loading = false;
+    }
+
+    private async Task CancelAsync(ClientLawyerRequestDto req)
+    {
+        _cancellingId = req.Id;
+        var resp = await RequestService.CancelRequestAsync(req.Id);
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess("Request cancelled.");
+            _requests.Remove(req);
+        }
+        else
+        {
+            Toast.ShowError(resp?.Message ?? "Failed to cancel.");
+        }
+        _cancellingId = 0;
+    }
+}

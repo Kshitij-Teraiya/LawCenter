@@ -1,0 +1,174 @@
+@page "/"
+@inject ILawyerService LawyerService
+@inject NavigationManager Navigation
+
+<PageTitle>LegalConnect – Find Expert Lawyers</PageTitle>
+
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<section class="lc-hero">
+    <div class="container text-center">
+        <h1 class="display-5 fw-bold mb-2">Find the Right Lawyer for Your Case</h1>
+        <p class="lead mb-4 opacity-75">
+            Connect with verified legal experts across Bangladesh
+        </p>
+
+        <!-- Search Bar -->
+        <div class="lc-hero__search mx-auto mb-5" style="max-width:620px;">
+            <div class="lc-hero .search-wrapper">
+                <input @bind="_searchTerm"
+                       @bind:event="oninput"
+                       @onkeydown="OnSearchKeyDown"
+                       type="text"
+                       class="bg-transparent"
+                       placeholder="Search by name, specialization, or city…" />
+                <button class="btn btn-primary rounded-pill px-4 py-2 ms-2"
+                        @onclick="GoToSearch">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="d-flex justify-content-center gap-4 flex-wrap">
+            <div class="text-center">
+                <div class="fw-bold fs-3">500+</div>
+                <div class="small opacity-75">Verified Lawyers</div>
+            </div>
+            <div class="text-center">
+                <div class="fw-bold fs-3">20+</div>
+                <div class="small opacity-75">Practice Areas</div>
+            </div>
+            <div class="text-center">
+                <div class="fw-bold fs-3">10K+</div>
+                <div class="small opacity-75">Cases Handled</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Practice Areas ─────────────────────────────────────────────────────── -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-4">Browse by Practice Area</h2>
+
+        @if (_loadingCategories)
+        {
+            <div class="text-center"><LoadingSpinner Message="Loading categories…" /></div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var cat in _categories)
+                {
+                    var c = cat;
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <a href="/lawyers?categoryId=@c.Id"
+                           class="lc-card d-flex align-items-center gap-3 text-decoration-none cursor-pointer h-100">
+                            <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                                <i class="@(c.IconClass ?? "bi bi-briefcase")"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold text-dark">@c.Name</div>
+                                <div class="small text-muted">@c.LawyerCount lawyers</div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ── Featured Lawyers ───────────────────────────────────────────────────── -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Featured Lawyers</h2>
+            <a href="/lawyers" class="btn btn-outline-primary btn-sm">
+                View All <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        @if (_loadingFeatured)
+        {
+            <LoadingSpinner Message="Loading lawyers…" />
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var lawyer in _featuredLawyers)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <LawyerCard Lawyer="@lawyer" />
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ── Why Choose Us ──────────────────────────────────────────────────────── -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5">Why Choose LegalConnect?</h2>
+        <div class="row g-4 text-center">
+            @foreach (var (icon, title, desc) in _features)
+            {
+                <div class="col-md-3">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3"
+                         style="width:56px;height:56px;border-radius:.75rem;font-size:1.5rem;
+                                display:flex;align-items:center;justify-content:center;">
+                        <i class="@icon"></i>
+                    </div>
+                    <h6 class="fw-semibold">@title</h6>
+                    <p class="text-muted small mb-0">@desc</p>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private string _searchTerm = "";
+    private bool _loadingCategories = true;
+    private bool _loadingFeatured   = true;
+    private List<CategoryDto> _categories = [];
+    private List<LawyerSummaryDto> _featuredLawyers = [];
+
+    private static readonly (string, string, string)[] _features =
+    [
+        ("bi bi-patch-check-fill", "Verified Lawyers",
+         "All lawyers are verified with valid Bar Council registration."),
+        ("bi bi-shield-lock-fill", "Secure Platform",
+         "Your data and communications are fully encrypted."),
+        ("bi bi-calendar-check-fill", "Easy Booking",
+         "Book appointments with a few clicks, anytime."),
+        ("bi bi-star-fill", "Genuine Reviews",
+         "Real client reviews to help you choose confidently.")
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var catTask = LawyerService.GetCategoriesAsync();
+        var lawTask = LawyerService.GetLawyersAsync(new LawyerFilterDto
+        {
+            SortBy = "rating", SortDescending = true, PageSize = 6, IsVerified = true
+        });
+
+        await Task.WhenAll(catTask, lawTask);
+
+        _categories = catTask.Result;
+        _loadingCategories = false;
+
+        _featuredLawyers = lawTask.Result?.Items ?? [];
+        _loadingFeatured  = false;
+    }
+
+    private void GoToSearch()
+        => Navigation.NavigateTo($"/lawyers?search={Uri.EscapeDataString(_searchTerm)}");
+
+    private void OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") GoToSearch();
+    }
+}

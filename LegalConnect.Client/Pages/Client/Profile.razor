@@ -1,0 +1,185 @@
+@page "/client/profile"
+@attribute [Authorize(Roles = "Client")]
+@inject IClientProfileService ProfileService
+@inject ToastService Toast
+
+<PageTitle>My Profile &mdash; LegalConnect</PageTitle>
+
+@if (_loading)
+{
+    <LoadingSpinner Message="Loading profile..." />
+}
+else if (_profile == null)
+{
+    <div class="container py-4 text-center">
+        <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+        <p class="mt-2 text-muted">Could not load your profile. Please try again later.</p>
+    </div>
+}
+else
+{
+    <div class="container-fluid py-4" style="max-width:860px;">
+
+        <h4 class="fw-bold mb-4"><i class="bi bi-person-gear me-2 text-primary"></i>My Profile</h4>
+
+        <div class="row g-4">
+            <!-- Left: Profile summary card -->
+            <div class="col-md-4">
+                <div class="lc-card text-center">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 text-primary"
+                         style="width:80px;height:80px;font-size:2rem;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">@_profile.FullName</h5>
+                    <p class="text-muted small mb-3">@_profile.Email</p>
+                    <div class="lc-divider"></div>
+                    <div class="d-flex justify-content-around mt-3">
+                        <div class="text-center">
+                            <div class="fw-bold text-primary fs-5">@_profile.TotalCases</div>
+                            <div class="text-muted small">Cases</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="fw-bold text-primary fs-5">@_profile.TotalAppointments</div>
+                            <div class="text-muted small">Appointments</div>
+                        </div>
+                    </div>
+                    <div class="lc-divider mt-3"></div>
+                    <div class="text-muted small mt-3">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        <span>Joined @_profile.CreatedAt.ToString("MMM yyyy")</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Edit form -->
+            <div class="col-md-8">
+                <div class="lc-card">
+                    <h5 class="fw-semibold mb-3"><i class="bi bi-pencil-square me-2"></i>Edit Profile</h5>
+
+                    <EditForm Model="_model" OnValidSubmit="HandleSave">
+                        <DataAnnotationsValidator />
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">First Name</label>
+                                <InputText class="form-control" @bind-Value="_model.FirstName" />
+                                <ValidationMessage For="() => _model.FirstName" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name</label>
+                                <InputText class="form-control" @bind-Value="_model.LastName" />
+                                <ValidationMessage For="() => _model.LastName" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <InputText class="form-control" @bind-Value="_model.PhoneNumber" />
+                                <ValidationMessage For="() => _model.PhoneNumber" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City</label>
+                                <InputText class="form-control" @bind-Value="_model.City" />
+                                <ValidationMessage For="() => _model.City" />
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary" disabled="@_saving">
+                                @if (_saving)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    <span>Save Changes</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+
+                <!-- Read-only info card -->
+                <div class="lc-card mt-3">
+                    <h5 class="fw-semibold mb-3"><i class="bi bi-info-circle me-2"></i>Account Info</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small">Email</div>
+                            <div class="fw-medium">@_profile.Email</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small">Member Since</div>
+                            <div class="fw-medium">@_profile.CreatedAt.ToString("MMMM dd, yyyy")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private ClientProfileDto? _profile;
+    private UpdateClientProfileDto _model = new();
+    private bool _loading = true;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfile();
+    }
+
+    private async Task LoadProfile()
+    {
+        _loading = true;
+        try
+        {
+            var resp = await ProfileService.GetMyProfileAsync();
+            if (resp is { Success: true, Data: not null })
+            {
+                _profile = resp.Data;
+                _model = new UpdateClientProfileDto
+                {
+                    FirstName = _profile.FirstName,
+                    LastName = _profile.LastName,
+                    PhoneNumber = _profile.PhoneNumber,
+                    City = _profile.City
+                };
+            }
+        }
+        catch
+        {
+            Toast.ShowError("Failed to load profile.");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task HandleSave()
+    {
+        _saving = true;
+        try
+        {
+            var resp = await ProfileService.UpdateMyProfileAsync(_model);
+            if (resp is { Success: true })
+            {
+                Toast.ShowSuccess("Profile updated successfully.");
+                await LoadProfile();
+            }
+            else
+            {
+                Toast.ShowError(resp?.Message ?? "Failed to update profile.");
+            }
+        }
+        catch
+        {
+            Toast.ShowError("An error occurred while saving.");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

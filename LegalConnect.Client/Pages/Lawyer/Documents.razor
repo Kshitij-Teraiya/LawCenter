@@ -1,0 +1,168 @@
+@page "/lawyer/documents"
+@using LegalConnect.Client.Models.Cases
+@using LegalConnect.Client.Services
+@using LegalConnect.Client.Components
+@attribute [Authorize(Roles = "Lawyer")]
+@inject ICaseService CaseService
+@inject ToastService Toast
+@inject NavigationManager Nav
+
+<PageTitle>Documents — LegalConnect</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0"><i class="bi bi-folder2 text-primary me-2"></i>Documents</h2>
+            <p class="text-muted mb-0">All documents across your cases</p>
+        </div>
+    </div>
+
+    <!-- Filter by Case -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Filter by Case</label>
+                    <select class="form-select" @bind="_selectedCaseId" @bind:after="LoadDocumentsAsync">
+                        <option value="0">— All Cases —</option>
+                        @foreach (var c in _cases)
+                        {
+                            <option value="@c.Id">@c.CaseTitle</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Document Type</label>
+                    <select class="form-select" @bind="_docType" @bind:after="LoadDocumentsAsync">
+                        <option value="">All Types</option>
+                        <option>Petition</option>
+                        <option>Affidavit</option>
+                        <option>Evidence</option>
+                        <option>Judgment</option>
+                        <option>Correspondence</option>
+                        <option>Contract</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                @if (_selectedCaseId > 0)
+                {
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-primary" @onclick="() => _showUploadModal = true">
+                            <i class="bi bi-upload me-1"></i>Upload
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (_loadingDocs)
+    {
+        <LoadingSpinner Message="Loading documents..." />
+    }
+    else if (_documents.Count == 0)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-file-earmark-x display-1 text-muted"></i>
+            <h4 class="mt-3 text-muted">No documents found</h4>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Document</th>
+                            <th>Case</th>
+                            <th>Type</th>
+                            <th>Uploaded By</th>
+                            <th>Date</th>
+                            <th>Size</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var doc in _documents)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="@doc.FileIcon fs-5"></i>
+                                        <span class="fw-medium">@doc.FileName</span>
+                                        @if (doc.IsPrivate)
+                                        {
+                                            <span class="badge bg-warning text-dark">Private</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="/lawyer/cases/@doc.CaseId" class="text-decoration-none">
+                                        Case #@doc.CaseId
+                                    </a>
+                                </td>
+                                <td><span class="badge bg-light text-dark">@doc.DocumentType</span></td>
+                                <td>@doc.UploadedByName</td>
+                                <td>@doc.UploadedDate.ToString("d MMM yyyy")</td>
+                                <td>@doc.FileSizeDisplay</td>
+                                <td>
+                                    <a href="/api/case-documents/@doc.Id/download"
+                                       target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@if (_showUploadModal && _selectedCaseId > 0)
+{
+    <DocumentUploadComponent CaseId="_selectedCaseId"
+                             IsLawyer="true"
+                             OnUploadSuccess="OnUploaded"
+                             OnClose="() => _showUploadModal = false" />
+}
+
+@code {
+    private List<CaseSummaryDto> _cases = [];
+    private List<CaseDocumentDto> _documents = [];
+    private int _selectedCaseId;
+    private string _docType = "";
+    private bool _loadingDocs;
+    private bool _showUploadModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resp = await CaseService.GetCasesAsync(new CaseFilterDto { PageSize = 100 });
+        _cases = resp?.Data?.Items ?? [];
+        await LoadDocumentsAsync();
+    }
+
+    private async Task LoadDocumentsAsync()
+    {
+        if (_selectedCaseId == 0)
+        {
+            _documents = [];
+            return;
+        }
+        _loadingDocs = true;
+        var resp = await CaseService.GetDocumentsAsync(_selectedCaseId);
+        _documents = (resp?.Data ?? [])
+            .Where(d => string.IsNullOrEmpty(_docType) || d.DocumentType == _docType)
+            .ToList();
+        _loadingDocs = false;
+    }
+
+    private async Task OnUploaded()
+    {
+        _showUploadModal = false;
+        await LoadDocumentsAsync();
+        Toast.ShowSuccess("Document uploaded.");
+    }
+}

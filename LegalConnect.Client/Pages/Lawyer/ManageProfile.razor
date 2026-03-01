@@ -1,0 +1,331 @@
+@page "/lawyer/profile"
+@attribute [Authorize(Roles = "Lawyer")]
+@inject ILawyerService LawyerService
+@inject ToastService Toast
+
+<PageTitle>Manage Profile – LegalConnect</PageTitle>
+
+<div class="container-fluid" style="max-width:860px;">
+    <h4 class="fw-bold mb-4">Manage Profile</h4>
+
+    @if (_loading) { <LoadingSpinner /> }
+    else
+    {
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+            @foreach (var (id, label, icon) in _tabs)
+            {
+                string tabId = id;
+                <li class="nav-item">
+                    <button class="nav-link @(_activeTab == tabId ? "active" : "")"
+                            @onclick="() => _activeTab = tabId">
+                        <i class="@icon me-2"></i>@label
+                    </button>
+                </li>
+            }
+        </ul>
+
+        <!-- ── Basic Info Tab ─────────────────────────────────────────── -->
+        @if (_activeTab == "basic")
+        {
+            <div class="lc-card">
+                <h6 class="fw-bold mb-3">Basic Information</h6>
+                <EditForm Model="@_basicInfo" OnValidSubmit="SaveBasicInfo">
+                    <DataAnnotationsValidator />
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">First Name</label>
+                            <InputText @bind-Value="_basicInfo.FirstName" class="form-control" />
+                            <ValidationMessage For="@(() => _basicInfo.FirstName)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Last Name</label>
+                            <InputText @bind-Value="_basicInfo.LastName" class="form-control" />
+                            <ValidationMessage For="@(() => _basicInfo.LastName)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Phone</label>
+                            <InputText @bind-Value="_basicInfo.PhoneNumber" class="form-control" />
+                            <ValidationMessage For="@(() => _basicInfo.PhoneNumber)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">City</label>
+                            <InputText @bind-Value="_basicInfo.City" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Court</label>
+                            <InputText @bind-Value="_basicInfo.Court" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Consultation Fee (৳)</label>
+                            <InputNumber @bind-Value="_basicInfo.ConsultationFee" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Bio</label>
+                            <InputTextArea @bind-Value="_basicInfo.Bio" class="form-control"
+                                           rows="4" maxlength="1000"
+                                           placeholder="Describe your practice, expertise…" />
+                        </div>
+                        <div class="col-12 form-check ms-1">
+                            <InputCheckbox @bind-Value="_basicInfo.IsAvailable" class="form-check-input" id="avail" />
+                            <label class="form-check-label" for="avail">Available for new appointments</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-4" disabled="@_saving">
+                        @if (_saving) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                        Save Changes
+                    </button>
+                </EditForm>
+            </div>
+        }
+
+        <!-- ── Experience Tab ─────────────────────────────────────────── -->
+        @if (_activeTab == "experience")
+        {
+            <div class="lc-card mb-4">
+                <h6 class="fw-bold mb-3">Add Experience</h6>
+                <EditForm Model="@_newExp" OnValidSubmit="AddExperience">
+                    <DataAnnotationsValidator />
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Title / Role</label>
+                            <InputText @bind-Value="_newExp.Title" class="form-control" placeholder="Senior Advocate" />
+                            <ValidationMessage For="@(() => _newExp.Title)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Organization / Court</label>
+                            <InputText @bind-Value="_newExp.Organization" class="form-control" />
+                            <ValidationMessage For="@(() => _newExp.Organization)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Start Date</label>
+                            <InputDate @bind-Value="_newExp.StartDate" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">End Date</label>
+                            <InputDate @bind-Value="_newExp.EndDate" class="form-control"
+                                       disabled="@_newExp.IsCurrent" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end pb-1">
+                            <div class="form-check">
+                                <InputCheckbox @bind-Value="_newExp.IsCurrent" class="form-check-input" id="isCurrent" />
+                                <label class="form-check-label" for="isCurrent">Currently working here</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Description</label>
+                            <InputTextArea @bind-Value="_newExp.Description" class="form-control" rows="2" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3" disabled="@_saving">
+                        @if (_saving) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                        Add Experience
+                    </button>
+                </EditForm>
+            </div>
+
+            <!-- Existing Experiences -->
+            @if (_profile?.Experiences.Count > 0)
+            {
+                <div class="lc-card">
+                    <h6 class="fw-bold mb-3">Your Experience</h6>
+                    @foreach (var exp in _profile.Experiences.OrderByDescending(e => e.StartDate))
+                    {
+                        var e2 = exp;
+                        <div class="d-flex justify-content-between align-items-start pb-3 mb-3 border-bottom">
+                            <div>
+                                <div class="fw-semibold">@exp.Title</div>
+                                <div class="text-muted small">@exp.Organization</div>
+                                <div class="text-muted small">
+                                    @exp.StartDate.ToString("MMM yyyy") –
+                                    @(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("MMM yyyy"))
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    @onclick="() => DeleteExperience(e2.Id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        <!-- ── Case Results Tab ───────────────────────────────────────── -->
+        @if (_activeTab == "cases")
+        {
+            <div class="lc-card mb-4">
+                <h6 class="fw-bold mb-3">Add Case Result</h6>
+                <EditForm Model="@_newCase" OnValidSubmit="AddCaseResult">
+                    <DataAnnotationsValidator />
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Case Title</label>
+                            <InputText @bind-Value="_newCase.CaseTitle" class="form-control" />
+                            <ValidationMessage For="@(() => _newCase.CaseTitle)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Court</label>
+                            <InputText @bind-Value="_newCase.Court" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Outcome</label>
+                            <InputSelect @bind-Value="_newCase.Outcome" class="form-select">
+                                <option value="">Select</option>
+                                <option value="Won">Won</option>
+                                <option value="Settled">Settled</option>
+                                <option value="Pending">Pending</option>
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Year</label>
+                            <InputNumber @bind-Value="_newCase.Year" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Description</label>
+                            <InputTextArea @bind-Value="_newCase.Description" class="form-control" rows="2" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3" disabled="@_saving">
+                        Add Case Result
+                    </button>
+                </EditForm>
+            </div>
+
+            @if (_profile?.CaseResults.Count > 0)
+            {
+                <div class="lc-card">
+                    <h6 class="fw-bold mb-3">Your Case Results</h6>
+                    @foreach (var cr in _profile.CaseResults.OrderByDescending(c => c.Year))
+                    {
+                        var c2 = cr;
+                        <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
+                            <div>
+                                <div class="fw-semibold">@cr.CaseTitle</div>
+                                <div class="text-muted small">@cr.Court · @cr.Year</div>
+                                <span class="badge @(cr.Outcome == "Won" ? "bg-success" : "bg-secondary")">@cr.Outcome</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger"
+                                    @onclick="() => DeleteCaseResult(c2.Id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        <!-- ── Fee Tab ────────────────────────────────────────────────── -->
+        @if (_activeTab == "fee")
+        {
+            <div class="lc-card" style="max-width:400px;">
+                <h6 class="fw-bold mb-3">Set Consultation Fee</h6>
+                <EditForm Model="@_feeDto" OnValidSubmit="SetFee">
+                    <DataAnnotationsValidator />
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Fee Amount (৳)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">৳</span>
+                            <InputNumber @bind-Value="_feeDto.ConsultationFee" class="form-control" min="0" />
+                        </div>
+                        <ValidationMessage For="@(() => _feeDto.ConsultationFee)" class="text-danger small" />
+                    </div>
+                    <button type="submit" class="btn btn-primary" disabled="@_saving">
+                        Update Fee
+                    </button>
+                </EditForm>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private LawyerDto? _profile;
+    private UpdateLawyerProfileDto _basicInfo = new();
+    private AddExperienceDto _newExp = new();
+    private AddCaseResultDto _newCase = new();
+    private SetServiceChargeDto _feeDto = new();
+    private bool _loading = true;
+    private bool _saving;
+    private string _activeTab = "basic";
+
+    private static readonly (string, string, string)[] _tabs =
+    [
+        ("basic",      "Basic Info",   "bi bi-person-circle"),
+        ("experience", "Experience",   "bi bi-briefcase"),
+        ("cases",      "Case Results", "bi bi-trophy"),
+        ("fee",        "Service Fee",  "bi bi-cash"),
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _profile  = await LawyerService.GetMyProfileAsync();
+        if (_profile is not null)
+        {
+            var parts = _profile.FullName.Split(' ', 2);
+            _basicInfo = new()
+            {
+                FirstName       = parts[0],
+                LastName        = parts.Length > 1 ? parts[1] : "",
+                PhoneNumber     = _profile.PhoneNumber,
+                City            = _profile.City,
+                Court           = _profile.Court,
+                Bio             = _profile.Bio,
+                ConsultationFee = _profile.ConsultationFee,
+                IsAvailable     = _profile.IsAvailable
+            };
+            _feeDto = new() { ConsultationFee = _profile.ConsultationFee };
+        }
+        _loading = false;
+    }
+
+    private async Task SaveBasicInfo()
+    {
+        _saving = true;
+        var (ok, err) = await LawyerService.UpdateMyProfileAsync(_basicInfo);
+        if (ok) Toast.ShowSuccess("Profile updated!");
+        else    Toast.ShowError(err ?? "Update failed.");
+        _saving = false;
+    }
+
+    private async Task AddExperience()
+    {
+        _saving = true;
+        var (ok, err) = await LawyerService.AddExperienceAsync(_newExp);
+        if (ok) { Toast.ShowSuccess("Experience added!"); _newExp = new(); _profile = await LawyerService.GetMyProfileAsync(); }
+        else     Toast.ShowError(err ?? "Failed.");
+        _saving = false;
+    }
+
+    private async Task DeleteExperience(int id)
+    {
+        var (ok, err) = await LawyerService.DeleteExperienceAsync(id);
+        if (ok) { Toast.ShowSuccess("Removed."); _profile = await LawyerService.GetMyProfileAsync(); }
+        else     Toast.ShowError(err ?? "Failed.");
+    }
+
+    private async Task AddCaseResult()
+    {
+        _saving = true;
+        var (ok, err) = await LawyerService.AddCaseResultAsync(_newCase);
+        if (ok) { Toast.ShowSuccess("Case result added!"); _newCase = new(); _profile = await LawyerService.GetMyProfileAsync(); }
+        else     Toast.ShowError(err ?? "Failed.");
+        _saving = false;
+    }
+
+    private async Task DeleteCaseResult(int id)
+    {
+        var (ok, err) = await LawyerService.DeleteCaseResultAsync(id);
+        if (ok) { Toast.ShowSuccess("Removed."); _profile = await LawyerService.GetMyProfileAsync(); }
+        else     Toast.ShowError(err ?? "Failed.");
+    }
+
+    private async Task SetFee()
+    {
+        _saving = true;
+        var (ok, err) = await LawyerService.SetServiceChargeAsync(_feeDto);
+        if (ok) Toast.ShowSuccess("Fee updated!");
+        else    Toast.ShowError(err ?? "Failed.");
+        _saving = false;
+    }
+}

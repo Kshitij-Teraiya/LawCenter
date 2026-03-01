@@ -1,0 +1,94 @@
+@page "/admin/commission"
+@attribute [Authorize(Roles = "Admin")]
+@inject IAdminService AdminService
+@inject ToastService Toast
+
+<PageTitle>Commission Settings – LegalConnect</PageTitle>
+
+<div class="container-fluid" style="max-width:560px;">
+    <h4 class="fw-bold mb-4">
+        <i class="bi bi-percent me-2 text-primary"></i>Platform Commission
+    </h4>
+
+    @if (_loading) { <LoadingSpinner /> }
+    else
+    {
+        @if (_current is not null)
+        {
+            <div class="lc-card mb-4">
+                <h6 class="fw-bold mb-3">Current Setting</h6>
+                <dl class="row mb-0">
+                    <dt class="col-6 text-muted small">Commission Rate</dt>
+                    <dd class="col-6 fw-bold fs-4 text-primary">@_current.DefaultCommissionPercentage%</dd>
+                    <dt class="col-6 text-muted small">Last Updated</dt>
+                    <dd class="col-6 small">@_current.LastUpdatedAt.ToString("MMM dd, yyyy")</dd>
+                    <dt class="col-6 text-muted small">Updated By</dt>
+                    <dd class="col-6 small">@_current.UpdatedBy</dd>
+                </dl>
+            </div>
+        }
+
+        <div class="lc-card">
+            <h6 class="fw-bold mb-3">Update Commission Rate</h6>
+            <EditForm Model="@_dto" OnValidSubmit="Save">
+                <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label class="form-label fw-medium">Commission Percentage (%)</label>
+                    <div class="input-group" style="max-width:200px;">
+                        <InputNumber @bind-Value="_dto.CommissionPercentage"
+                                     class="form-control" min="0" max="100" step="0.5" />
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <div class="form-text text-muted">
+                        Set the percentage taken from each appointment fee.
+                    </div>
+                    <ValidationMessage For="@(() => _dto.CommissionPercentage)" class="text-danger small" />
+                </div>
+
+                <!-- Preview -->
+                <div class="bg-light rounded-3 p-3 mb-3 small">
+                    <strong>Preview:</strong> On a ৳1,000 consultation:
+                    <div class="mt-1">
+                        Platform earns: <strong class="text-primary">৳@(1000m * _dto.CommissionPercentage / 100m):N2</strong>
+                    </div>
+                    <div>
+                        Lawyer receives: <strong class="text-success">৳@(1000m - 1000m * _dto.CommissionPercentage / 100m):N2</strong>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" disabled="@_saving">
+                    @if (_saving) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                    Save Commission Rate
+                </button>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code {
+    private CommissionSettingDto? _current;
+    private readonly SetCommissionDto _dto = new();
+    private bool _loading = true;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _current = await AdminService.GetCommissionSettingAsync();
+        if (_current is not null)
+            _dto.CommissionPercentage = _current.DefaultCommissionPercentage;
+        _loading = false;
+    }
+
+    private async Task Save()
+    {
+        _saving = true;
+        var (ok, err) = await AdminService.SetCommissionAsync(_dto);
+        if (ok)
+        {
+            Toast.ShowSuccess("Commission rate updated!");
+            _current = await AdminService.GetCommissionSettingAsync();
+        }
+        else Toast.ShowError(err ?? "Failed.");
+        _saving = false;
+    }
+}

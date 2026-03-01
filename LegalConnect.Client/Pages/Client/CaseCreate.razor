@@ -1,0 +1,240 @@
+@page "/client/cases/create"
+@attribute [Authorize(Roles = "Client")]
+@inject ICaseService CaseService
+@inject ToastService Toast
+@inject NavigationManager Nav
+
+<PageTitle>New Case — LegalConnect</PageTitle>
+
+<div class="container py-4" style="max-width: 800px;">
+    <div class="d-flex align-items-center mb-4">
+        <a href="/client/my-cases" class="btn btn-outline-secondary btn-sm me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-0"><i class="bi bi-folder-plus text-primary me-2"></i>Open New Case</h2>
+            <p class="text-muted mb-0">You can open a case immediately — lawyers can be added later</p>
+        </div>
+    </div>
+
+    <EditForm Model="_dto" OnValidSubmit="SubmitAsync">
+        <DataAnnotationsValidator />
+
+        <!-- Lawyer Selection (Optional) -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-briefcase me-2"></i>Assign Lawyers
+                    <span class="badge bg-secondary ms-2">Optional</span>
+                </h6>
+                <a href="/client/hire-lawyers" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-search me-1"></i>Find More Lawyers
+                </a>
+            </div>
+            <div class="card-body">
+                @if (_lawyers == null)
+                {
+                    <div class="text-muted d-flex align-items-center gap-2">
+                        <span class="spinner-border spinner-border-sm"></span> Loading your lawyers...
+                    </div>
+                }
+                else if (_lawyers.Count == 0)
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        You can open this case now and add a lawyer later. Or
+                        <a href="/client/hire-lawyers" class="alert-link">find and request a lawyer</a> first.
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Select one or more lawyers to assign, or skip and add them after creating the case.
+                    </div>
+                    <div class="row g-3">
+                        @foreach (var lawyer in _lawyers)
+                        {
+                            var selected = _selectedIds.Contains(lawyer.LawyerProfileId);
+                            <div class="col-md-6">
+                                <div class="lawyer-option @(selected ? "selected" : "")"
+                                     @onclick="() => ToggleLawyer(lawyer)">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="@(lawyer.ProfilePictureUrl ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(lawyer.LawyerFullName)}&background=1a56db&color=fff&size=48")"
+                                             alt="@lawyer.LawyerFullName"
+                                             class="rounded-circle"
+                                             style="width:48px;height:48px;object-fit:cover;" />
+                                        <div class="flex-grow-1 min-w-0">
+                                            <div class="fw-semibold">@lawyer.LawyerFullName</div>
+                                            @if (!string.IsNullOrEmpty(lawyer.CategoryName))
+                                            {
+                                                <div class="text-muted small">@lawyer.CategoryName</div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(lawyer.City))
+                                            {
+                                                <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>@lawyer.City</div>
+                                            }
+                                        </div>
+                                        @if (selected)
+                                        {
+                                            <i class="bi bi-check-circle-fill text-primary fs-5"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-circle text-muted fs-5"></i>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="mt-3 small @(_selectedIds.Count > 0 ? "text-success" : "text-muted")">
+                        @if (_selectedIds.Count > 0)
+                        {
+                            <span><i class="bi bi-check-circle me-1"></i>@_selectedIds.Count @(_selectedIds.Count > 1 ? "lawyers" : "lawyer") selected</span>
+                        }
+                        else
+                        {
+                            <span><i class="bi bi-info-circle me-1"></i>No lawyers selected &mdash; you can add them after creating the case.</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Case Information -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Case Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label">Case Title <span class="text-danger">*</span></label>
+                        <InputText class="form-control" @bind-Value="_dto.CaseTitle"
+                                   placeholder="e.g. Property Dispute — Kumar vs Sharma" />
+                        <ValidationMessage For="@(() => _dto.CaseTitle)" class="text-danger small" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Case Number</label>
+                        <InputText class="form-control" @bind-Value="_dto.CaseNumber"
+                                   placeholder="e.g. 2024/CIV/001" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Case Type <span class="text-danger">*</span></label>
+                        <InputSelect class="form-select" @bind-Value="_dto.CaseType">
+                            <option value="">Select type...</option>
+                            <option>Criminal</option>
+                            <option>Civil</option>
+                            <option>Family</option>
+                            <option>Property</option>
+                            <option>Corporate</option>
+                            <option>Labour</option>
+                            <option>Constitutional</option>
+                            <option>Other</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => _dto.CaseType)" class="text-danger small" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Court <span class="text-danger">*</span></label>
+                        <InputText class="form-control" @bind-Value="_dto.Court"
+                                   placeholder="e.g. District Court, Mumbai" />
+                        <ValidationMessage For="@(() => _dto.Court)" class="text-danger small" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Filing Date</label>
+                        <InputDate class="form-control" @bind-Value="_dto.FilingDate" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Next Hearing Date</label>
+                        <InputDate class="form-control" @bind-Value="_dto.NextHearingDate" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="bi bi-card-text me-2"></i>Case Description <span class="text-danger">*</span></h6>
+            </div>
+            <div class="card-body">
+                <InputTextArea class="form-control" rows="5" @bind-Value="_dto.Description"
+                               placeholder="Describe the case in detail — background, parties involved, issues, and what you need help with..." />
+                <ValidationMessage For="@(() => _dto.Description)" class="text-danger small" />
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_errorMsg))
+        {
+            <div class="alert alert-danger"><i class="bi bi-exclamation-circle me-2"></i>@_errorMsg</div>
+        }
+
+        <div class="d-flex gap-2 justify-content-end">
+            <a href="/client/my-cases" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" disabled="@_submitting">
+                @if (_submitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                <i class="bi bi-folder-plus me-2"></i>Open Case
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+<style>
+    .lawyer-option {
+        border: 2px solid #dee2e6;
+        border-radius: .5rem;
+        padding: .85rem 1rem;
+        cursor: pointer;
+        transition: all .15s ease;
+    }
+    .lawyer-option:hover {
+        border-color: var(--bs-primary);
+        background: #f0f5ff;
+    }
+    .lawyer-option.selected {
+        border-color: var(--bs-primary);
+        background: #e8f0fe;
+    }
+</style>
+
+@code {
+    private CreateCaseDto _dto = new() { FilingDate = DateTime.Today };
+    private List<HiredLawyerDto>? _lawyers;
+    private readonly HashSet<int> _selectedIds = [];
+    private bool _submitting;
+    private string _errorMsg = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resp = await CaseService.GetMyLawyersAsync();
+        _lawyers = resp?.Data ?? [];
+    }
+
+    private void ToggleLawyer(HiredLawyerDto lawyer)
+    {
+        if (!_selectedIds.Remove(lawyer.LawyerProfileId))
+            _selectedIds.Add(lawyer.LawyerProfileId);
+    }
+
+    private async Task SubmitAsync()
+    {
+        _errorMsg = "";
+        _dto.LawyerProfileIds = [.. _selectedIds];
+        _submitting = true;
+        var resp = await CaseService.CreateCaseAsync(_dto);
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess("Case opened successfully!");
+            Nav.NavigateTo($"/client/cases/{resp.Data!.Id}");
+        }
+        else
+        {
+            _errorMsg = resp?.Message ?? "Failed to create case.";
+        }
+        _submitting = false;
+    }
+}

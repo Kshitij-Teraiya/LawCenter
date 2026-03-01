@@ -1,0 +1,205 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build and Test
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build solution
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run unit tests
+      run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Publish test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: '**/test-results.trx'
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    name: Publish Artifacts
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Publish API
+      run: dotnet publish LegalConnect.API/LegalConnect.API.csproj -c Release -o api-publish
+
+    - name: Publish Client
+      run: dotnet publish LegalConnect.Client/LegalConnect.Client.csproj -c Release -o client-publish
+
+    - name: Upload API artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-publish
+        path: api-publish/
+
+    - name: Upload Client artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: client-publish
+        path: client-publish/wwwroot/
+
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
+    name: Deploy to Hostinger
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Download API artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: api-publish
+        path: api-publish
+
+    - name: Download Client artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: client-publish
+        path: client-publish
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOSTINGER_HOST }}
+        username: ${{ secrets.HOSTINGER_USER }}
+        key: ${{ secrets.HOSTINGER_SSH_KEY }}
+        port: 22
+        script: |
+          set -e
+
+          echo "Starting deployment..."
+          cd /home/legalconnect
+
+          # Create backup of current API
+          if [ -d api ]; then
+            echo "Creating backup..."
+            cp -r api api.backup.$(date +%s)
+          fi
+
+          # Stop API service
+          echo "Stopping LegalConnect API..."
+          systemctl stop legalconnect-api || true
+          sleep 2
+
+          # Clean old API files
+          rm -rf api/*
+
+          # Create necessary directories if they don't exist
+          mkdir -p api wwwroot logs uploads/case-documents
+
+          # Extract and deploy new API version
+          echo "Deploying API..."
+          tar -xzf /tmp/api-publish.tar.gz -C api/ || unzip -q /tmp/api-publish.zip -d api/
+
+          # Extract and deploy client files
+          echo "Deploying Client..."
+          tar -xzf /tmp/client-publish.tar.gz -C wwwroot/ || unzip -q /tmp/client-publish.zip -d wwwroot/
+
+          # Set permissions
+          chown -R www-data:www-data /home/legalconnect
+
+          # Run database migrations (optional - uncomment if using EF migrations)
+          # echo "Running database migrations..."
+          # cd api
+          # /usr/bin/dotnet LegalConnect.API.dll --migrate
+          # cd ..
+
+          # Start API service
+          echo "Starting LegalConnect API..."
+          systemctl start legalconnect-api
+          sleep 3
+
+          # Verify service is running
+          if systemctl is-active --quiet legalconnect-api; then
+            echo "✓ LegalConnect API started successfully"
+          else
+            echo "✗ Failed to start LegalConnect API"
+            echo "Restoring from backup..."
+            systemctl stop legalconnect-api || true
+            rm -rf api
+            ls -t api.backup.* | head -1 | xargs -I {} cp -r {} api
+            systemctl start legalconnect-api
+            exit 1
+          fi
+
+          # Reload Nginx
+          echo "Reloading Nginx..."
+          nginx -t && systemctl reload nginx
+
+          echo "✓ Deployment completed successfully"
+      env:
+        API_ARTIFACT: ${{ github.workspace }}/api-publish
+        CLIENT_ARTIFACT: ${{ github.workspace }}/client-publish
+
+    - name: Notify deployment status
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: 'Deployment to Hostinger: ${{ job.status }}'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      continue-on-error: true
+
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    name: Verify Deployment
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Health check
+      run: |
+        echo "Checking API health..."
+        for i in {1..5}; do
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.yourdomain.com/api/health || echo "000")
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✓ API is healthy (HTTP $HTTP_STATUS)"
+            exit 0
+          else
+            echo "✗ API health check failed (HTTP $HTTP_STATUS). Attempt $i/5"
+            sleep 5
+          fi
+        done
+        echo "✗ API health check failed after 5 attempts"
+        exit 1
+
+    - name: Client check
+      run: |
+        echo "Checking Client availability..."
+        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://yourdomain.com/ || echo "000")
+        if [ "$HTTP_STATUS" = "200" ]; then
+          echo "✓ Client is available (HTTP $HTTP_STATUS)"
+        else
+          echo "✗ Client check failed (HTTP $HTTP_STATUS)"
+          exit 1
+        fi

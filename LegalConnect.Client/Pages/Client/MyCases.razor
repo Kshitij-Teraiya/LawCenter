@@ -1,0 +1,105 @@
+@page "/client/my-cases"
+@using LegalConnect.Client.Models.Cases
+@using LegalConnect.Client.Services
+@using LegalConnect.Client.Components
+@attribute [Authorize(Roles = "Client")]
+@inject ICaseService CaseService
+@inject NavigationManager Nav
+
+<PageTitle>My Cases — LegalConnect</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0"><i class="bi bi-folder2-open text-primary me-2"></i>My Cases</h2>
+            <p class="text-muted mb-0">Track your active and past legal cases</p>
+        </div>
+        <a href="/client/cases/create" class="btn btn-primary">
+            <i class="bi bi-folder-plus me-2"></i>New Case
+        </a>
+    </div>
+
+    <!-- Status Tabs -->
+    <ul class="nav nav-pills mb-4">
+        <li class="nav-item">
+            <button class="nav-link @(_statusFilter == null ? "active" : "")"
+                    @onclick="@(() => SetStatusFilter(null))">All</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(_statusFilter == CaseStatus.Open ? "active" : "")"
+                    @onclick="@(() => SetStatusFilter(CaseStatus.Open))">Open</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(_statusFilter == CaseStatus.InProgress ? "active" : "")"
+                    @onclick="@(() => SetStatusFilter(CaseStatus.InProgress))">In Progress</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(_statusFilter == CaseStatus.Closed ? "active" : "")"
+                    @onclick="@(() => SetStatusFilter(CaseStatus.Closed))">Closed</button>
+        </li>
+    </ul>
+
+    @if (_loading)
+    {
+        <LoadingSpinner Message="Loading your cases..." />
+    }
+    else if (_cases?.Items.Count == 0)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-folder display-1 text-muted"></i>
+            <h4 class="mt-3 text-muted">No cases found</h4>
+            <p class="text-muted">Your lawyer will create cases for you once work begins.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var c in _cases!.Items)
+            {
+                <div class="col-xl-4 col-lg-6">
+                    <CaseCard Case="c"
+                              OnViewDetails="@(() => Nav.NavigateTo($"/client/cases/{c.Id}"))"
+                              ShowEditDelete="false" />
+                </div>
+            }
+        </div>
+
+        @if (_cases!.TotalPages > 1)
+        {
+            <Pagination CurrentPage="_cases.PageNumber"
+                        TotalPages="_cases.TotalPages"
+                        OnPageChange="OnPageChange" />
+        }
+    }
+</div>
+
+@code {
+    private PagedResult<CaseSummaryDto>? _cases;
+    private CaseFilterDto _filter = new();
+    private CaseStatus? _statusFilter;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync() => await LoadCasesAsync();
+
+    private async Task SetStatusFilter(CaseStatus? status)
+    {
+        _statusFilter = status;
+        _filter.Status = status;
+        _filter.PageNumber = 1;
+        await LoadCasesAsync();
+    }
+
+    private async Task LoadCasesAsync()
+    {
+        _loading = true;
+        var resp = await CaseService.GetCasesAsync(_filter);
+        _cases = resp?.Data ?? new PagedResult<CaseSummaryDto>();
+        _loading = false;
+    }
+
+    private async Task OnPageChange(int page)
+    {
+        _filter.PageNumber = page;
+        await LoadCasesAsync();
+    }
+}

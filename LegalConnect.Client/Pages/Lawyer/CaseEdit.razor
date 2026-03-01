@@ -1,0 +1,153 @@
+@page "/lawyer/cases/{Id:int}/edit"
+@using LegalConnect.Client.Models.Cases
+@using LegalConnect.Client.Services
+@attribute [Authorize(Roles = "Lawyer")]
+@inject ICaseService CaseService
+@inject ToastService Toast
+@inject NavigationManager Nav
+
+<PageTitle>Edit Case — LegalConnect</PageTitle>
+
+<div class="container py-4" style="max-width: 800px;">
+    <div class="d-flex align-items-center mb-4">
+        <a href="/lawyer/cases/@Id" class="btn btn-outline-secondary btn-sm me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="mb-0"><i class="bi bi-pencil text-primary me-2"></i>Edit Case</h2>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><span class="spinner-border text-primary"></span></div>
+    }
+    else
+    {
+        <EditForm Model="_dto" OnValidSubmit="SubmitAsync">
+            <DataAnnotationsValidator />
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">Case Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Case Title <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="_dto.CaseTitle" />
+                            <ValidationMessage For="@(() => _dto.CaseTitle)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Case Number</label>
+                            <InputText class="form-control" @bind-Value="_dto.CaseNumber" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Case Type <span class="text-danger">*</span></label>
+                            <InputSelect class="form-select" @bind-Value="_dto.CaseType">
+                                <option value="">Select type...</option>
+                                <option>Criminal</option>
+                                <option>Civil</option>
+                                <option>Family</option>
+                                <option>Property</option>
+                                <option>Corporate</option>
+                                <option>Labour</option>
+                                <option>Constitutional</option>
+                                <option>Other</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => _dto.CaseType)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Court <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="_dto.Court" />
+                            <ValidationMessage For="@(() => _dto.Court)" class="text-danger small" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Status</label>
+                            <InputSelect class="form-select" @bind-Value="_dto.Status">
+                                <option value="@CaseStatus.Open">Open</option>
+                                <option value="@CaseStatus.InProgress">In Progress</option>
+                                <option value="@CaseStatus.OnHold">On Hold</option>
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Filing Date</label>
+                            <InputDate class="form-control" @bind-Value="_dto.FilingDate" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Next Hearing</label>
+                            <InputDate class="form-control" @bind-Value="_dto.NextHearingDate" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description <span class="text-danger">*</span></label>
+                            <InputTextArea class="form-control" rows="5" @bind-Value="_dto.Description" />
+                            <ValidationMessage For="@(() => _dto.Description)" class="text-danger small" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Outcome (optional)</label>
+                            <InputTextArea class="form-control" rows="3" @bind-Value="_dto.Outcome"
+                                           placeholder="Leave blank if case is still active" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_errorMsg))
+            {
+                <div class="alert alert-danger">@_errorMsg</div>
+            }
+
+            <div class="d-flex justify-content-end gap-2">
+                <a href="/lawyer/cases/@Id" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" disabled="@_submitting">
+                    @if (_submitting) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                    Save Changes
+                </button>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private UpdateCaseDto _dto = new();
+    private bool _loading = true;
+    private bool _submitting;
+    private string _errorMsg = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resp = await CaseService.GetCaseByIdAsync(Id);
+        if (resp?.Data != null)
+        {
+            var c = resp.Data;
+            _dto = new UpdateCaseDto
+            {
+                CaseTitle = c.CaseTitle,
+                CaseNumber = c.CaseNumber,
+                CaseType = c.CaseType,
+                Court = c.Court,
+                FilingDate = c.FilingDate,
+                NextHearingDate = c.NextHearingDate,
+                Status = c.Status,
+                Description = c.Description,
+                Outcome = c.Outcome
+            };
+        }
+        else Nav.NavigateTo("/lawyer/cases");
+        _loading = false;
+    }
+
+    private async Task SubmitAsync()
+    {
+        _errorMsg = "";
+        _submitting = true;
+        var resp = await CaseService.UpdateCaseAsync(Id, _dto);
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess("Case updated.");
+            Nav.NavigateTo($"/lawyer/cases/{Id}");
+        }
+        else _errorMsg = resp?.Message ?? "Failed to update.";
+        _submitting = false;
+    }
+}

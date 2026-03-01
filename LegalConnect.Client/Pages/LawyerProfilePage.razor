@@ -1,0 +1,408 @@
+@page "/lawyers/{Id:int}"
+@using LegalConnect.Client.Models.Deals
+@inject ILawyerService LawyerService
+@inject IDealService DealService
+@inject NavigationManager Navigation
+@inject IAuthService AuthService
+@inject ToastService Toast
+
+<PageTitle>@(_lawyer?.FullName ?? "Lawyer Profile") &mdash; LegalConnect</PageTitle>
+
+@if (_loading)
+{
+    <LoadingSpinner />
+}
+else if (_lawyer is null)
+{
+    <div class="container mt-5 text-center">
+        <h3 class="text-muted">Lawyer not found.</h3>
+        <a href="/lawyers" class="btn btn-primary mt-3">Browse Lawyers</a>
+    </div>
+}
+else
+{
+    <div class="container py-4">
+        <div class="row g-4">
+
+            <!-- ── Left Column ─────────────────────────────────────────── -->
+            <div class="col-lg-4">
+
+                <!-- Profile Card -->
+                <div class="lc-card text-center mb-4">
+                    <img src="@(_lawyer.ProfilePictureUrl ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(_lawyer.FullName)}&background=1a56db&color=fff&size=128")"
+                         alt="@_lawyer.FullName"
+                         class="rounded-circle mb-3 border border-3 border-primary"
+                         style="width:128px;height:128px;object-fit:cover;" />
+
+                    <h5 class="fw-bold mb-1">@_lawyer.FullName</h5>
+                    <p class="text-muted small mb-2">@_lawyer.Category?.Name</p>
+
+                    @if (_lawyer.IsVerified)
+                    {
+                        <span class="badge-verified mb-2">
+                            <i class="bi bi-patch-check-fill me-1"></i>Verified
+                        </span>
+                    }
+
+                    <div class="mt-2 mb-3">
+                        <RatingStars Rating="@_lawyer.AverageRating" ShowValue="true" />
+                        <span class="text-muted small">(@_lawyer.TotalReviews reviews)</span>
+                    </div>
+
+                    <div class="text-start lc-divider pt-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-geo-alt text-primary"></i>
+                            <span class="small">@_lawyer.City</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-building text-primary"></i>
+                            <span class="small">@_lawyer.Court</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-clock text-primary"></i>
+                            <span class="small">@_lawyer.YearsOfExperience years experience</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-card-text text-primary"></i>
+                            <span class="small">BN: @_lawyer.BarCouncilNumber</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Widget -->
+                <div class="lc-card">
+                    <h6 class="fw-bold mb-1">Consultation Fee</h6>
+                    <div class="text-primary fw-bold fs-4 mb-3">
+                        &#8377;@_lawyer.ConsultationFee.ToString("N0")
+                        <span class="text-muted small fw-normal">/ session</span>
+                    </div>
+
+                    @if (_lawyer.IsAvailable)
+                    {
+                        <AuthorizeView>
+                            <Authorized>
+                                <AuthorizeView Roles="Client" Context="clientCtx">
+                                    <div class="d-flex flex-column gap-2">
+                                        <a href="/book/@_lawyer.Id"
+                                           class="btn btn-primary w-100">
+                                            <i class="bi bi-calendar-plus me-2"></i>Book Appointment
+                                        </a>
+                                        @if (_existingRequest != null)
+                                        {
+                                            @if (_existingRequest.Status == "Inquiry")
+                                            {
+                                                <a href="/client/deals/@_existingRequest.Id"
+                                                   class="btn btn-warning w-100">
+                                                    <i class="bi bi-clock me-2"></i>Request Pending
+                                                </a>
+                                            }
+                                            else if (_existingRequest.Status == "ConvertedToCase")
+                                            {
+                                                <span class="btn btn-success w-100 disabled">
+                                                    <i class="bi bi-check-circle me-2"></i>Already Hired
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <a href="/client/deals/@_existingRequest.Id"
+                                                   class="btn btn-outline-primary w-100">
+                                                    <i class="bi bi-handshake me-2"></i>View Deal
+                                                </a>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-outline-primary w-100"
+                                                    @onclick="OpenHireModal">
+                                                <i class="bi bi-person-plus me-2"></i>Send Hire Request
+                                            </button>
+                                        }
+                                    </div>
+                                </AuthorizeView>
+                            </Authorized>
+                            <NotAuthorized>
+                                <a href="/login" class="btn btn-primary w-100">
+                                    <i class="bi bi-box-arrow-in-right me-2"></i>Login to Book
+                                </a>
+                            </NotAuthorized>
+                        </AuthorizeView>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary w-100" disabled>
+                            <i class="bi bi-calendar-x me-2"></i>Currently Unavailable
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- ── Right Column ────────────────────────────────────────── -->
+            <div class="col-lg-8">
+
+                <!-- Bio -->
+                @if (!string.IsNullOrWhiteSpace(_lawyer.Bio))
+                {
+                    <div class="lc-card mb-4">
+                        <h6 class="section-title">About</h6>
+                        <p class="text-muted mb-0">@_lawyer.Bio</p>
+                    </div>
+                }
+
+                <!-- Experience -->
+                @if (_lawyer.Experiences.Count > 0)
+                {
+                    <div class="lc-card mb-4">
+                        <h6 class="section-title">
+                            <i class="bi bi-briefcase me-2 text-primary"></i>Experience
+                        </h6>
+                        <div class="timeline">
+                            @foreach (var exp in _lawyer.Experiences.OrderByDescending(e => e.StartDate))
+                            {
+                                <div class="d-flex gap-3 mb-3 pb-3 border-bottom">
+                                    <div class="stat-icon bg-primary bg-opacity-10 text-primary flex-shrink-0"
+                                         style="width:40px;height:40px;border-radius:.5rem;font-size:1rem;">
+                                        <i class="bi bi-briefcase"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">@exp.Title</div>
+                                        <div class="text-muted small">@exp.Organization</div>
+                                        <div class="text-muted small">
+                                            @exp.StartDate.ToString("MMM yyyy") &mdash;
+                                            @(exp.IsCurrent ? "Present" : exp.EndDate?.ToString("MMM yyyy"))
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(exp.Description))
+                                        {
+                                            <p class="text-muted small mt-1 mb-0">@exp.Description</p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Case Results -->
+                @if (_lawyer.CaseResults.Count > 0)
+                {
+                    <div class="lc-card mb-4">
+                        <h6 class="section-title">
+                            <i class="bi bi-trophy me-2 text-primary"></i>Case Results
+                        </h6>
+                        <div class="row g-3">
+                            @foreach (var c in _lawyer.CaseResults.OrderByDescending(x => x.Year))
+                            {
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light rounded-3">
+                                        <div class="fw-semibold small">@c.CaseTitle</div>
+                                        <div class="text-muted small">@c.Court &middot; @c.Year</div>
+                                        <span class="badge @(c.Outcome == "Won" ? "bg-success" : "bg-secondary") mt-1">
+                                            @c.Outcome
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Certifications -->
+                @if (_lawyer.Certifications.Count > 0)
+                {
+                    <div class="lc-card mb-4">
+                        <h6 class="section-title">
+                            <i class="bi bi-award me-2 text-primary"></i>Certifications
+                        </h6>
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var cert in _lawyer.Certifications)
+                            {
+                                <li class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="bi bi-patch-check-fill text-success"></i>
+                                    <span>
+                                        <strong>@cert.Title</strong>
+                                        <span class="text-muted small ms-1">&mdash; @cert.IssuingOrganization (@cert.Year)</span>
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <!-- Publications -->
+                @if (_lawyer.Publications.Count > 0)
+                {
+                    <div class="lc-card mb-4">
+                        <h6 class="section-title">
+                            <i class="bi bi-journal-text me-2 text-primary"></i>Publications
+                        </h6>
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var pub in _lawyer.Publications)
+                            {
+                                <li class="mb-2">
+                                    <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                                    @if (!string.IsNullOrWhiteSpace(pub.Url))
+                                    {
+                                        <a href="@pub.Url" target="_blank">@pub.Title</a>
+                                    }
+                                    else
+                                    {
+                                        <span>@pub.Title</span>
+                                    }
+                                    <span class="text-muted small ms-1">&mdash; @pub.Publisher (@pub.Year)</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+
+                <!-- Reviews -->
+                @if (_lawyer.Reviews.Count > 0)
+                {
+                    <div class="lc-card">
+                        <h6 class="section-title">
+                            <i class="bi bi-chat-square-text me-2 text-primary"></i>Client Reviews
+                        </h6>
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var rev in _lawyer.Reviews.OrderByDescending(r => r.CreatedAt).Take(5))
+                            {
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-semibold small">@rev.ClientName</span>
+                                        <span class="text-muted small">@rev.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                    </div>
+                                    <RatingStars Rating="@rev.Rating" ShowValue="false" />
+                                    <p class="mb-0 mt-1 small text-secondary">@rev.Comment</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ── Hire Request Modal ────────────────────────────────────────────────── -->
+@if (_showHireModal && _lawyer != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus text-primary me-2"></i>Send Hire Request</h5>
+                    <button class="btn-close" @onclick="CloseHireModal" disabled="@_sending"></button>
+                </div>
+                <EditForm Model="_hireModel" OnValidSubmit="SendHireRequestAsync">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">
+                            Sending a hire request to <strong>@_lawyer.FullName</strong>.
+                            Describe your legal matter so the lawyer can evaluate.
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Case Type <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="_hireModel.CaseType"
+                                       placeholder="e.g. Criminal, Civil, Property..." />
+                            <ValidationMessage For="() => _hireModel.CaseType" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Court <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="_hireModel.Court"
+                                       placeholder="e.g. Delhi High Court, Supreme Court..." />
+                            <ValidationMessage For="() => _hireModel.Court" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                            <InputTextArea class="form-control" rows="4" @bind-Value="_hireModel.Description"
+                                           placeholder="Describe your legal matter in detail..." />
+                            <ValidationMessage For="() => _hireModel.Description" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Message <span class="text-muted">(optional)</span></label>
+                            <InputTextArea class="form-control" rows="2" @bind-Value="_hireModel.Message"
+                                           placeholder="Any additional message for the lawyer..." />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseHireModal" disabled="@_sending">Cancel</button>
+                        <button type="submit" class="btn btn-primary" disabled="@_sending">
+                            @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            <i class="bi bi-send me-1"></i>Send Request
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private LawyerDto? _lawyer;
+    private bool _loading = true;
+
+    // Hire request state
+    private HireRequestDto? _existingRequest;
+    private bool _showHireModal;
+    private CreateHireRequestDto _hireModel = new();
+    private bool _sending;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _lawyer = await LawyerService.GetLawyerByIdAsync(Id);
+        _loading = false;
+
+        // If logged-in client, check for existing hire request to this lawyer
+        try
+        {
+            var resp = await DealService.GetMyHireRequestsAsync();
+            if (resp is { Success: true, Data: not null })
+            {
+                _existingRequest = resp.Data
+                    .FirstOrDefault(r => r.LawyerProfileId == Id && r.Status != "Rejected");
+            }
+        }
+        catch
+        {
+            // Not logged in or not a Client role — ignore, buttons won't show
+        }
+    }
+
+    private void OpenHireModal()
+    {
+        _hireModel = new CreateHireRequestDto { LawyerProfileId = Id };
+        _showHireModal = true;
+    }
+
+    private void CloseHireModal()
+    {
+        _showHireModal = false;
+    }
+
+    private async Task SendHireRequestAsync()
+    {
+        _sending = true;
+        try
+        {
+            var resp = await DealService.CreateHireRequestAsync(_hireModel);
+            if (resp is { Success: true, Data: not null })
+            {
+                Toast.ShowSuccess("Hire request sent successfully!");
+                _existingRequest = resp.Data;
+                _showHireModal = false;
+            }
+            else
+            {
+                Toast.ShowError(resp?.Message ?? "Failed to send request.");
+            }
+        }
+        catch
+        {
+            Toast.ShowError("An error occurred while sending the request.");
+        }
+        finally
+        {
+            _sending = false;
+        }
+    }
+}

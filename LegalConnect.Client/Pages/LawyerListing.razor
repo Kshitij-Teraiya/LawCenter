@@ -1,0 +1,249 @@
+@page "/lawyers"
+@inject ILawyerService LawyerService
+@inject NavigationManager Navigation
+
+<PageTitle>Find Lawyers – LegalConnect</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="row g-4">
+
+        <!-- ── Filters Sidebar ─────────────────────────────────────────────── -->
+        <div class="col-lg-3">
+            <div class="lc-card sticky-top" style="top:80px;">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-funnel me-2 text-primary"></i>Filters
+                </h6>
+
+                <!-- Search -->
+                <div class="mb-3">
+                    <input class="form-control form-control-sm"
+                           placeholder="Name or keyword…"
+                           @bind="_filter.SearchTerm"
+                           @bind:event="oninput"
+                           @onkeydown="OnSearchKeyDown" />
+                </div>
+
+                <!-- Category -->
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Specialization</label>
+                    <select class="form-select form-select-sm"
+                            @bind="_filter.CategoryId"
+                            @bind:after="ApplyFilters">
+                        <option value="">All Areas</option>
+                        @foreach (var c in _categories)
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- City -->
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">City</label>
+                    <select class="form-select form-select-sm"
+                            @bind="_filter.City"
+                            @bind:after="ApplyFilters">
+                        <option value="">All Cities</option>
+                        @foreach (var city in _cities)
+                        {
+                            <option value="@city">@city</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Court -->
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Court</label>
+                    <select class="form-select form-select-sm"
+                            @bind="_filter.Court"
+                            @bind:after="ApplyFilters">
+                        <option value="">All Courts</option>
+                        @foreach (var court in _courts)
+                        {
+                            <option value="@court">@court</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Experience Range -->
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">
+                        Experience: @_filter.MinExperience – @_filter.MaxExperience yrs
+                    </label>
+                    <div class="d-flex gap-2">
+                        <input type="number" class="form-control form-control-sm"
+                               @bind="_filter.MinExperience" min="0" max="50" placeholder="Min" />
+                        <input type="number" class="form-control form-control-sm"
+                               @bind="_filter.MaxExperience" min="0" max="50" placeholder="Max" />
+                    </div>
+                </div>
+
+                <!-- Fee Range -->
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Consultation Fee (৳)</label>
+                    <div class="d-flex gap-2">
+                        <input type="number" class="form-control form-control-sm"
+                               @bind="_filter.MinFee" min="0" placeholder="Min" />
+                        <input type="number" class="form-control form-control-sm"
+                               @bind="_filter.MaxFee" min="0" placeholder="Max" />
+                    </div>
+                </div>
+
+                <!-- Rating -->
+                <div class="mb-3">
+                    <label class="form-label fw-medium small">Minimum Rating</label>
+                    <select class="form-select form-select-sm" @bind="_filter.MinRating" @bind:after="ApplyFilters">
+                        <option value="">Any</option>
+                        <option value="4">4+ ★</option>
+                        <option value="3">3+ ★</option>
+                        <option value="2">2+ ★</option>
+                    </select>
+                </div>
+
+                <!-- Verified -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="verifiedOnly"
+                           @bind="_verifiedOnly"
+                           @bind:after="OnVerifiedChanged" />
+                    <label class="form-check-label small" for="verifiedOnly">
+                        Verified lawyers only
+                    </label>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary btn-sm flex-grow-1" @onclick="ApplyFilters">
+                        Apply
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" @onclick="ResetFilters">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Results ────────────────────────────────────────────────────── -->
+        <div class="col-lg-9">
+
+            <!-- Sort bar -->
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <span class="text-muted small">
+                    @(_result?.TotalCount.ToString("N0") ?? "0") lawyers found
+                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small fw-medium">Sort by:</span>
+                    <select class="form-select form-select-sm" style="width:auto;"
+                            @bind="_filter.SortBy" @bind:after="ApplyFilters">
+                        <option value="rating">Highest Rated</option>
+                        <option value="fee">Lowest Fee</option>
+                        <option value="experience">Most Experienced</option>
+                        <option value="name">Name A–Z</option>
+                    </select>
+                </div>
+            </div>
+
+            @if (_loading)
+            {
+                <LoadingSpinner Message="Searching for lawyers…" />
+            }
+            else if (_result?.Items.Count == 0)
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-search text-muted" style="font-size:3rem;"></i>
+                    <h5 class="mt-3">No lawyers found</h5>
+                    <p class="text-muted">Try adjusting your filters.</p>
+                    <button class="btn btn-outline-primary" @onclick="ResetFilters">
+                        Clear Filters
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var lawyer in _result?.Items ?? [])
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <LawyerCard Lawyer="@lawyer" />
+                        </div>
+                    }
+                </div>
+
+                @if (_result is { TotalPages: > 1 })
+                {
+                    <div class="mt-5">
+                        <Pagination CurrentPage="_result.PageNumber"
+                                    TotalPages="_result.TotalPages"
+                                    TotalItems="_result.TotalCount"
+                                    OnPageChanged="OnPageChanged" />
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery] private string? Search     { get; set; }
+    [SupplyParameterFromQuery] private int?   CategoryId  { get; set; }
+
+    private LawyerFilterDto _filter = new();
+    private PagedResult<LawyerSummaryDto>? _result;
+    private List<CategoryDto> _categories = [];
+    private List<string> _cities = [];
+    private List<string> _courts = [];
+    private bool _loading = true;
+    private bool _verifiedOnly;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Apply any query parameters
+        if (!string.IsNullOrWhiteSpace(Search)) _filter.SearchTerm = Search;
+        if (CategoryId.HasValue) _filter.CategoryId = CategoryId;
+
+        var metaTask  = Task.WhenAll(
+            LoadCategories(), LoadCities(), LoadCourts());
+        var lawTask   = LoadLawyers();
+
+        await Task.WhenAll(metaTask, lawTask);
+    }
+
+    private async Task LoadCategories() => _categories = await LawyerService.GetCategoriesAsync();
+    private async Task LoadCities()     => _cities     = await LawyerService.GetCitiesAsync();
+    private async Task LoadCourts()     => _courts     = await LawyerService.GetCourtsAsync();
+
+    private async Task LoadLawyers()
+    {
+        _loading = true;
+        _result  = await LawyerService.GetLawyersAsync(_filter);
+        _loading = false;
+    }
+
+    private async Task ApplyFilters()
+    {
+        _filter.PageNumber = 1;
+        await LoadLawyers();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _filter.PageNumber = page;
+        await LoadLawyers();
+    }
+
+    private async Task ResetFilters()
+    {
+        _filter      = new LawyerFilterDto();
+        _verifiedOnly = false;
+        await LoadLawyers();
+    }
+
+    private async Task OnVerifiedChanged()
+    {
+        _filter.IsVerified = _verifiedOnly ? true : null;
+        await ApplyFilters();
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await ApplyFilters();
+    }
+}

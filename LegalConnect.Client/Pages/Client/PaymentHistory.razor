@@ -1,0 +1,107 @@
+@page "/client/payments"
+@attribute [Authorize(Roles = "Client")]
+@inject IAppointmentService AppointmentService
+
+<PageTitle>Payment History – LegalConnect</PageTitle>
+
+<div class="container-fluid">
+    <h4 class="fw-bold mb-4">Payment History</h4>
+
+    @if (_loading)
+    {
+        <LoadingSpinner />
+    }
+    else
+    {
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">@_totalTransactions</div>
+                        <div class="stat-label">Total Transactions</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">৳@_totalSpent.ToString("N0")</div>
+                        <div class="stat-label">Total Spent</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="lc-card">
+            @if (_payments.Count == 0)
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-receipt-cutoff" style="font-size:2.5rem;"></i>
+                    <p class="mt-2">No payment records found.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Lawyer</th>
+                                <th>Date</th>
+                                <th>Consultation</th>
+                                <th>Platform Fee</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var appt in _payments)
+                            {
+                                <tr>
+                                    <td class="text-muted">@appt.Id</td>
+                                    <td>@appt.LawyerName</td>
+                                    <td>@appt.AppointmentDate.ToString("MMM dd, yyyy")</td>
+                                    <td>৳@appt.ConsultationFee.ToString("N2")</td>
+                                    <td class="text-muted">৳@appt.PlatformCommission.ToString("N2")</td>
+                                    <td class="fw-semibold">৳@appt.TotalAmount.ToString("N2")</td>
+                                    <td>
+                                        <span class="badge @(appt.Status == AppointmentStatus.Completed ? "bg-success" : "bg-secondary")">
+                                            @appt.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<AppointmentDto> _payments = [];
+    private int _totalTransactions;
+    private decimal _totalSpent;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await AppointmentService.GetMyAppointmentsAsync(1, 100);
+        _payments = (result?.Items ?? [])
+            .Where(a => a.Status == AppointmentStatus.Completed)
+            .ToList();
+        _totalTransactions = _payments.Count;
+        _totalSpent        = _payments.Sum(p => p.TotalAmount);
+        _loading           = false;
+    }
+}

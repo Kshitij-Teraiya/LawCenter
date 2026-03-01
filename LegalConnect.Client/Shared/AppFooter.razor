@@ -1,0 +1,20 @@
+@code {
+    [Parameter] public bool IsSidebarVisible { get; set; }
+}
+
+<footer class="lc-footer @(IsSidebarVisible ? "" : "no-sidebar")">
+    <div class="container-fluid px-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <div>
+                <i class="bi bi-briefcase-fill me-1 text-primary"></i>
+                <strong class="text-white">LegalConnect</strong>
+                <span class="ms-2">© @DateTime.Now.Year All rights reserved.</span>
+            </div>
+            <div class="d-flex gap-3">
+                <a href="/privacy">Privacy</a>
+                <a href="/terms">Terms</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </div>
+</footer>

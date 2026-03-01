@@ -1,0 +1,168 @@
+@page "/admin/categories"
+@attribute [Authorize(Roles = "Admin")]
+@inject IAdminService AdminService
+@inject ToastService Toast
+
+<PageTitle>Manage Categories – LegalConnect</PageTitle>
+
+<div class="container-fluid" style="max-width:860px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">
+            <i class="bi bi-tags me-2 text-primary"></i>Practice Area Categories
+        </h4>
+        <button class="btn btn-primary btn-sm"
+                @onclick="() => { _editMode = false; _form = new(); _showForm = true; }">
+            <i class="bi bi-plus-lg me-1"></i>Add Category
+        </button>
+    </div>
+
+    <!-- Add/Edit Form -->
+    @if (_showForm)
+    {
+        <div class="lc-card mb-4">
+            <h6 class="fw-bold mb-3">@(_editMode ? "Edit Category" : "New Category")</h6>
+            <EditForm Model="@_form" OnValidSubmit="SaveCategory">
+                <DataAnnotationsValidator />
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Name</label>
+                        <InputText @bind-Value="_form.Name" class="form-control" />
+                        <ValidationMessage For="@(() => _form.Name)" class="text-danger small" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Icon (Bootstrap Icons class)</label>
+                        <InputText @bind-Value="_form.IconClass" class="form-control"
+                                   placeholder="bi bi-briefcase" />
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        @if (!string.IsNullOrWhiteSpace(_form.IconClass))
+                        {
+                            <span class="text-primary fs-4 me-2"><i class="@_form.IconClass"></i></span>
+                        }
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Description</label>
+                        <InputTextArea @bind-Value="_form.Description" class="form-control" rows="2" />
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary" disabled="@_saving">
+                        @if (_saving) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                        @(_editMode ? "Update" : "Create")
+                    </button>
+                    <button type="button" class="btn btn-secondary"
+                            @onclick="() => _showForm = false">Cancel</button>
+                </div>
+            </EditForm>
+        </div>
+    }
+
+    @if (_loading)
+    {
+        <LoadingSpinner />
+    }
+    else
+    {
+        <div class="lc-card">
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Icon</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Lawyers</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var cat in _categories)
+                        {
+                            var c = cat;
+                            <tr>
+                                <td><i class="@(cat.IconClass ?? "bi bi-briefcase") fs-5 text-primary"></i></td>
+                                <td class="fw-semibold">@cat.Name</td>
+                                <td class="text-muted small">@cat.Description</td>
+                                <td>@cat.LawyerCount</td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                @onclick="() => EditCategory(c)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                @onclick="() => { _toDelete = c; _deleteModal?.Show(); }">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+<ConfirmationModal @ref="_deleteModal"
+                   Title="Delete Category"
+                   Message="@($"Delete '{_toDelete?.Name}'? Lawyers in this category will be uncategorized.")"
+                   ConfirmText="Delete"
+                   ConfirmButtonClass="btn-danger"
+                   OnConfirmed="ConfirmDelete" />
+
+@code {
+    private List<CategoryDto> _categories = [];
+    private UpdateCategoryDto _form = new();
+    private CategoryDto? _toDelete;
+    private ConfirmationModal? _deleteModal;
+    private bool _loading = true;
+    private bool _saving;
+    private bool _showForm;
+    private bool _editMode;
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load()
+    {
+        _loading    = true;
+        _categories = await AdminService.GetAllCategoriesAsync();
+        _loading    = false;
+    }
+
+    private void EditCategory(CategoryDto cat)
+    {
+        _editMode = true;
+        _form = new UpdateCategoryDto
+        {
+            Id = cat.Id, Name = cat.Name,
+            Description = cat.Description, IconClass = cat.IconClass
+        };
+        _showForm = true;
+    }
+
+    private async Task SaveCategory()
+    {
+        _saving = true;
+        (bool ok, string? err) result;
+
+        if (_editMode)
+            result = await AdminService.UpdateCategoryAsync(_form);
+        else
+            result = await AdminService.CreateCategoryAsync(_form);
+
+        if (result.ok) { Toast.ShowSuccess("Category saved!"); _showForm = false; await Load(); }
+        else            Toast.ShowError(result.err ?? "Failed.");
+        _saving = false;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_toDelete is null) return;
+        var (ok, err) = await AdminService.DeleteCategoryAsync(_toDelete.Id);
+        if (ok) { Toast.ShowSuccess("Category deleted."); await Load(); }
+        else     Toast.ShowError(err ?? "Failed.");
+        _toDelete = null;
+    }
+}

@@ -1,0 +1,298 @@
+@page "/lawyer/cases/{Id:int}"
+@using LegalConnect.Client.Models.Cases
+@using LegalConnect.Client.Services
+@using LegalConnect.Client.Components
+@attribute [Authorize(Roles = "Lawyer")]
+@inject ICaseService CaseService
+@inject ToastService Toast
+@inject NavigationManager Nav
+
+<PageTitle>Case Details — LegalConnect</PageTitle>
+
+@if (_loading)
+{
+    <div class="container py-5"><LoadingSpinner Message="Loading case..." /></div>
+}
+else if (_case == null)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-folder-x display-1 text-muted"></i>
+        <h4 class="mt-3">Case not found</h4>
+        <a href="/lawyer/cases" class="btn btn-primary mt-2">Back to Cases</a>
+    </div>
+}
+else
+{
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+            <div class="d-flex align-items-center">
+                <a href="/lawyer/cases" class="btn btn-outline-secondary btn-sm me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h2 class="mb-0">@_case.CaseTitle</h2>
+                        <span class="@_case.StatusBadgeClass fs-6">@_case.Status</span>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        @if (!string.IsNullOrEmpty(_case.CaseNumber))
+                        {
+                            <span class="me-3"><i class="bi bi-hash me-1"></i>@_case.CaseNumber</span>
+                        }
+                        <span class="me-3"><i class="bi bi-building me-1"></i>@_case.Court</span>
+                        <span><i class="bi bi-tag me-1"></i>@_case.CaseType</span>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                @if (_case.Status != CaseStatus.Closed)
+                {
+                    <a href="/lawyer/cases/@Id/edit" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </a>
+                    <button class="btn btn-success btn-sm" @onclick="() => _showCloseModal = true">
+                        <i class="bi bi-folder-check me-1"></i>Close Case
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column: Case Info + Documents -->
+            <div class="col-lg-4">
+                <!-- Case Info Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Case Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-5 text-muted small">Client</dt>
+                            <dd class="col-7">@_case.ClientName</dd>
+                            <dt class="col-5 text-muted small">Lawyer</dt>
+                            <dd class="col-7">@_case.LawyerName</dd>
+                            @if (_case.FilingDate.HasValue)
+                            {
+                                <dt class="col-5 text-muted small">Filed</dt>
+                                <dd class="col-7">@_case.FilingDate.Value.ToString("d MMM yyyy")</dd>
+                            }
+                            @if (_case.NextHearingDate.HasValue)
+                            {
+                                <dt class="col-5 text-muted small">Next Hearing</dt>
+                                <dd class="col-7 @(_case.NextHearingDate < DateTime.Today ? "text-danger fw-bold" : "text-success")">
+                                    @_case.NextHearingDate.Value.ToString("d MMM yyyy")
+                                </dd>
+                            }
+                            <dt class="col-5 text-muted small">Created</dt>
+                            <dd class="col-7">@_case.CreatedDate.ToString("d MMM yyyy")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-card-text me-2"></i>Description</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0" style="white-space: pre-wrap;">@_case.Description</p>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_case.Outcome))
+                {
+                    <div class="card shadow-sm mb-4 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="bi bi-trophy me-2"></i>Outcome</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0" style="white-space: pre-wrap;">@_case.Outcome</p>
+                        </div>
+                    </div>
+                }
+
+                <!-- Documents Card -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-folder2 me-2"></i>Documents (@_case.DocumentCount)</h6>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="() => _showUploadModal = true">
+                            <i class="bi bi-upload me-1"></i>Upload
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (!_case.Documents.Any())
+                        {
+                            <div class="text-center py-3 text-muted small">No documents yet</div>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var doc in _case.Documents)
+                                {
+                                    <li class="list-group-item d-flex align-items-center gap-2 py-2">
+                                        <i class="@doc.FileIcon fs-5"></i>
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <div class="text-truncate small fw-medium">@doc.FileName</div>
+                                            <div class="text-muted" style="font-size:.75rem">
+                                                @doc.FileSizeDisplay · @doc.DocumentType
+                                                @if (doc.IsPrivate) { <span class="badge bg-warning text-dark ms-1">Private</span> }
+                                            </div>
+                                        </div>
+                                        <a href="/api/case-documents/@doc.Id/download" target="_blank"
+                                           class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Timeline + Add Activity -->
+            <div class="col-lg-8">
+                <!-- Add Activity -->
+                @if (_case.Status != CaseStatus.Closed)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Add Activity</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <select class="form-select form-select-sm" @bind="_newActivity.ActivityType">
+                                        <option value="@ActivityType.Note">Note</option>
+                                        <option value="@ActivityType.Hearing">Hearing</option>
+                                        <option value="@ActivityType.StatusChange">Status Change</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea class="form-control form-control-sm" rows="2"
+                                              placeholder="Describe the activity..."
+                                              @bind="_newActivity.Description"></textarea>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button class="btn btn-sm btn-primary" @onclick="AddActivityAsync"
+                                            disabled="@(string.IsNullOrWhiteSpace(_newActivity.Description))">
+                                        <i class="bi bi-plus me-1"></i>Add to Timeline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Timeline -->
+                <CaseTimeline Activities="_activities" IsLoading="_loadingActivities" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Close Case Modal -->
+    @if (_showCloseModal)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-folder-check me-2"></i>Close Case</h5>
+                        <button type="button" class="btn-close" @onclick="() => _showCloseModal = false"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted">Closing a case is final. Please provide the outcome.</p>
+                        <label class="form-label">Outcome / Resolution <span class="text-danger">*</span></label>
+                        <textarea class="form-control" rows="4" @bind="_closeDto.Outcome"
+                                  placeholder="Describe the final outcome of this case..."></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="() => _showCloseModal = false">Cancel</button>
+                        <button class="btn btn-success" @onclick="CloseCaseAsync"
+                                disabled="@(string.IsNullOrWhiteSpace(_closeDto.Outcome) || _closing)">
+                            @if (_closing) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            Close Case
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Upload Modal -->
+    @if (_showUploadModal)
+    {
+        <DocumentUploadComponent CaseId="Id"
+                                 IsLawyer="true"
+                                 OnUploadSuccess="OnDocumentUploaded"
+                                 OnClose="() => _showUploadModal = false" />
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CaseDto? _case;
+    private List<CaseActivityDto> _activities = [];
+    private bool _loading = true;
+    private bool _loadingActivities = true;
+    private bool _showCloseModal;
+    private bool _showUploadModal;
+    private bool _closing;
+    private CloseCaseDto _closeDto = new();
+    private AddCaseActivityDto _newActivity = new() { ActivityType = ActivityType.Note };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadCaseAsync(), LoadActivitiesAsync());
+    }
+
+    private async Task LoadCaseAsync()
+    {
+        _loading = true;
+        var resp = await CaseService.GetCaseByIdAsync(Id);
+        _case = resp?.Data;
+        _loading = false;
+    }
+
+    private async Task LoadActivitiesAsync()
+    {
+        _loadingActivities = true;
+        var resp = await CaseService.GetActivitiesAsync(Id);
+        _activities = resp?.Data ?? [];
+        _loadingActivities = false;
+    }
+
+    private async Task AddActivityAsync()
+    {
+        var resp = await CaseService.AddActivityAsync(Id, _newActivity);
+        if (resp?.Success == true)
+        {
+            _newActivity = new AddCaseActivityDto { ActivityType = ActivityType.Note };
+            await LoadActivitiesAsync();
+        }
+        else Toast.ShowError(resp?.Message ?? "Failed.");
+    }
+
+    private async Task CloseCaseAsync()
+    {
+        _closing = true;
+        var resp = await CaseService.CloseCaseAsync(Id, _closeDto);
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess("Case closed successfully.");
+            _showCloseModal = false;
+            await LoadCaseAsync();
+            await LoadActivitiesAsync();
+        }
+        else Toast.ShowError(resp?.Message ?? "Failed.");
+        _closing = false;
+    }
+
+    private async Task OnDocumentUploaded()
+    {
+        _showUploadModal = false;
+        await LoadCaseAsync();
+    }
+}

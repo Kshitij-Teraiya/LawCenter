@@ -1,0 +1,79 @@
+<nav class="lc-pagination" aria-label="Pagination">
+    <ul class="pagination mb-0 flex-wrap justify-content-center">
+
+        <!-- Previous -->
+        <li class="page-item @(CurrentPage <= 1 ? "disabled" : "")">
+            <button class="page-link" @onclick="() => GoTo(CurrentPage - 1)"
+                    disabled="@(CurrentPage <= 1)">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </li>
+
+        <!-- Page numbers -->
+        @foreach (var page in GetPageNumbers())
+        {
+            if (page == -1)
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">…</span>
+                </li>
+            }
+            else
+            {
+                int p = page;
+                <li class="page-item @(p == CurrentPage ? "active" : "")">
+                    <button class="page-link" @onclick="() => GoTo(p)">@p</button>
+                </li>
+            }
+        }
+
+        <!-- Next -->
+        <li class="page-item @(CurrentPage >= TotalPages ? "disabled" : "")">
+            <button class="page-link" @onclick="() => GoTo(CurrentPage + 1)"
+                    disabled="@(CurrentPage >= TotalPages)">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </li>
+    </ul>
+
+    @if (ShowSummary)
+    {
+        <p class="text-muted small text-center mt-2 mb-0">
+            Page @CurrentPage of @TotalPages
+            (@TotalItems.ToString("N0") results)
+        </p>
+    }
+</nav>
+
+@code {
+    [Parameter] public int  CurrentPage { get; set; } = 1;
+    [Parameter] public int  TotalPages  { get; set; } = 1;
+    [Parameter] public int  TotalItems  { get; set; }
+    [Parameter] public bool ShowSummary { get; set; } = true;
+    [Parameter] public EventCallback<int> OnPageChanged { get; set; }
+
+    private async Task GoTo(int page)
+    {
+        if (page < 1 || page > TotalPages || page == CurrentPage) return;
+        await OnPageChanged.InvokeAsync(page);
+    }
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        // Always show first, last, and pages around current
+        var pages = new SortedSet<int>();
+        pages.Add(1);
+        pages.Add(TotalPages);
+        for (int i = Math.Max(1, CurrentPage - 2); i <= Math.Min(TotalPages, CurrentPage + 2); i++)
+            pages.Add(i);
+
+        int prev = 0;
+        foreach (var page in pages)
+        {
+            if (prev > 0 && page - prev > 1)
+                yield return -1; // ellipsis
+            yield return page;
+            prev = page;
+        }
+    }
+}

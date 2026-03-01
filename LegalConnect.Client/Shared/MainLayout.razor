@@ -1,0 +1,130 @@
+@inherits LayoutComponentBase
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject ToastService Toast
+
+<div class="lc-layout">
+    <!-- Top Navbar -->
+    <nav class="lc-navbar">
+        <button class="btn btn-link d-md-none me-2 p-0 text-secondary"
+                @onclick="ToggleSidebar" aria-label="Toggle menu">
+            <i class="bi bi-list fs-4"></i>
+        </button>
+
+        <a href="/" class="lc-brand">
+            <img src="image/logo.jpeg" alt="LegalConnect" class="lc-brand-logo" />
+        </a>
+
+        <div class="ms-auto d-flex align-items-center gap-3">
+            <!-- Public nav links (non-auth) -->
+            <AuthorizeView>
+                <NotAuthorized>
+                    <a href="/lawyers" class="d-none d-md-inline text-secondary fw-500">
+                        Find Lawyers
+                    </a>
+                    <a href="/login" class="btn btn-outline-primary btn-sm">Login</a>
+                    <a href="/register-client" class="btn btn-primary btn-sm">Sign Up</a>
+                </NotAuthorized>
+
+                <Authorized>
+                    <!-- Role Badge -->
+                    <AuthorizeView Roles="Admin" Context="badgeAdminCtx">
+                        <span class="badge-role admin">Admin</span>
+                    </AuthorizeView>
+                    <AuthorizeView Roles="Lawyer" Context="badgeLawyerCtx">
+                        <span class="badge-role lawyer">Lawyer</span>
+                    </AuthorizeView>
+                    <AuthorizeView Roles="Client" Context="badgeClientCtx">
+                        <span class="badge-role client">Client</span>
+                    </AuthorizeView>
+
+                    <!-- User Menu Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-link text-secondary p-0 dropdown-toggle"
+                                type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle fs-5"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <AuthorizeView Roles="Client" Context="menuClientCtx">
+                                <li><a class="dropdown-item" href="/client/dashboard">
+                                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                                </a></li>
+                                <li><a class="dropdown-item" href="/client/appointments">
+                                    <i class="bi bi-calendar-check me-2"></i>My Appointments
+                                </a></li>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="Lawyer" Context="menuLawyerCtx">
+                                <li><a class="dropdown-item" href="/lawyer/dashboard">
+                                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                                </a></li>
+                                <li><a class="dropdown-item" href="/lawyer/profile">
+                                    <i class="bi bi-person-badge me-2"></i>My Profile
+                                </a></li>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="Admin" Context="menuAdminCtx">
+                                <li><a class="dropdown-item" href="/admin/dashboard">
+                                    <i class="bi bi-gear me-2"></i>Admin Panel
+                                </a></li>
+                            </AuthorizeView>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <button class="dropdown-item text-danger" @onclick="HandleLogout">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </nav>
+
+    <div class="lc-body">
+        <!-- Sidebar -->
+        <AuthorizeView>
+            <Authorized>
+                <aside class="lc-sidebar @(_sidebarOpen ? "show" : "")" id="lc-sidebar">
+                    <NavMenu />
+                </aside>
+
+                <!-- Overlay for mobile -->
+                @if (_sidebarOpen)
+                {
+                    <div class="position-fixed top-0 start-0 w-100 h-100 d-md-none"
+                         style="background:rgba(0,0,0,.4);z-index:1019;"
+                         @onclick="ToggleSidebar"></div>
+                }
+            </Authorized>
+        </AuthorizeView>
+
+        <!-- Main content area -->
+        <main class="lc-main-content @(IsAuthenticated ? "" : "no-sidebar")">
+            @Body
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <AppFooter IsSidebarVisible="@IsAuthenticated" />
+
+    <!-- Global Toast container -->
+    <ToastContainer />
+</div>
+
+<!-- Sidebar backdrop click dismiss on mobile -->
+@code {
+    private bool _sidebarOpen;
+    private bool IsAuthenticated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsAuthenticated = await AuthService.IsAuthenticatedAsync();
+    }
+
+    private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}

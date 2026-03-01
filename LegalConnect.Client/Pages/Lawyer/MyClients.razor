@@ -1,0 +1,311 @@
+@page "/lawyer/my-clients"
+@using LegalConnect.Client.Models.Cases
+@using LegalConnect.Client.Services
+@using LegalConnect.Client.Components
+@attribute [Authorize(Roles = "Lawyer")]
+@inject ILawyerClientService LawyerClientService
+@inject ToastService Toast
+@inject NavigationManager Nav
+
+<PageTitle>My Clients — LegalConnect</PageTitle>
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0"><i class="bi bi-people-fill text-primary me-2"></i>My Clients</h2>
+            <p class="text-muted mb-0">Manage your client relationships</p>
+        </div>
+        <button class="btn btn-primary" @onclick="OpenAddModal">
+            <i class="bi bi-person-plus me-2"></i>Add Client
+        </button>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input class="form-control" placeholder="Search by name, email or phone..."
+                               @bind="_filter.SearchTerm" @bind:event="oninput" @onkeyup="OnSearchKeyUp" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" @bind="_statusFilter">
+                        <option value="">All Clients</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" @bind="_filter.SortBy">
+                        <option value="addedDate">Date Added</option>
+                        <option value="name">Name</option>
+                        <option value="cases">Cases</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary w-100" @onclick="LoadClientsAsync">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    @if (_loading)
+    {
+        <LoadingSpinner Message="Loading clients..." />
+    }
+    else if (_clients?.Items.Count == 0)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-people display-1 text-muted"></i>
+            <h4 class="mt-3 text-muted">No clients yet</h4>
+            <p class="text-muted">Add clients from completed appointments to start managing them.</p>
+            <button class="btn btn-primary" @onclick="OpenAddModal">
+                <i class="bi bi-person-plus me-2"></i>Add First Client
+            </button>
+        </div>
+    }
+    else
+    {
+        <!-- Client Grid -->
+        <div class="row g-4">
+            @foreach (var client in _clients!.Items)
+            {
+                <div class="col-xl-4 col-lg-6">
+                    <ClientCard Client="client"
+                                OnViewDetails="@(() => Nav.NavigateTo($"/lawyer/my-clients/{client.Id}"))"
+                                OnViewCases="@(() => Nav.NavigateTo($"/lawyer/cases?clientId={client.ClientProfileId}"))"
+                                OnEditNotes="@(() => OpenEditNotesModal(client))"
+                                OnRemove="@(() => ConfirmRemove(client))" />
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (_clients!.TotalPages > 1)
+        {
+            <Pagination CurrentPage="_clients.PageNumber"
+                        TotalPages="_clients.TotalPages"
+                        OnPageChange="OnPageChange" />
+        }
+    }
+</div>
+
+<!-- Add Client Modal -->
+@if (_showAddModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add Client</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showAddModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (_eligibleClients == null)
+                    {
+                        <LoadingSpinner Message="Loading eligible clients..." />
+                    }
+                    else if (_eligibleClients.Count == 0)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-calendar-x display-4 text-muted"></i>
+                            <p class="mt-3 text-muted">No eligible clients found. Complete appointments first.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Select a client from your completed appointments:</p>
+                        @foreach (var ec in _eligibleClients)
+                        {
+                            <div class="d-flex align-items-center p-3 border rounded mb-2 @(ec.AlreadyAdded ? "opacity-50" : "")">
+                                <div class="avatar-circle me-3">
+                                    @ec.ClientFullName.Substring(0, 1).ToUpper()
+                                </div>
+                                <div class="flex-grow-1">
+                                    <strong>@ec.ClientFullName</strong>
+                                    <div class="text-muted small">@ec.ClientEmail | @ec.AppointmentDate.ToString("MMM d, yyyy")</div>
+                                </div>
+                                @if (ec.AlreadyAdded)
+                                {
+                                    <span class="badge bg-success">Added</span>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-primary"
+                                            @onclick="@(() => AddClientAsync(ec))"
+                                            disabled="@_adding">
+                                        <i class="bi bi-plus me-1"></i>Add
+                                    </button>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => _showAddModal = false">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Edit Notes Modal -->
+@if (_editNotesClient != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Notes — @_editNotesClient.ClientFullName</h5>
+                    <button type="button" class="btn-close" @onclick="() => _editNotesClient = null"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Private Notes</label>
+                        <textarea class="form-control" rows="5" @bind="_editNotesDto.Notes"
+                                  placeholder="Add private notes about this client..."></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @bind="_editNotesDto.IsActive" id="isActive" />
+                        <label class="form-check-label" for="isActive">Active Client</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="() => _editNotesClient = null">Cancel</button>
+                    <button class="btn btn-primary" @onclick="SaveNotesAsync" disabled="@_saving">
+                        @if (_saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                        Save Notes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Remove Confirm Modal -->
+@if (_removeClient != null)
+{
+    <ConfirmationModal Title="Remove Client"
+                       Message="@($"Remove {_removeClient.ClientFullName} from your client list?")"
+                       ConfirmText="Remove"
+                       ConfirmClass="btn-danger"
+                       OnConfirm="ExecuteRemoveAsync"
+                       OnCancel="@(() => _removeClient = null)" />
+}
+
+<style>
+    .avatar-circle {
+        width: 42px; height: 42px;
+        background: var(--lc-primary, #0d6efd);
+        color: white; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 1.1rem;
+    }
+</style>
+
+@code {
+    private PagedResult<LawyerClientDto>? _clients;
+    private List<EligibleClientDto>? _eligibleClients;
+    private LawyerClientFilterDto _filter = new();
+    private bool _loading = true;
+    private bool _showAddModal;
+    private bool _adding;
+    private bool _saving;
+    private string _statusFilter = "";
+    private LawyerClientDto? _editNotesClient;
+    private UpdateLawyerClientNotesDto _editNotesDto = new();
+    private LawyerClientDto? _removeClient;
+
+    protected override async Task OnInitializedAsync() => await LoadClientsAsync();
+
+    private async Task LoadClientsAsync()
+    {
+        _loading = true;
+        _filter.IsActive = string.IsNullOrEmpty(_statusFilter) ? null : bool.Parse(_statusFilter);
+        var resp = await LawyerClientService.GetMyClientsAsync(_filter);
+        _clients = resp?.Data ?? new PagedResult<LawyerClientDto>();
+        _loading = false;
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await LoadClientsAsync();
+    }
+
+    private async Task OnPageChange(int page)
+    {
+        _filter.PageNumber = page;
+        await LoadClientsAsync();
+    }
+
+    private async Task OpenAddModal()
+    {
+        _showAddModal = true;
+        _eligibleClients = null;
+        var resp = await LawyerClientService.GetEligibleClientsAsync();
+        _eligibleClients = resp?.Data ?? [];
+    }
+
+    private async Task AddClientAsync(EligibleClientDto ec)
+    {
+        _adding = true;
+        var dto = new AddLawyerClientDto
+        {
+            ClientProfileId = ec.ClientProfileId,
+            FirstAppointmentId = ec.AppointmentId
+        };
+        var resp = await LawyerClientService.AddClientAsync(dto);
+        if (resp?.Success == true)
+        {
+            ec.AlreadyAdded = true;
+            Toast.ShowSuccess($"{ec.ClientFullName} added to My Clients!");
+            await LoadClientsAsync();
+        }
+        else
+        {
+            Toast.ShowError(resp?.Message ?? "Failed to add client.");
+        }
+        _adding = false;
+    }
+
+    private void OpenEditNotesModal(LawyerClientDto client)
+    {
+        _editNotesClient = client;
+        _editNotesDto = new UpdateLawyerClientNotesDto { Notes = client.Notes, IsActive = client.IsActive };
+    }
+
+    private async Task SaveNotesAsync()
+    {
+        _saving = true;
+        var resp = await LawyerClientService.UpdateNotesAsync(_editNotesClient!.Id, _editNotesDto);
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess("Notes updated.");
+            _editNotesClient = null;
+            await LoadClientsAsync();
+        }
+        else Toast.ShowError(resp?.Message ?? "Failed to save.");
+        _saving = false;
+    }
+
+    private void ConfirmRemove(LawyerClientDto client) => _removeClient = client;
+
+    private async Task ExecuteRemoveAsync()
+    {
+        var resp = await LawyerClientService.RemoveClientAsync(_removeClient!.Id);
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess("Client removed.");
+            await LoadClientsAsync();
+        }
+        else Toast.ShowError(resp?.Message ?? "Failed.");
+        _removeClient = null;
+    }
+}

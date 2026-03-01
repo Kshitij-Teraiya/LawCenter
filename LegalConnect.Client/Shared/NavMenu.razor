@@ -1,0 +1,107 @@
+@inject NavigationManager Navigation
+
+<!-- ── Common Links ──────────────────────────────────────────────────────── -->
+<div class="lc-nav-section">General</div>
+
+<NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+    <i class="bi bi-house-door"></i> Home
+</NavLink>
+
+<NavLink class="nav-link" href="/lawyers">
+    <i class="bi bi-people"></i> Find Lawyers
+</NavLink>
+
+<!-- ── Client Section ────────────────────────────────────────────────────── -->
+<AuthorizeView Roles="Client">
+    <div class="lc-nav-section">Client</div>
+
+    <NavLink class="nav-link" href="/client/dashboard">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </NavLink>
+
+    <NavLink class="nav-link" href="/client/appointments">
+        <i class="bi bi-calendar-check"></i> My Appointments
+    </NavLink>
+
+    <NavLink class="nav-link" href="/client/my-cases">
+        <i class="bi bi-folder2-open"></i> My Cases
+    </NavLink>
+
+    <NavLink class="nav-link" href="/client/hire-lawyers">
+        <i class="bi bi-person-plus"></i> Hire Lawyers
+    </NavLink>
+
+    <NavLink class="nav-link" href="/client/my-deals">
+        <i class="bi bi-handshake"></i> My Deals
+    </NavLink>
+
+    <NavLink class="nav-link" href="/client/payments">
+        <i class="bi bi-credit-card"></i> Payment History
+    </NavLink>
+
+    <NavLink class="nav-link" href="/client/profile">
+        <i class="bi bi-person-circle"></i> Profile Settings
+    </NavLink>
+</AuthorizeView>
+
+<!-- ── Lawyer Section ────────────────────────────────────────────────────── -->
+<AuthorizeView Roles="Lawyer">
+    <div class="lc-nav-section">Lawyer</div>
+
+    <NavLink class="nav-link" href="/lawyer/dashboard">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/profile">
+        <i class="bi bi-person-badge"></i> My Profile
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/appointments">
+        <i class="bi bi-calendar3"></i> Appointments
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/my-clients">
+        <i class="bi bi-people-fill"></i> My Clients
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/cases">
+        <i class="bi bi-folder2-open"></i> Cases
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/documents">
+        <i class="bi bi-files"></i> Documents
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/hire-requests">
+        <i class="bi bi-handshake"></i> Deal Requests
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/earnings">
+        <i class="bi bi-cash-stack"></i> Earnings
+    </NavLink>
+</AuthorizeView>
+
+<!-- ── Admin Section ─────────────────────────────────────────────────────── -->
+<AuthorizeView Roles="Admin">
+    <div class="lc-nav-section">Administration</div>
+
+    <NavLink class="nav-link" href="/admin/dashboard">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </NavLink>
+
+    <NavLink class="nav-link" href="/admin/approve-lawyers">
+        <i class="bi bi-person-check"></i> Approve Lawyers
+    </NavLink>
+
+    <NavLink class="nav-link" href="/admin/categories">
+        <i class="bi bi-tags"></i> Categories
+    </NavLink>
+
+    <NavLink class="nav-link" href="/admin/commission">
+        <i class="bi bi-percent"></i> Commission
+    </NavLink>
+
+    <NavLink class="nav-link" href="/admin/revenue">
+        <i class="bi bi-graph-up"></i> Revenue Stats
+    </NavLink>
+</AuthorizeView>

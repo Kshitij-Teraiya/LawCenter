@@ -1,0 +1,312 @@
+@page "/client/hire-lawyers"
+@attribute [Authorize(Roles = "Client")]
+@using LegalConnect.Client.Models.Lawyer
+@inject ILawyerService LawyerService
+@inject IDealService DealService
+@inject ToastService Toast
+
+<PageTitle>Hire Lawyers &mdash; LegalConnect</PageTitle>
+
+<div class="container py-4">
+    <div class="mb-4">
+        <h2 class="mb-0"><i class="bi bi-person-plus text-primary me-2"></i>Hire a Lawyer</h2>
+        <p class="text-muted mb-0">Browse verified lawyers and send a hire request</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <input class="form-control" type="text" placeholder="Search by name, city, court..."
+                           @bind="_filter.SearchTerm" @bind:event="oninput" @onkeyup="OnSearch" />
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" @bind="_filter.CategoryId" @bind:after="LoadAsync">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in _categories)
+                        {
+                            <option value="@cat.Id">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" @bind="_filter.City" @bind:after="LoadAsync">
+                        <option value="">All Cities</option>
+                        @foreach (var city in _cities)
+                        {
+                            <option>@city</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary w-100" @onclick="ResetFilters">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><span class="spinner-border text-primary"></span></div>
+    }
+    else if (_lawyers.Count == 0)
+    {
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-people display-3"></i>
+            <p class="mt-2">No lawyers found matching your criteria.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var lawyer in _lawyers)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <img src="@(lawyer.ProfilePictureUrl ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(lawyer.FullName)}&background=1a56db&color=fff&size=56")"
+                                     alt="@lawyer.FullName"
+                                     class="rounded-circle flex-shrink-0"
+                                     style="width:56px;height:56px;object-fit:cover;" />
+                                <div class="overflow-hidden">
+                                    <div class="fw-semibold text-truncate">@lawyer.FullName</div>
+                                    @if (!string.IsNullOrEmpty(lawyer.CategoryName))
+                                    {
+                                        <span class="badge bg-primary bg-opacity-10 text-primary small">@lawyer.CategoryName</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="text-muted small mb-2">
+                                @if (!string.IsNullOrEmpty(lawyer.City))
+                                {
+                                    <span class="me-3"><i class="bi bi-geo-alt me-1"></i>@lawyer.City</span>
+                                }
+                                @if (!string.IsNullOrEmpty(lawyer.Court))
+                                {
+                                    <span><i class="bi bi-building me-1"></i>@lawyer.Court</span>
+                                }
+                            </div>
+
+                            <div class="d-flex align-items-center gap-3 text-muted small mb-3">
+                                <span><i class="bi bi-briefcase me-1"></i>@lawyer.YearsOfExperience yrs exp</span>
+                                @if (lawyer.AverageRating > 0)
+                                {
+                                    <span><i class="bi bi-star-fill text-warning me-1"></i>@lawyer.AverageRating.ToString("F1") (@lawyer.TotalReviews)</span>
+                                }
+                                <span class="ms-auto fw-semibold text-dark">&#8377;@lawyer.ConsultationFee.ToString("N0")/hr</span>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a href="/lawyers/@lawyer.Id" class="btn btn-sm btn-outline-secondary flex-grow-1" target="_blank">
+                                    <i class="bi bi-eye me-1"></i>Profile
+                                </a>
+                                @{
+                                    var existing = GetExistingRequest(lawyer.Id);
+                                }
+                                @if (existing == null)
+                                {
+                                    <button class="btn btn-sm btn-primary flex-grow-1"
+                                            @onclick="() => OpenSendRequest(lawyer)">
+                                        <i class="bi bi-send me-1"></i>Hire Request
+                                    </button>
+                                }
+                                else if (existing.Status == "Inquiry")
+                                {
+                                    <a href="/client/deals/@existing.Id" class="btn btn-sm btn-warning flex-grow-1">
+                                        <i class="bi bi-clock me-1"></i>Pending
+                                    </a>
+                                }
+                                else if (existing.Status == "ConvertedToCase")
+                                {
+                                    <span class="btn btn-sm btn-success disabled flex-grow-1">
+                                        <i class="bi bi-check-circle me-1"></i>Hired
+                                    </span>
+                                }
+                                else
+                                {
+                                    <a href="/client/deals/@existing.Id" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                        <i class="bi bi-arrow-right me-1"></i>View Deal
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (_totalPages > 1)
+        {
+            <div class="d-flex justify-content-center gap-2 mt-4">
+                <button class="btn btn-outline-secondary btn-sm" disabled="@(_filter.PageNumber <= 1)"
+                        @onclick="PrevPage">Previous</button>
+                <span class="btn btn-light btn-sm disabled">Page @_filter.PageNumber of @_totalPages</span>
+                <button class="btn btn-outline-secondary btn-sm" disabled="@(_filter.PageNumber >= _totalPages)"
+                        @onclick="NextPage">Next</button>
+            </div>
+        }
+    }
+</div>
+
+<!-- Send Hire Request Modal -->
+@if (_sendTarget != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-send text-primary me-2"></i>Send Hire Request</h5>
+                    <button class="btn-close" @onclick="() => _sendTarget = null" disabled="@_sending"></button>
+                </div>
+                <EditForm Model="_hireModel" OnValidSubmit="SendRequestAsync">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        <p class="text-muted mb-3">
+                            Sending a hire request to <strong>@_sendTarget.FullName</strong>.
+                            Describe your legal matter so the lawyer can evaluate.
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Case Type <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="_hireModel.CaseType"
+                                       placeholder="e.g. Criminal, Civil, Property..." />
+                            <ValidationMessage For="() => _hireModel.CaseType" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Court <span class="text-danger">*</span></label>
+                            <InputText class="form-control" @bind-Value="_hireModel.Court"
+                                       placeholder="e.g. Delhi High Court, Supreme Court..." />
+                            <ValidationMessage For="() => _hireModel.Court" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                            <InputTextArea class="form-control" rows="4" @bind-Value="_hireModel.Description"
+                                           placeholder="Describe your legal matter in detail..." />
+                            <ValidationMessage For="() => _hireModel.Description" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Message <span class="text-muted">(optional)</span></label>
+                            <InputTextArea class="form-control" rows="2" @bind-Value="_hireModel.Message"
+                                           placeholder="Any additional message for the lawyer..." />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="() => _sendTarget = null" disabled="@_sending">Cancel</button>
+                        <button type="submit" class="btn btn-primary" disabled="@_sending">
+                            @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            <i class="bi bi-send me-1"></i>Send Request
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private LawyerFilterDto _filter = new() { PageSize = 12, IsVerified = true };
+    private List<LawyerSummaryDto> _lawyers = [];
+    private List<CategoryDto> _categories = [];
+    private List<string> _cities = [];
+    private List<HireRequestDto> _myRequests = [];
+    private bool _loading = true;
+    private int _totalPages = 1;
+    private System.Threading.CancellationTokenSource? _searchCts;
+
+    private LawyerSummaryDto? _sendTarget;
+    private CreateHireRequestDto _hireModel = new();
+    private bool _sending;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadAsync(), LoadMetaAsync(), LoadMyRequestsAsync());
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        var result = await LawyerService.GetLawyersAsync(_filter);
+        _lawyers = result?.Items ?? [];
+        var total = result?.TotalCount ?? 0;
+        _totalPages = (int)Math.Ceiling(total / (double)_filter.PageSize);
+        _loading = false;
+    }
+
+    private async Task LoadMetaAsync()
+    {
+        _categories = await LawyerService.GetCategoriesAsync();
+        _cities = await LawyerService.GetCitiesAsync();
+    }
+
+    private async Task LoadMyRequestsAsync()
+    {
+        var resp = await DealService.GetMyHireRequestsAsync();
+        _myRequests = resp?.Data ?? [];
+    }
+
+    private HireRequestDto? GetExistingRequest(int lawyerProfileId)
+    {
+        return _myRequests.FirstOrDefault(r => r.LawyerProfileId == lawyerProfileId
+            && r.Status != "Rejected");
+    }
+
+    private void OnSearch()
+    {
+        _searchCts?.Cancel();
+        _searchCts = new System.Threading.CancellationTokenSource();
+        _ = Task.Delay(400, _searchCts.Token).ContinueWith(async t =>
+        {
+            if (!t.IsCanceled)
+            {
+                _filter.PageNumber = 1;
+                await InvokeAsync(LoadAsync);
+            }
+        });
+    }
+
+    private async Task ResetFilters()
+    {
+        _filter = new() { PageSize = 12, IsVerified = true };
+        await LoadAsync();
+    }
+
+    private async Task PrevPage()
+    {
+        if (_filter.PageNumber > 1) { _filter.PageNumber--; await LoadAsync(); }
+    }
+
+    private async Task NextPage()
+    {
+        if (_filter.PageNumber < _totalPages) { _filter.PageNumber++; await LoadAsync(); }
+    }
+
+    private void OpenSendRequest(LawyerSummaryDto lawyer)
+    {
+        _sendTarget = lawyer;
+        _hireModel = new CreateHireRequestDto { LawyerProfileId = lawyer.Id };
+    }
+
+    private async Task SendRequestAsync()
+    {
+        if (_sendTarget == null) return;
+        _sending = true;
+
+        var resp = await DealService.CreateHireRequestAsync(_hireModel);
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess("Hire request sent successfully!");
+            if (resp.Data != null) _myRequests.Add(resp.Data);
+            _sendTarget = null;
+        }
+        else
+        {
+            Toast.ShowError(resp?.Message ?? "Failed to send request.");
+        }
+        _sending = false;
+    }
+}

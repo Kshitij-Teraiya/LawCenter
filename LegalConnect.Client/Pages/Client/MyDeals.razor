@@ -1,0 +1,160 @@
+@page "/client/my-deals"
+@attribute [Authorize(Roles = "Client")]
+@inject IDealService DealService
+@inject ToastService Toast
+
+<PageTitle>My Deals &mdash; LegalConnect</PageTitle>
+
+<div class="container py-4" style="max-width: 960px;">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-0"><i class="bi bi-handshake text-primary me-2"></i>My Deals</h2>
+            <p class="text-muted mb-0">Hire requests and deals with lawyers</p>
+        </div>
+        <a href="/client/hire-lawyers" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Find Lawyers
+        </a>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><span class="spinner-border text-primary"></span></div>
+    }
+    else if (_deals.Count == 0)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-handshake display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">No deals yet</h5>
+            <p class="text-muted">Find a lawyer and send a hire request to get started.</p>
+            <a href="/client/hire-lawyers" class="btn btn-primary mt-2">
+                <i class="bi bi-search me-1"></i>Find Lawyers
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Filter tabs -->
+        <ul class="nav nav-pills mb-4 flex-wrap gap-1">
+            <li class="nav-item">
+                <button class="nav-link @(_statusFilter == null ? "active" : "")" @onclick='() => _statusFilter = null'>
+                    All <span class="badge bg-secondary ms-1">@_deals.Count</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_statusFilter == "Inquiry" ? "active" : "")" @onclick='() => _statusFilter = "Inquiry"'>
+                    Inquiry <span class="badge bg-info ms-1">@_deals.Count(d => d.Status == "Inquiry")</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_statusFilter == "AcceptedByLawyer" ? "active" : "")" @onclick='() => _statusFilter = "AcceptedByLawyer"'>
+                    Accepted <span class="badge bg-primary ms-1">@_deals.Count(d => d.Status == "AcceptedByLawyer")</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_statusFilter == "DealInProgress" ? "active" : "")" @onclick='() => _statusFilter = "DealInProgress"'>
+                    In Progress <span class="badge bg-warning text-dark ms-1">@_deals.Count(d => d.Status == "DealInProgress")</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link @(_statusFilter == "ConvertedToCase" ? "active" : "")" @onclick='() => _statusFilter = "ConvertedToCase"'>
+                    Converted <span class="badge bg-success ms-1">@_deals.Count(d => d.Status == "ConvertedToCase")</span>
+                </button>
+            </li>
+        </ul>
+
+        <div class="row g-3">
+            @foreach (var deal in FilteredDeals)
+            {
+                <div class="col-12">
+                    <a href="/client/deals/@deal.Id" class="text-decoration-none">
+                        <div class="card shadow-sm border-start border-4 @GetBorderClass(deal.Status)">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center gap-3 flex-wrap">
+                                    <img src="@(deal.LawyerPicture ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(deal.LawyerFullName)}&background=1a56db&color=fff&size=48")"
+                                         alt="@deal.LawyerFullName"
+                                         class="rounded-circle flex-shrink-0"
+                                         style="width:48px;height:48px;object-fit:cover;" />
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span class="fw-semibold text-dark">@deal.LawyerFullName</span>
+                                            <span class="@GetStatusBadge(deal.Status)">@FormatStatus(deal.Status)</span>
+                                        </div>
+                                        <div class="text-muted small"><i class="bi bi-briefcase-fill me-1"></i>@deal.CaseType</div>
+                                        @if (!string.IsNullOrEmpty(deal.LawyerCategoryName))
+                                        {
+                                            <div class="text-muted small"><i class="bi bi-tag me-1"></i>@deal.LawyerCategoryName</div>
+                                        }
+                                        <div class="d-flex align-items-center gap-3 mt-1">
+                                            @if (deal.MessageCount > 0)
+                                            {
+                                                <span class="text-muted small">
+                                                    <i class="bi bi-chat-dots me-1"></i>@deal.MessageCount messages
+                                                    @if (deal.UnreadCount > 0)
+                                                    {
+                                                        <span class="badge bg-danger ms-1">@deal.UnreadCount new</span>
+                                                    }
+                                                </span>
+                                            }
+                                            @if (deal.HasDeal)
+                                            {
+                                                <span class="text-muted small"><i class="bi bi-file-earmark-text me-1"></i><span>Deal active</span></span>
+                                            }
+                                        </div>
+                                        <div class="text-muted" style="font-size:.75rem">
+                                            <span>Created @deal.CreatedAt.ToString("d MMM yyyy")</span>
+                                        </div>
+                                    </div>
+                                    <i class="bi bi-chevron-right text-muted fs-5"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<HireRequestDto> _deals = [];
+    private bool _loading = true;
+    private string? _statusFilter;
+
+    private IEnumerable<HireRequestDto> FilteredDeals =>
+        _statusFilter == null ? _deals : _deals.Where(d => d.Status == _statusFilter);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resp = await DealService.GetMyHireRequestsAsync();
+        _deals = resp?.Data ?? [];
+        _loading = false;
+    }
+
+    private static string GetStatusBadge(string status) => status switch
+    {
+        "Inquiry" => "badge bg-info",
+        "AcceptedByLawyer" => "badge bg-primary",
+        "Rejected" => "badge bg-danger",
+        "DealInProgress" => "badge bg-warning text-dark",
+        "ConvertedToCase" => "badge bg-success",
+        _ => "badge bg-secondary"
+    };
+
+    private static string GetBorderClass(string status) => status switch
+    {
+        "Inquiry" => "border-info",
+        "AcceptedByLawyer" => "border-primary",
+        "Rejected" => "border-danger",
+        "DealInProgress" => "border-warning",
+        "ConvertedToCase" => "border-success",
+        _ => ""
+    };
+
+    private static string FormatStatus(string status) => status switch
+    {
+        "AcceptedByLawyer" => "Accepted",
+        "DealInProgress" => "In Progress",
+        "ConvertedToCase" => "Converted to Case",
+        _ => status
+    };
+}

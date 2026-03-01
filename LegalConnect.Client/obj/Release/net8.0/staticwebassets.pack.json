@@ -1,0 +1,57 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\bin\\Release\\net8.0\\wwwroot\\_framework\\blazor.webassembly.js",
+      "PackagePath": "staticwebassets\\_framework\\blazor.webassembly.js"
+    },
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\obj\\Release\\net8.0\\compressed\\1pzbymhja2.gz",
+      "PackagePath": "staticwebassets\\_framework\\blazor.webassembly.js.gz"
+    },
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\obj\\Release\\net8.0\\service-worker-assets.js",
+      "PackagePath": "staticwebassets\\service-worker-assets.js"
+    },
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\obj\\Release\\net8.0\\service-worker\\service-worker.published.js",
+      "PackagePath": "staticwebassets\\service-worker.js"
+    },
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\appsettings.json",
+      "PackagePath": "staticwebassets\\appsettings.json"
+    },
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\css\\app.css",
+      "PackagePath": "staticwebassets\\css\\app.css"
+    },
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\image\\logo.jpeg",
+      "PackagePath": "staticwebassets\\image\\logo.jpeg"
+    },
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\js\\google-auth.js",
+      "PackagePath": "staticwebassets\\js\\google-auth.js"
+    },
+    {
+      "Id": "obj\\Release\\net8.0\\staticwebassets\\msbuild.LegalConnect.Client.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Release\\net8.0\\staticwebassets\\msbuild.build.LegalConnect.Client.props",
+      "PackagePath": "build\\LegalConnect.Client.props"
+    },
+    {
+      "Id": "obj\\Release\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.LegalConnect.Client.props",
+      "PackagePath": "buildMultiTargeting\\LegalConnect.Client.props"
+    },
+    {
+      "Id": "obj\\Release\\net8.0\\staticwebassets\\msbuild.buildTransitive.LegalConnect.Client.props",
+      "PackagePath": "buildTransitive\\LegalConnect.Client.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

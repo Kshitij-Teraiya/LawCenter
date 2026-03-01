@@ -1,0 +1,110 @@
+@using LegalConnect.Client.Models.Cases
+
+<div class="card shadow-sm h-100 client-card">
+    <div class="card-body d-flex flex-column gap-2 p-3">
+        <!-- Header -->
+        <div class="d-flex align-items-center gap-3">
+            <div class="client-avatar flex-shrink-0">
+                @Client.ClientFullName.Substring(0, 1).ToUpper()
+            </div>
+            <div class="flex-grow-1 min-w-0">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h6 class="mb-0 fw-semibold text-truncate">@Client.ClientFullName</h6>
+                    @if (!Client.IsActive)
+                    {
+                        <span class="badge bg-secondary" style="font-size:.68rem">Inactive</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success" style="font-size:.68rem">Active</span>
+                    }
+                </div>
+                <p class="mb-0 text-muted small text-truncate">@Client.ClientEmail</p>
+            </div>
+        </div>
+
+        <!-- Contact info -->
+        @if (!string.IsNullOrEmpty(Client.ClientPhone) || !string.IsNullOrEmpty(Client.ClientCity))
+        {
+            <div class="d-flex flex-wrap gap-2">
+                @if (!string.IsNullOrEmpty(Client.ClientPhone))
+                {
+                    <span class="badge bg-light text-secondary border" style="font-size:.72rem">
+                        <i class="bi bi-telephone me-1"></i>@Client.ClientPhone
+                    </span>
+                }
+                @if (!string.IsNullOrEmpty(Client.ClientCity))
+                {
+                    <span class="badge bg-light text-secondary border" style="font-size:.72rem">
+                        <i class="bi bi-geo-alt me-1"></i>@Client.ClientCity
+                    </span>
+                }
+            </div>
+        }
+
+        <!-- Case stats -->
+        <div class="d-flex gap-2">
+            <div class="stat-pill text-center flex-fill">
+                <div class="fw-bold text-primary">@Client.TotalCases</div>
+                <div class="text-muted" style="font-size:.7rem">Total Cases</div>
+            </div>
+            <div class="stat-pill text-center flex-fill">
+                <div class="fw-bold text-warning">@Client.OpenCases</div>
+                <div class="text-muted" style="font-size:.7rem">Open Cases</div>
+            </div>
+        </div>
+
+        <!-- Footer info -->
+        <div class="text-muted small mt-auto">
+            <i class="bi bi-calendar-plus me-1"></i>Added @Client.AddedDate.ToString("d MMM yyyy")
+            @if (Client.LastActivityDate.HasValue)
+            {
+                <span class="ms-2"><i class="bi bi-clock-history me-1"></i>@Client.LastActivityDate.Value.ToString("d MMM yyyy")</span>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Client.Notes))
+        {
+            <div class="text-muted small p-2 bg-light rounded text-truncate" title="@Client.Notes">
+                <i class="bi bi-sticky me-1"></i>@Client.Notes
+            </div>
+        }
+    </div>
+
+    <!-- Actions -->
+    <div class="card-footer bg-white border-top d-flex gap-2 px-3 py-2">
+        <button class="btn btn-sm btn-primary flex-grow-1" @onclick="OnViewCases" title="View Cases">
+            <i class="bi bi-folder2-open me-1"></i>Cases
+        </button>
+        <button class="btn btn-sm btn-outline-secondary" @onclick="OnEditNotes" title="Edit Notes">
+            <i class="bi bi-sticky"></i>
+        </button>
+        <button class="btn btn-sm btn-outline-danger" @onclick="OnRemove" title="Remove">
+            <i class="bi bi-person-dash"></i>
+        </button>
+    </div>
+</div>
+
+<style>
+    .client-avatar {
+        width: 44px; height: 44px;
+        background: var(--bs-primary, #0d6efd);
+        color: white; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 1.15rem;
+    }
+    .stat-pill {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: .375rem;
+        padding: .35rem .5rem;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired] public LawyerClientDto Client { get; set; } = default!;
+    [Parameter] public EventCallback OnViewDetails { get; set; }
+    [Parameter] public EventCallback OnViewCases { get; set; }
+    [Parameter] public EventCallback OnEditNotes { get; set; }
+    [Parameter] public EventCallback OnRemove { get; set; }
+}

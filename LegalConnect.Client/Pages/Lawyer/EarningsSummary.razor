@@ -1,0 +1,137 @@
+@page "/lawyer/earnings"
+@attribute [Authorize(Roles = "Lawyer")]
+@inject IAppointmentService AppointmentService
+
+<PageTitle>Earnings – LegalConnect</PageTitle>
+
+<div class="container-fluid">
+    <h4 class="fw-bold mb-4">Earnings Summary</h4>
+
+    @if (_loading) { <LoadingSpinner /> }
+    else
+    {
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-5">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">৳@_totalEarned.ToString("N0")</div>
+                        <div class="stat-label">Total Earned</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">@_totalCompleted</div>
+                        <div class="stat-label">Sessions Done</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">৳@_avgEarned.ToString("N0")</div>
+                        <div class="stat-label">Avg. Per Session</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-calendar-month"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">৳@_monthEarned.ToString("N0")</div>
+                        <div class="stat-label">This Month</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Breakdown -->
+        <div class="lc-card">
+            <h6 class="fw-bold mb-3">Monthly Breakdown</h6>
+            @if (_monthly.Count == 0)
+            {
+                <p class="text-muted text-center py-3">No completed sessions yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Month</th>
+                                <th>Sessions</th>
+                                <th>Gross Earned</th>
+                                <th>Platform Fee</th>
+                                <th>Net Received</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in _monthly)
+                            {
+                                <tr>
+                                    <td>@m.Month</td>
+                                    <td>@m.Sessions</td>
+                                    <td>৳@m.Gross.ToString("N2")</td>
+                                    <td class="text-muted">৳@m.Commission.ToString("N2")</td>
+                                    <td class="fw-semibold text-success">৳@m.Net.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool _loading = true;
+    private decimal _totalEarned;
+    private decimal _monthEarned;
+    private decimal _avgEarned;
+    private int _totalCompleted;
+    private List<(string Month, int Sessions, decimal Gross, decimal Commission, decimal Net)> _monthly = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var all = await AppointmentService.GetLawyerAppointmentsAsync(
+            DateTime.Today.AddYears(-1), DateTime.Today.AddDays(1));
+
+        var completed = all.Where(a => a.Status == AppointmentStatus.Completed).ToList();
+
+        _totalCompleted = completed.Count;
+        _totalEarned    = completed.Sum(a => a.ConsultationFee);
+        _avgEarned      = _totalCompleted > 0 ? _totalEarned / _totalCompleted : 0;
+        _monthEarned    = completed
+            .Where(a => a.AppointmentDate.Month == DateTime.Today.Month
+                     && a.AppointmentDate.Year  == DateTime.Today.Year)
+            .Sum(a => a.ConsultationFee);
+
+        _monthly = completed
+            .GroupBy(a => new { a.AppointmentDate.Year, a.AppointmentDate.Month })
+            .OrderByDescending(g => g.Key.Year).ThenByDescending(g => g.Key.Month)
+            .Select(g =>
+            {
+                var month      = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMMM yyyy");
+                var gross      = g.Sum(a => a.ConsultationFee);
+                var commission = g.Sum(a => a.PlatformCommission);
+                return (month, g.Count(), gross, commission, gross - commission);
+            })
+            .ToList();
+
+        _loading = false;
+    }
+}

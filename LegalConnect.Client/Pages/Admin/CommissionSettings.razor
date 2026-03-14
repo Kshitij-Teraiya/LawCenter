@@ -1,9 +1,9 @@
 @page "/admin/commission"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin,AdminStaff")]
 @inject IAdminService AdminService
 @inject ToastService Toast
 
-<PageTitle>Commission Settings – LegalConnect</PageTitle>
+<PageTitle>Commission Settings – LawCity</PageTitle>
 
 <div class="container-fluid" style="max-width:560px;">
     <h4 class="fw-bold mb-4">
@@ -47,12 +47,12 @@
 
                 <!-- Preview -->
                 <div class="bg-light rounded-3 p-3 mb-3 small">
-                    <strong>Preview:</strong> On a ৳1,000 consultation:
+                    <strong>Preview:</strong> On a Rs.1,000 consultation:
                     <div class="mt-1">
-                        Platform earns: <strong class="text-primary">৳@(1000m * _dto.CommissionPercentage / 100m):N2</strong>
+                        Platform earns: <strong class="text-primary">Rs.@(1000m * _dto.CommissionPercentage / 100m):N2</strong>
                     </div>
                     <div>
-                        Lawyer receives: <strong class="text-success">৳@(1000m - 1000m * _dto.CommissionPercentage / 100m):N2</strong>
+                        Lawyer receives: <strong class="text-success">Rs.@(1000m - 1000m * _dto.CommissionPercentage / 100m):N2</strong>
                     </div>
                 </div>
 

@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "LegalConnect.Client",
   "resources": {
-    "hash": "sha256-Jasg5DhVWT6UpSeYjCnj3qyWQLiO57doyRN5tQzeHAc=",
+    "hash": "sha256-xxV91DpJbwH6mZW0xJsOl7jc4+sauceeWG629JzbgG8=",
     "jsModuleNative": {
       "dotnet.native.8.0.10.2d2lwqs7ke.js": "sha256-QVxMlY7ohmjgde/bZMA0dlWDAeuUP+tEfkiSdg4DFcE="
     },
@@ -220,16 +220,17 @@
       "mscorlib.wasm": "sha256-KvqZaNpjwhrOuzE4b4aMFsI+VUTyiWfoDI4zn4l9BM8=",
       "netstandard.wasm": "sha256-v+s7sWxtOM6bnOvC0jFrtnm6uMfbDymwl2nHNgbS2LM=",
       "System.Private.CoreLib.wasm": "sha256-pklll63uFQoY6vaD3vbluS9osYiJWLLLmob1yHFgepI=",
-      "LegalConnect.Client.wasm": "sha256-9Y2u/qocmF4gynTgvQMyAmJb5vHrO+5xoSZWitgA5SM="
+      "LegalConnect.Client.wasm": "sha256-0iKSdPeUWdM2WRLaagK8Cc2mH6bj4n0f8SPL/YZPCds="
     },
     "pdb": {
-      "LegalConnect.Client.pdb": "sha256-25QITf/k10vXGIKvYN3HZEdQHOdtBnmN6n80RBZhYuI="
+      "LegalConnect.Client.pdb": "sha256-yjeWF0HerXqjAnG8M/sKsPMtON+ih2kiPS2NWkrtrUs="
     }
   },
   "cacheBootResources": true,
   "debugLevel": -1,
   "appsettings": [
-    "../appsettings.json"
+    "../appsettings.json",
+    "../appsettings.Production.json"
   ],
   "globalizationMode": "sharded",
   "extensions": {

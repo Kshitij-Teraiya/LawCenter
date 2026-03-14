@@ -3,7 +3,7 @@
 @inject IAppointmentService AppointmentService
 @inject IAuthService AuthService
 
-<PageTitle>Client Dashboard – LegalConnect</PageTitle>
+<PageTitle>Client Dashboard – LawCity</PageTitle>
 
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -82,7 +82,7 @@
                                 <td>@appt.AppointmentDate.ToString("MMM dd, yyyy")<br />
                                     <span class="text-muted">@DateTime.Today.Add(appt.StartTime).ToString("hh:mm tt")</span>
                                 </td>
-                                <td>৳@appt.TotalAmount.ToString("N0")</td>
+                                <td>Rs.@appt.TotalAmount.ToString("N0")</td>
                                 <td>
                                     <span class="badge @GetStatusBadge(appt.Status)">
                                         @appt.Status
@@ -126,7 +126,7 @@
             ("bi bi-calendar-check", "Total Bookings", total.ToString(), "bg-primary bg-opacity-10 text-primary"),
             ("bi bi-calendar-event", "Upcoming",       upcoming.ToString(), "bg-success bg-opacity-10 text-success"),
             ("bi bi-check-circle",  "Completed",       completed.ToString(), "bg-info bg-opacity-10 text-info"),
-            ("bi bi-cash-stack",    "Total Spent",     $"৳{spent:N0}", "bg-warning bg-opacity-10 text-warning"),
+            ("bi bi-cash-stack",    "Total Spent",     $"Rs.{spent:N0}", "bg-warning bg-opacity-10 text-warning"),
         ];
 
         _loading = false;

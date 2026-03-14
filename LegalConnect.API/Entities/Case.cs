@@ -42,6 +42,7 @@ public class Case
     public List<CaseActivity> Activities { get; set; } = [];
     public List<CaseDocument> Documents { get; set; } = [];
     public List<CaseLawyer> CaseLawyers { get; set; } = [];  // multiple lawyers per case
+    public List<CaseStaff> CaseStaffs { get; set; } = [];   // assigned staff members
     public int? DealId { get; set; }
     public Deal? Deal { get; set; }
 }

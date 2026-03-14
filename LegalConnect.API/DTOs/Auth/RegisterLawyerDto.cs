@@ -45,4 +45,7 @@ public class RegisterLawyerDto
 
     [Range(0, 1_000_000)]
     public decimal ConsultationFee { get; set; }
+
+    [Required]
+    public bool AcceptedTnC { get; set; }
 }

@@ -45,4 +45,7 @@ public class RegisterLawyerDto
 
     [Range(0, 1_000_000, ErrorMessage = "Enter a valid consultation fee.")]
     public decimal ConsultationFee { get; set; }
+
+    [Required]
+    public bool AcceptedTnC { get; set; }
 }

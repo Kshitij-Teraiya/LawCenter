@@ -1,13 +1,17 @@
 @page "/lawyer/cases/{Id:int}"
 @using LegalConnect.Client.Models.Cases
+@using LegalConnect.Client.Models.Staff
 @using LegalConnect.Client.Services
 @using LegalConnect.Client.Components
 @attribute [Authorize(Roles = "Lawyer")]
 @inject ICaseService CaseService
 @inject ToastService Toast
 @inject NavigationManager Nav
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JSRuntime
+@inject IStaffService StaffService
 
-<PageTitle>Case Details — LegalConnect</PageTitle>
+<PageTitle>Case Details — LawCity</PageTitle>
 
 @if (_loading)
 {
@@ -45,7 +49,14 @@ else
                     </div>
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-outline-secondary btn-sm" @onclick="PrintCaseInfoAsync" title="Print case information">
+                    <i class="bi bi-printer me-1"></i>Print Info
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" @onclick="PrintTimelineAsync"
+                        disabled="@(_activities.Count == 0)" title="Print activity timeline">
+                    <i class="bi bi-printer me-1"></i>Print Timeline
+                </button>
                 @if (_case.Status != CaseStatus.Closed)
                 {
                     <a href="/lawyer/cases/@Id/edit" class="btn btn-outline-primary btn-sm">
@@ -72,6 +83,15 @@ else
                             <dd class="col-7">@_case.ClientName</dd>
                             <dt class="col-5 text-muted small">Lawyer</dt>
                             <dd class="col-7">@_case.LawyerName</dd>
+                            @if (_case.DealId.HasValue && _case.DealHireRequestId.HasValue)
+                            {
+                                <dt class="col-5 text-muted small">Deal</dt>
+                                <dd class="col-7">
+                                    <a href="/lawyer/deals/@_case.DealHireRequestId" class="btn btn-sm btn-outline-info py-0 px-2">
+                                        <i class="bi bi-briefcase me-1"></i>View Deal
+                                    </a>
+                                </dd>
+                            }
                             @if (_case.FilingDate.HasValue)
                             {
                                 <dt class="col-5 text-muted small">Filed</dt>
@@ -112,6 +132,115 @@ else
                     </div>
                 }
 
+                <!-- Staff Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-people me-2"></i>Assigned Staff (@_caseStaff.Count)</h6>
+                        @if (!_showAssignStaff)
+                        {
+                            <button class="btn btn-sm btn-outline-primary"
+                                    @onclick="() => _showAssignStaff = true"
+                                    disabled="@(_availableStaff.Count == 0)">
+                                <i class="bi bi-person-plus me-1"></i>Assign
+                            </button>
+                        }
+                    </div>
+                    <div class="card-body p-2">
+                        @if (_showAssignStaff)
+                        {
+                            <div class="px-1 mb-2">
+                                <select class="form-select form-select-sm mb-2" @bind="_assignStaffId">
+                                    <option value="0">— Select Staff —</option>
+                                    @foreach (var s in _availableStaff)
+                                    {
+                                        <option value="@s.Id">@s.FullName (@s.StaffRole)</option>
+                                    }
+                                </select>
+                                <div class="d-flex gap-3 mb-2 px-1">
+                                    <div class="form-check form-check-sm">
+                                        <input class="form-check-input" type="checkbox" id="chk-activity"
+                                               @bind="_assignCanAddActivity" />
+                                        <label class="form-check-label small" for="chk-activity">
+                                            <i class="bi bi-pencil me-1"></i>Can Add Activity
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-sm">
+                                        <input class="form-check-input" type="checkbox" id="chk-document"
+                                               @bind="_assignCanUploadDocument" />
+                                        <label class="form-check-label small" for="chk-document">
+                                            <i class="bi bi-upload me-1"></i>Can Upload Document
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-primary text-nowrap"
+                                            @onclick="AssignStaffAsync"
+                                            disabled="@(_assignStaffId == 0 || _assigningStaff)">
+                                        @if (_assigningStaff)
+                                        {
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                        }
+                                        else
+                                        {
+                                            <span>Add</span>
+                                        }
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                            @onclick='() => { _showAssignStaff = false; _assignStaffId = 0; _assignCanAddActivity = false; _assignCanUploadDocument = false; }'>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        @if (_caseStaff.Count == 0)
+                        {
+                            <p class="text-muted small text-center py-2 mb-0">No staff assigned yet.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var s in _caseStaff)
+                                {
+                                    <li class="list-group-item py-2 px-2">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <span class="fw-medium small">@s.FullName</span>
+                                                <span class="badge bg-primary-subtle text-primary ms-1 small">@s.StaffRole</span>
+                                            </div>
+                                            <button class="btn btn-xs btn-outline-danger"
+                                                    @onclick='() => RemoveStaffAsync(s.StaffProfileId)'
+                                                    disabled="@(_removingStaffId == s.StaffProfileId)">
+                                                @if (_removingStaffId == s.StaffProfileId)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm"></span>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-x-lg"></i>
+                                                }
+                                            </button>
+                                        </div>
+                                        <div class="mt-1" style="font-size:.7rem;">
+                                            @if (s.CanAddActivity)
+                                            {
+                                                <span class="badge bg-success-subtle text-success me-1"><i class="bi bi-pencil me-1"></i>Activities</span>
+                                            }
+                                            @if (s.CanUploadDocument)
+                                            {
+                                                <span class="badge bg-info-subtle text-info me-1"><i class="bi bi-upload me-1"></i>Documents</span>
+                                            }
+                                            @if (!s.CanAddActivity && !s.CanUploadDocument)
+                                            {
+                                                <span class="text-muted">View only</span>
+                                            }
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+
                 <!-- Documents Card -->
                 <div class="card shadow-sm">
                     <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -139,10 +268,10 @@ else
                                                 @if (doc.IsPrivate) { <span class="badge bg-warning text-dark ms-1">Private</span> }
                                             </div>
                                         </div>
-                                        <a href="/api/case-documents/@doc.Id/download" target="_blank"
-                                           class="btn btn-sm btn-outline-secondary">
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                                @onclick="() => DownloadDocAsync(doc.Id, doc.FileName)">
                                             <i class="bi bi-download"></i>
-                                        </a>
+                                        </button>
                                     </li>
                                 }
                             </ul>
@@ -162,21 +291,63 @@ else
                         </div>
                         <div class="card-body">
                             <div class="row g-2">
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control form-control-sm"
+                                           placeholder="Title (optional)"
+                                           @bind="_newActivity.Title" />
+                                </div>
                                 <div class="col-md-4">
+                                    <select class="form-select form-select-sm" @bind="_newActivity.Category">
+                                        @foreach (var cat in _activityCategories)
+                                        {
+                                            <option value="@cat">@cat</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-1" style="font-size:.75rem">Activity Type</label>
                                     <select class="form-select form-select-sm" @bind="_newActivity.ActivityType">
                                         <option value="@ActivityType.Note">Note</option>
                                         <option value="@ActivityType.Hearing">Hearing</option>
                                         <option value="@ActivityType.StatusChange">Status Change</option>
                                     </select>
                                 </div>
-                                <div class="col-md-8">
-                                    <textarea class="form-control form-control-sm" rows="2"
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-1" style="font-size:.75rem">Event Date (optional)</label>
+                                    <input type="date" class="form-control form-control-sm"
+                                           @bind="_newActivity.EventDate" />
+                                </div>
+                                <div class="col-12">
+                                    <textarea class="form-control form-control-sm" rows="3"
                                               placeholder="Describe the activity..."
                                               @bind="_newActivity.Description"></textarea>
                                 </div>
+                                @if (_case.Documents.Any())
+                                {
+                                    <div class="col-12">
+                                        <label class="text-muted mb-1" style="font-size:.75rem">
+                                            <i class="bi bi-paperclip me-1"></i>Link Documents (optional)
+                                        </label>
+                                        <div class="border rounded p-2" style="max-height:120px; overflow-y:auto;">
+                                            @foreach (var doc in _case.Documents)
+                                            {
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input" type="checkbox" id="doc-@doc.Id"
+                                                           checked="@_selectedDocumentIds.Contains(doc.Id)"
+                                                           @onchange='e => ToggleDocument(doc.Id, (bool)e.Value!)' />
+                                                    <label class="form-check-label small" for="doc-@doc.Id">
+                                                        <i class="@doc.FileIcon me-1"></i>@doc.FileName
+                                                        <span class="text-muted">(@doc.FileSizeDisplay)</span>
+                                                    </label>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
                                 <div class="col-12 text-end">
                                     <button class="btn btn-sm btn-primary" @onclick="AddActivityAsync"
-                                            disabled="@(string.IsNullOrWhiteSpace(_newActivity.Description))">
+                                            disabled="@(string.IsNullOrWhiteSpace(_newActivity.Description) || _addingActivity)">
+                                        @if (_addingActivity) { <span class="spinner-border spinner-border-sm me-1"></span> }
                                         <i class="bi bi-plus me-1"></i>Add to Timeline
                                     </button>
                                 </div>
@@ -225,10 +396,15 @@ else
     {
         <DocumentUploadComponent CaseId="Id"
                                  IsLawyer="true"
+                                 Activities="_activities"
                                  OnUploadSuccess="OnDocumentUploaded"
                                  OnClose="() => _showUploadModal = false" />
     }
 }
+
+<style>
+    .btn-xs { padding: 0.15rem 0.4rem; font-size: 0.75rem; }
+</style>
 
 @code {
     [Parameter] public int Id { get; set; }
@@ -240,12 +416,31 @@ else
     private bool _showCloseModal;
     private bool _showUploadModal;
     private bool _closing;
+    private bool _addingActivity;
     private CloseCaseDto _closeDto = new();
     private AddCaseActivityDto _newActivity = new() { ActivityType = ActivityType.Note };
+    private HashSet<int> _selectedDocumentIds = [];
+
+    // Staff assignment state
+    private List<CaseStaffModel>   _caseStaff             = [];
+    private List<StaffProfileModel> _availableStaff       = [];
+    private bool _showAssignStaff        = false;
+    private bool _assigningStaff         = false;
+    private int  _assignStaffId          = 0;
+    private int  _removingStaffId        = 0;
+    private bool _assignCanAddActivity   = false;
+    private bool _assignCanUploadDocument = false;
+
+    private static readonly string[] _activityCategories =
+    [
+        "Other", "Clerical", "Police Inquiry", "FIR", "Main Event",
+        "Case Submission", "Court Hearing", "Judgement Day",
+        "Summons Attended", "Payment"
+    ];
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.WhenAll(LoadCaseAsync(), LoadActivitiesAsync());
+        await Task.WhenAll(LoadCaseAsync(), LoadActivitiesAsync(), LoadStaffAsync());
     }
 
     private async Task LoadCaseAsync()
@@ -264,15 +459,25 @@ else
         _loadingActivities = false;
     }
 
+    private void ToggleDocument(int docId, bool selected)
+    {
+        if (selected) _selectedDocumentIds.Add(docId);
+        else _selectedDocumentIds.Remove(docId);
+    }
+
     private async Task AddActivityAsync()
     {
+        _addingActivity = true;
+        _newActivity.LinkedDocumentIds = [.. _selectedDocumentIds];
         var resp = await CaseService.AddActivityAsync(Id, _newActivity);
         if (resp?.Success == true)
         {
             _newActivity = new AddCaseActivityDto { ActivityType = ActivityType.Note };
+            _selectedDocumentIds = [];
             await LoadActivitiesAsync();
         }
         else Toast.ShowError(resp?.Message ?? "Failed.");
+        _addingActivity = false;
     }
 
     private async Task CloseCaseAsync()
@@ -294,5 +499,122 @@ else
     {
         _showUploadModal = false;
         await LoadCaseAsync();
+        await LoadActivitiesAsync();
+    }
+
+    private async Task LoadStaffAsync()
+    {
+        var staffResult = await StaffService.GetCaseStaffAsync(Id);
+        if (staffResult?.Success == true) _caseStaff = staffResult.Data ?? [];
+
+        var myStaffResult = await StaffService.GetMyStaffAsync();
+        var allStaff = (myStaffResult?.Data ?? []).Where(s => s.IsActive).ToList();
+        // Only show staff not yet assigned
+        var assignedIds = _caseStaff.Select(cs => cs.StaffProfileId).ToHashSet();
+        _availableStaff = allStaff.Where(s => !assignedIds.Contains(s.Id)).ToList();
+    }
+
+    private async Task AssignStaffAsync()
+    {
+        if (_assignStaffId == 0) return;
+        _assigningStaff = true;
+        var result = await StaffService.AssignStaffToCaseAsync(Id, new AssignStaffModel
+        {
+            StaffProfileId    = _assignStaffId,
+            CanAddActivity    = _assignCanAddActivity,
+            CanUploadDocument = _assignCanUploadDocument
+        });
+        if (result?.Success == true)
+        {
+            Toast.ShowSuccess("Staff assigned.");
+            _showAssignStaff          = false;
+            _assignStaffId            = 0;
+            _assignCanAddActivity     = false;
+            _assignCanUploadDocument  = false;
+            await LoadStaffAsync();
+        }
+        else Toast.ShowError(result?.Message ?? "Failed to assign staff.");
+        _assigningStaff = false;
+    }
+
+    private async Task RemoveStaffAsync(int staffProfileId)
+    {
+        _removingStaffId = staffProfileId;
+        var result = await StaffService.RemoveStaffFromCaseAsync(Id, staffProfileId);
+        if (result?.Success == true)
+        {
+            Toast.ShowSuccess("Staff removed.");
+            await LoadStaffAsync();
+        }
+        else Toast.ShowError(result?.Message ?? "Failed to remove staff.");
+        _removingStaffId = 0;
+    }
+
+    private async Task DownloadDocAsync(int docId, string fileName)
+    {
+        try
+        {
+            var http = HttpClientFactory.CreateClient("secured");
+            var response = await http.GetAsync($"case-documents/{docId}/download");
+            if (!response.IsSuccessStatusCode) { Toast.ShowError("Download failed or access denied."); return; }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", fileName, contentType, Convert.ToBase64String(bytes));
+        }
+        catch { Toast.ShowError("Download failed."); }
+    }
+
+    private async Task PrintCaseInfoAsync()
+    {
+        if (_case == null) return;
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"<div class='container'><h2 class='mb-3'>{_case.CaseTitle}</h2>");
+        sb.Append("<table class='table table-bordered'><tbody>");
+        sb.Append($"<tr><th style='width:35%'>Client</th><td>{_case.ClientName}</td></tr>");
+        sb.Append($"<tr><th>Lawyer</th><td>{_case.LawyerName}</td></tr>");
+        sb.Append($"<tr><th>Case Type</th><td>{_case.CaseType}</td></tr>");
+        sb.Append($"<tr><th>Court</th><td>{_case.Court}</td></tr>");
+        sb.Append($"<tr><th>Status</th><td>{_case.Status}</td></tr>");
+        if (!string.IsNullOrEmpty(_case.CaseNumber))
+            sb.Append($"<tr><th>Case Number</th><td>{_case.CaseNumber}</td></tr>");
+        if (_case.FilingDate.HasValue)
+            sb.Append($"<tr><th>Filed</th><td>{_case.FilingDate.Value:d MMM yyyy}</td></tr>");
+        if (_case.NextHearingDate.HasValue)
+            sb.Append($"<tr><th>Next Hearing</th><td>{_case.NextHearingDate.Value:d MMM yyyy}</td></tr>");
+        sb.Append($"<tr><th>Created</th><td>{_case.CreatedDate:d MMM yyyy}</td></tr>");
+        sb.Append("</tbody></table>");
+        if (!string.IsNullOrEmpty(_case.Description))
+            sb.Append($"<h5>Description</h5><p style='white-space:pre-wrap'>{_case.Description}</p>");
+        if (!string.IsNullOrEmpty(_case.Outcome))
+            sb.Append($"<h5>Outcome</h5><p style='white-space:pre-wrap'>{_case.Outcome}</p>");
+        sb.Append("</div>");
+        await JSRuntime.InvokeVoidAsync("printHtml", sb.ToString(), $"{_case.CaseTitle} \u2013 Case Information");
+    }
+
+    private async Task PrintTimelineAsync()
+    {
+        if (_case == null || _activities.Count == 0) return;
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"<div class='container'><h2 class='mb-1'>{_case.CaseTitle}</h2>");
+        sb.Append("<h5 class='text-muted mb-4'>Activity Timeline</h5>");
+        foreach (var a in _activities.OrderByDescending(x => x.ActivityDate))
+        {
+            sb.Append("<div class='timeline-item'>");
+            sb.Append("<div class='d-flex justify-content-between align-items-start mb-1'>");
+            var heading = !string.IsNullOrWhiteSpace(a.Title) ? a.Title : a.ActivityTypeName;
+            sb.Append($"<strong>{heading}</strong>");
+            sb.Append($"<span class='text-muted small'>{a.ActivityDate:d MMM yyyy, HH:mm}</span></div>");
+            if (!string.IsNullOrWhiteSpace(a.Category) && a.Category != "Other")
+                sb.Append($"<span class='badge bg-secondary me-1'>{a.Category}</span>");
+            sb.Append($"<span class='badge bg-light text-dark border'>{a.ActivityTypeName}</span>");
+            if (a.EventDate.HasValue)
+                sb.Append($"<div class='text-info small mt-1'>Event: {a.EventDate.Value:d MMM yyyy}</div>");
+            sb.Append($"<p class='mt-1 mb-1 small' style='white-space:pre-wrap'>{a.Description}</p>");
+            sb.Append($"<div class='text-muted' style='font-size:.8rem'>By: {a.CreatedByName} ({a.CreatedByRole})</div>");
+            sb.Append("</div>");
+        }
+        sb.Append("</div>");
+        await JSRuntime.InvokeVoidAsync("printHtml", sb.ToString(), $"{_case.CaseTitle} \u2013 Activity Timeline");
     }
 }

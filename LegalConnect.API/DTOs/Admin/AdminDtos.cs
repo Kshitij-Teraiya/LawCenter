@@ -68,3 +68,31 @@ public class RejectLawyerDto
     [Required]
     public string Reason { get; set; } = string.Empty;
 }
+
+public class AdminLawyerDto
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Phone { get; set; }
+    public string City { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
+    public string BarCouncilNumber { get; set; } = string.Empty;
+    public bool IsVerified { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime RegisteredAt { get; set; }
+}
+
+public class AdminClientDto
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Phone { get; set; }
+    public string? City { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime RegisteredAt { get; set; }
+    public int TotalCases { get; set; }
+}

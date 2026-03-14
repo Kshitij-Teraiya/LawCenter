@@ -7,9 +7,11 @@
     <i class="bi bi-house-door"></i> Home
 </NavLink>
 
-<NavLink class="nav-link" href="/lawyers">
-    <i class="bi bi-people"></i> Find Lawyers
-</NavLink>
+<AuthorizeView Roles="Client,Lawyer,Admin">
+    <NavLink class="nav-link" href="/lawyers">
+        <i class="bi bi-people"></i> Find Lawyers
+    </NavLink>
+</AuthorizeView>
 
 <!-- ── Client Section ────────────────────────────────────────────────────── -->
 <AuthorizeView Roles="Client">
@@ -27,6 +29,10 @@
         <i class="bi bi-folder2-open"></i> My Cases
     </NavLink>
 
+    <NavLink class="nav-link" href="/client/documents">
+        <i class="bi bi-folder2"></i> Documents
+    </NavLink>
+
     <NavLink class="nav-link" href="/client/hire-lawyers">
         <i class="bi bi-person-plus"></i> Hire Lawyers
     </NavLink>
@@ -37,6 +43,14 @@
 
     <NavLink class="nav-link" href="/client/payments">
         <i class="bi bi-credit-card"></i> Payment History
+    </NavLink>
+
+    <NavLink class="nav-link" href="/client/disputes">
+        <i class="bi bi-exclamation-triangle"></i> Disputes
+    </NavLink>
+
+    <NavLink class="nav-link" href="/client/support">
+        <i class="bi bi-life-preserver"></i> Support
     </NavLink>
 
     <NavLink class="nav-link" href="/client/profile">
@@ -52,9 +66,7 @@
         <i class="bi bi-speedometer2"></i> Dashboard
     </NavLink>
 
-    <NavLink class="nav-link" href="/lawyer/profile">
-        <i class="bi bi-person-badge"></i> My Profile
-    </NavLink>
+    
 
     <NavLink class="nav-link" href="/lawyer/appointments">
         <i class="bi bi-calendar3"></i> Appointments
@@ -76,32 +88,142 @@
         <i class="bi bi-handshake"></i> Deal Requests
     </NavLink>
 
+    <NavLink class="nav-link" href="/lawyer/invoice-settings">
+        <i class="bi bi-receipt"></i> Invoice Settings
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/staff">
+        <i class="bi bi-people"></i> Staff
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/tasks">
+        <i class="bi bi-check2-square"></i> Tasks
+    </NavLink>
+
     <NavLink class="nav-link" href="/lawyer/earnings">
         <i class="bi bi-cash-stack"></i> Earnings
     </NavLink>
+    <NavLink class="nav-link" href="/lawyer/availability">
+        <i class="bi bi-calendar-week"></i> Availability
+    </NavLink>
+    <NavLink class="nav-link" href="/lawyer/contracts">
+        <i class="bi bi-file-earmark-text"></i> Contracts
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/disputes">
+        <i class="bi bi-exclamation-triangle"></i> Disputes
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/support">
+        <i class="bi bi-life-preserver"></i> Support
+    </NavLink>
+
+    <NavLink class="nav-link" href="/lawyer/profile">
+        <i class="bi bi-person-badge"></i> My Profile
+    </NavLink>
 </AuthorizeView>
 
-<!-- ── Admin Section ─────────────────────────────────────────────────────── -->
-<AuthorizeView Roles="Admin">
+<!-- ── Staff Section ──────────────────────────────────────────────────────── -->
+<AuthorizeView Roles="Staff">
+    <div class="lc-nav-section">Staff</div>
+
+    <NavLink class="nav-link" href="/staff/dashboard">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </NavLink>
+
+    <NavLink class="nav-link" href="/staff/my-cases">
+        <i class="bi bi-folder2-open"></i> My Cases
+    </NavLink>
+
+    <NavLink class="nav-link" href="/staff/my-tasks">
+        <i class="bi bi-list-check"></i> My Tasks
+    </NavLink>
+</AuthorizeView>
+
+<!-- ── Admin & AdminStaff Section ─────────────────────────────────────────── -->
+<AuthorizeView Roles="Admin,AdminStaff">
     <div class="lc-nav-section">Administration</div>
+
+    @{
+        var adminUser = context.User;
+        bool isSuperAdmin = adminUser.IsInRole("Admin");
+        var staffRoles = adminUser.FindAll("adminStaffRole").Select(c => c.Value).ToHashSet();
+        bool HasStaffRole(string r) => isSuperAdmin || staffRoles.Contains(r);
+    }
 
     <NavLink class="nav-link" href="/admin/dashboard">
         <i class="bi bi-speedometer2"></i> Dashboard
     </NavLink>
 
-    <NavLink class="nav-link" href="/admin/approve-lawyers">
-        <i class="bi bi-person-check"></i> Approve Lawyers
-    </NavLink>
+    @if (HasStaffRole("LawyerApprovalManager"))
+    {
+        <NavLink class="nav-link" href="/admin/approve-lawyers">
+            <i class="bi bi-person-check"></i> Approve Lawyers
+        </NavLink>
+    }
 
-    <NavLink class="nav-link" href="/admin/categories">
-        <i class="bi bi-tags"></i> Categories
-    </NavLink>
+    @if (HasStaffRole("UserManagementStaff"))
+    {
+        <NavLink class="nav-link" href="/admin/users">
+            <i class="bi bi-people-fill"></i> Manage Users
+        </NavLink>
+    }
 
-    <NavLink class="nav-link" href="/admin/commission">
-        <i class="bi bi-percent"></i> Commission
-    </NavLink>
+    @if (isSuperAdmin)
+    {
+        <NavLink class="nav-link" href="/admin/categories">
+            <i class="bi bi-tags"></i> Categories
+        </NavLink>
+    }
 
-    <NavLink class="nav-link" href="/admin/revenue">
-        <i class="bi bi-graph-up"></i> Revenue Stats
-    </NavLink>
+    @if (HasStaffRole("FinanceStaff"))
+    {
+        <NavLink class="nav-link" href="/admin/commission">
+            <i class="bi bi-percent"></i> Commission
+        </NavLink>
+
+        <NavLink class="nav-link" href="/admin/revenue">
+            <i class="bi bi-graph-up"></i> Revenue Stats
+        </NavLink>
+    }
+
+    @if (isSuperAdmin)
+    {
+        <NavLink class="nav-link" href="/admin/holidays">
+            <i class="bi bi-calendar-heart"></i> Holidays
+        </NavLink>
+
+        <NavLink class="nav-link" href="/admin/contracts">
+            <i class="bi bi-file-earmark-text"></i> Contracts
+        </NavLink>
+
+        <NavLink class="nav-link" href="/admin/tnc-settings">
+            <i class="bi bi-file-text"></i> T&amp;C Settings
+        </NavLink>
+    }
+
+    @if (HasStaffRole("DisputeRefundManager"))
+    {
+        <NavLink class="nav-link" href="/admin/disputes">
+            <i class="bi bi-exclamation-triangle"></i> Disputes
+        </NavLink>
+
+        <NavLink class="nav-link" href="/admin/refund-invoices">
+            <i class="bi bi-receipt"></i> Refund Invoices
+        </NavLink>
+    }
+
+    @if (HasStaffRole("SupportStaff"))
+    {
+        <NavLink class="nav-link" href="/admin/support">
+            <i class="bi bi-life-preserver"></i> Support Tickets
+        </NavLink>
+    }
+
+    @if (isSuperAdmin)
+    {
+        <NavLink class="nav-link" href="/admin/admin-staff">
+            <i class="bi bi-person-gear"></i> Admin Staff
+        </NavLink>
+    }
 </AuthorizeView>

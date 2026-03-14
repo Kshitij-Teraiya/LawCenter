@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LegalConnect.API.Controllers;
 
 [ApiController]
-[Authorize(Roles = "Lawyer,Client,Admin")]
+[Authorize(Roles = "Lawyer,Client,Admin,Staff")]
 public class CaseDocumentsController : ControllerBase
 {
     private readonly ICaseDocumentService _service;
@@ -73,6 +73,29 @@ public class CaseDocumentsController : ControllerBase
         var (success, message) = await _service.DeleteDocumentAsync(GetUserId(), GetUserRole(), id);
         if (!success) return BadRequest(ApiResponse.Fail(message));
         return Ok(ApiResponse.Ok(message));
+    }
+
+    /// <summary>Toggle IsPrivate on a document the caller uploaded.</summary>
+    [HttpPut("api/case-documents/{id:int}/toggle-private")]
+    [Authorize(Roles = "Client")]
+    public async Task<IActionResult> TogglePrivate(int id)
+    {
+        var (success, message, newValue) = await _service.TogglePrivateAsync(GetUserId(), id);
+        if (!success) return BadRequest(ApiResponse.Fail(message));
+        return Ok(ApiResponse<bool>.Ok(newValue, message));
+    }
+
+    /// <summary>
+    /// Toggle IsAvailableForDeal on a client-owned non-private document.
+    /// Only the client who uploaded the document may call this.
+    /// </summary>
+    [HttpPut("api/case-documents/{id:int}/toggle-deal-share")]
+    [Authorize(Roles = "Client")]
+    public async Task<IActionResult> ToggleDealShare(int id)
+    {
+        var (success, message, newValue) = await _service.ToggleAvailableForDealAsync(GetUserId(), id);
+        if (!success) return BadRequest(ApiResponse.Fail(message));
+        return Ok(ApiResponse<bool>.Ok(newValue, message));
     }
 
     private int GetUserId() =>

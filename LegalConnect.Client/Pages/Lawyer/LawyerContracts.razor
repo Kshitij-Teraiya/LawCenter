@@ -1,0 +1,184 @@
+@page "/lawyer/contracts"
+@attribute [Authorize(Roles = "Lawyer")]
+@inject IContractService ContractService
+@inject ToastService Toast
+@inject IJSRuntime JS
+
+<PageTitle>My Contracts – LawCity</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="bi bi-file-earmark-text me-2"></i>My Contracts</h4>
+    </div>
+
+    @* Filter Bar *@
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small mb-1">Contract Type</label>
+                    <select class="form-select form-select-sm" @bind="_filter.ContractType">
+                        <option value="">All Types</option>
+                        <option value="RegistrationTnC">Registration T&amp;C</option>
+                        <option value="ProposalDraft">Proposal Draft</option>
+                        <option value="ProposalFinal">Proposal Final</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">From</label>
+                    <input type="date" class="form-control form-control-sm" @bind="_filter.DateFrom" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">To</label>
+                    <input type="date" class="form-control form-control-sm" @bind="_filter.DateTo" />
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary btn-sm w-100" @onclick="LoadAsync">
+                        <i class="bi bi-search me-1"></i>Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    }
+    else if (_contracts == null || _contracts.Items.Count == 0)
+    {
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>No contracts found.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Type</th>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Size</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in _contracts.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <span class='badge @ContractTypeBadge(c.ContractType)'>
+                                        @ContractTypeDisplay(c.ContractType)
+                                    </span>
+                                </td>
+                                <td class="small">@c.Title</td>
+                                <td class="small">@c.GeneratedAt.ToString("dd MMM yyyy")</td>
+                                <td class="small text-muted">@c.FileSizeFormatted</td>
+                                <td>
+                                    <button class="btn btn-outline-primary btn-sm"
+                                            @onclick="() => DownloadAsync(c.Id, c.FileName)"
+                                            title="Download">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @* Pagination *@
+        @if (_contracts.TotalPages > 1)
+        {
+            <div class="d-flex justify-content-center mt-3">
+                <nav>
+                    <ul class="pagination pagination-sm">
+                        <li class="page-item @(_contracts.HasPrevious ? "" : "disabled")">
+                            <button class="page-link" @onclick='() => ChangePage(_filter.Page - 1)'>
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                        </li>
+                        @for (int p = 1; p <= _contracts.TotalPages; p++)
+                        {
+                            var pg = p;
+                            <li class="page-item @(pg == _filter.Page ? "active" : "")">
+                                <button class="page-link" @onclick='() => ChangePage(pg)'>@pg</button>
+                            </li>
+                        }
+                        <li class="page-item @(_contracts.HasNext ? "" : "disabled")">
+                            <button class="page-link" @onclick='() => ChangePage(_filter.Page + 1)'>
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private PagedResult<LegalContractModel>? _contracts;
+    private ContractFilterModel _filter = new();
+    private bool _loading;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true; StateHasChanged();
+        try
+        {
+            var resp = await ContractService.GetContractsAsync(_filter);
+            _contracts = resp?.Data;
+        }
+        catch { Toast.ShowError("Failed to load contracts."); }
+        finally { _loading = false; }
+    }
+
+    private async Task ChangePage(int p)
+    {
+        _filter.Page = p;
+        await LoadAsync();
+    }
+
+    private async Task DownloadAsync(int id, string fileName)
+    {
+        try
+        {
+            var bytes = await ContractService.DownloadContractAsync(id);
+            if (bytes == null || bytes.Length == 0)
+            {
+                Toast.ShowError("Failed to download contract.");
+                return;
+            }
+            await JS.InvokeVoidAsync("downloadFileFromBytes", fileName, "application/pdf", Convert.ToBase64String(bytes));
+        }
+        catch
+        {
+            Toast.ShowError("Failed to download contract.");
+        }
+    }
+
+    private static string ContractTypeBadge(string type) => type switch
+    {
+        "RegistrationTnC"  => "bg-info-subtle text-info",
+        "ProposalDraft"    => "bg-warning-subtle text-warning",
+        "ProposalFinal"    => "bg-success-subtle text-success",
+        "RefundInvoice"    => "bg-danger-subtle text-danger",
+        _                  => "bg-secondary-subtle text-secondary"
+    };
+
+    private static string ContractTypeDisplay(string type) => type switch
+    {
+        "RegistrationTnC"  => "Registration T&C",
+        "ProposalDraft"    => "Proposal Draft",
+        "ProposalFinal"    => "Proposal Final",
+        "RefundInvoice"    => "Refund Invoice",
+        _                  => type
+    };
+}

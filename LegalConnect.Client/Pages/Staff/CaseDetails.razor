@@ -1,0 +1,303 @@
+@page "/staff/cases/{Id:int}"
+@using LegalConnect.Client.Models.Cases
+@using LegalConnect.Client.Models.Staff
+@using LegalConnect.Client.Services
+@using LegalConnect.Client.Components
+@attribute [Authorize(Roles = "Staff")]
+@inject ICaseService CaseService
+@inject IStaffService StaffService
+@inject ToastService Toast
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Case Details — Staff View</PageTitle>
+
+@if (_loading)
+{
+    <div class="container py-5"><LoadingSpinner Message="Loading case..." /></div>
+}
+else if (_case == null)
+{
+    <div class="container py-5 text-center">
+        <i class="bi bi-folder-x display-1 text-muted"></i>
+        <h4 class="mt-3">Case not found</h4>
+        <a href="/staff/dashboard" class="btn btn-primary mt-2">Back to Dashboard</a>
+    </div>
+}
+else
+{
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+            <div class="d-flex align-items-center">
+                <a href="/staff/my-cases" class="btn btn-outline-secondary btn-sm me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h2 class="mb-0">@_case.CaseTitle</h2>
+                        <span class="@_case.StatusBadgeClass fs-6">@_case.Status</span>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        @if (!string.IsNullOrEmpty(_case.CaseNumber))
+                        {
+                            <span class="me-3"><i class="bi bi-hash me-1"></i>@_case.CaseNumber</span>
+                        }
+                        <span class="me-3"><i class="bi bi-building me-1"></i>@_case.Court</span>
+                        <span><i class="bi bi-tag me-1"></i>@_case.CaseType</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column: Case Info + Documents -->
+            <div class="col-lg-4">
+                <!-- Case Info Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Case Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-5 text-muted small">Client</dt>
+                            <dd class="col-7">@_case.ClientName</dd>
+                            <dt class="col-5 text-muted small">Lawyer</dt>
+                            <dd class="col-7">@_case.LawyerName</dd>
+                            @if (_case.FilingDate.HasValue)
+                            {
+                                <dt class="col-5 text-muted small">Filed</dt>
+                                <dd class="col-7">@_case.FilingDate.Value.ToString("d MMM yyyy")</dd>
+                            }
+                            @if (_case.NextHearingDate.HasValue)
+                            {
+                                <dt class="col-5 text-muted small">Next Hearing</dt>
+                                <dd class="col-7 @(_case.NextHearingDate < DateTime.Today ? "text-danger fw-bold" : "text-success")">
+                                    @_case.NextHearingDate.Value.ToString("d MMM yyyy")
+                                </dd>
+                            }
+                            <dt class="col-5 text-muted small">Created</dt>
+                            <dd class="col-7">@_case.CreatedDate.ToString("d MMM yyyy")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-card-text me-2"></i>Description</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0" style="white-space: pre-wrap;">@_case.Description</p>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_case.Outcome))
+                {
+                    <div class="card shadow-sm mb-4 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="bi bi-trophy me-2"></i>Outcome</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0" style="white-space: pre-wrap;">@_case.Outcome</p>
+                        </div>
+                    </div>
+                }
+
+                <!-- Documents Card -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-folder2 me-2"></i>Documents (@_case.DocumentCount)</h6>
+                        @if (_permissions?.CanUploadDocument == true && _case.Status != CaseStatus.Closed)
+                        {
+                            <button class="btn btn-sm btn-outline-primary"
+                                    @onclick="() => _showUploadModal = true">
+                                <i class="bi bi-upload me-1"></i>Upload
+                            </button>
+                        }
+                    </div>
+                    <div class="card-body p-0">
+                        @if (!_case.Documents.Any())
+                        {
+                            <div class="text-center py-3 text-muted small">No documents yet</div>
+                        }
+                        else
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var doc in _case.Documents)
+                                {
+                                    <li class="list-group-item d-flex align-items-center gap-2 py-2">
+                                        <i class="@doc.FileIcon fs-5"></i>
+                                        <div class="flex-grow-1 overflow-hidden">
+                                            <div class="text-truncate small fw-medium">@doc.FileName</div>
+                                            <div class="text-muted" style="font-size:.75rem">
+                                                @doc.FileSizeDisplay · @doc.DocumentType
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                                @onclick="() => DownloadDocAsync(doc.Id, doc.FileName)">
+                                            <i class="bi bi-download"></i>
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Timeline + Add Activity (if permitted) -->
+            <div class="col-lg-8">
+                @* ── Add Activity (shown only when permitted) ─────────────────── *@
+                @if (_permissions?.CanAddActivity == true && _case.Status != CaseStatus.Closed)
+                {
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Add Activity</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control form-control-sm"
+                                           placeholder="Title (optional)"
+                                           @bind="_newActivity.Title" />
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select form-select-sm" @bind="_newActivity.Category">
+                                        @foreach (var cat in _activityCategories)
+                                        {
+                                            <option value="@cat">@cat</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-1" style="font-size:.75rem">Activity Type</label>
+                                    <select class="form-select form-select-sm" @bind="_newActivity.ActivityType">
+                                        <option value="@ActivityType.Note">Note</option>
+                                        <option value="@ActivityType.Hearing">Hearing</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted mb-1" style="font-size:.75rem">Event Date (optional)</label>
+                                    <input type="date" class="form-control form-control-sm"
+                                           @bind="_newActivity.EventDate" />
+                                </div>
+                                <div class="col-12">
+                                    <textarea class="form-control form-control-sm" rows="3"
+                                              placeholder="Describe the activity..."
+                                              @bind="_newActivity.Description"></textarea>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button class="btn btn-sm btn-primary" @onclick="AddActivityAsync"
+                                            disabled="@(string.IsNullOrWhiteSpace(_newActivity.Description) || _addingActivity)">
+                                        @if (_addingActivity)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1"></span>
+                                        }
+                                        <i class="bi bi-plus-circle me-1"></i>Add Activity
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <CaseTimeline Activities="_activities" IsLoading="_loadingActivities" />
+            </div>
+        </div>
+    </div>
+
+    @* ── Upload Modal ──────────────────────────────────────────────────── *@
+    @if (_showUploadModal)
+    {
+        <DocumentUploadComponent CaseId="Id"
+                                 IsLawyer="false"
+                                 Activities="_activities"
+                                 OnUploadSuccess="OnDocumentUploaded"
+                                 OnClose="() => _showUploadModal = false" />
+    }
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CaseDto?                  _case;
+    private List<CaseActivityDto>     _activities = [];
+    private StaffCasePermissionsModel? _permissions;
+    private bool _loading          = true;
+    private bool _loadingActivities = true;
+    private bool _showUploadModal  = false;
+    private bool _addingActivity   = false;
+    private AddCaseActivityDto _newActivity = new() { ActivityType = ActivityType.Note };
+
+    private static readonly string[] _activityCategories =
+    [
+        "Other", "Clerical", "Police Inquiry", "FIR", "Main Event",
+        "Case Submission", "Court Hearing", "Judgement Day",
+        "Summons Attended", "Payment"
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadCaseAsync(), LoadActivitiesAsync(), LoadPermissionsAsync());
+    }
+
+    private async Task LoadCaseAsync()
+    {
+        _loading = true;
+        var resp = await CaseService.GetCaseByIdAsync(Id);
+        _case = resp?.Data;
+        _loading = false;
+    }
+
+    private async Task LoadActivitiesAsync()
+    {
+        _loadingActivities = true;
+        var resp = await CaseService.GetActivitiesAsync(Id);
+        _activities = resp?.Data ?? [];
+        _loadingActivities = false;
+    }
+
+    private async Task LoadPermissionsAsync()
+    {
+        var resp = await StaffService.GetMyPermissionsAsync(Id);
+        _permissions = resp?.Data;
+    }
+
+    private async Task AddActivityAsync()
+    {
+        _addingActivity = true;
+        _newActivity.LinkedDocumentIds = [];
+        var resp = await CaseService.AddActivityAsync(Id, _newActivity);
+        if (resp?.Success == true)
+        {
+            _newActivity = new AddCaseActivityDto { ActivityType = ActivityType.Note };
+            Toast.ShowSuccess("Activity added.");
+            await LoadActivitiesAsync();
+        }
+        else Toast.ShowError(resp?.Message ?? "Failed to add activity.");
+        _addingActivity = false;
+    }
+
+    private async Task OnDocumentUploaded()
+    {
+        _showUploadModal = false;
+        await LoadCaseAsync();
+        await LoadActivitiesAsync();
+    }
+
+    private async Task DownloadDocAsync(int docId, string fileName)
+    {
+        try
+        {
+            var http = HttpClientFactory.CreateClient("secured");
+            var response = await http.GetAsync($"case-documents/{docId}/download");
+            if (!response.IsSuccessStatusCode) { Toast.ShowError("Download failed or access denied."); return; }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", fileName, contentType, Convert.ToBase64String(bytes));
+        }
+        catch { Toast.ShowError("Download failed."); }
+    }
+}

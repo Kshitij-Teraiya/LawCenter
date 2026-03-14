@@ -22,6 +22,11 @@ public class HireRequest
     public string Court { get; set; } = string.Empty;
     public string? Message { get; set; }
 
+    /// <summary>
+    /// If set, the deal will be linked to an existing case instead of auto-creating a new one.
+    /// </summary>
+    public int? LinkedCaseId { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public bool IsDeleted { get; set; } = false;
@@ -29,6 +34,8 @@ public class HireRequest
     // Navigation
     public ClientProfile ClientProfile { get; set; } = null!;
     public LawyerProfile LawyerProfile { get; set; } = null!;
-    public List<HireRequestMessage> Messages { get; set; } = [];
+    public List<HireRequestMessage>  Messages  { get; set; } = [];
+    public List<HireRequestDocument> Documents { get; set; } = [];
     public Deal? Deal { get; set; }
+    public Case? LinkedCase { get; set; }
 }

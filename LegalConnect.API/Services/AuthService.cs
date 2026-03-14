@@ -23,13 +23,23 @@ public class AuthService : IAuthService
     private readonly AppDbContext _db;
     private readonly JwtHelper _jwt;
     private readonly IConfiguration _config;
+    private readonly ISystemSettingsService _settingsService;
+    private readonly IContractService _contractService;
 
-    public AuthService(UserManager<ApplicationUser> userManager, AppDbContext db, JwtHelper jwt, IConfiguration config)
+    public AuthService(
+        UserManager<ApplicationUser> userManager,
+        AppDbContext db,
+        JwtHelper jwt,
+        IConfiguration config,
+        ISystemSettingsService settingsService,
+        IContractService contractService)
     {
-        _userManager = userManager;
-        _db = db;
-        _jwt = jwt;
-        _config = config;
+        _userManager      = userManager;
+        _db               = db;
+        _jwt              = jwt;
+        _config           = config;
+        _settingsService  = settingsService;
+        _contractService  = contractService;
     }
 
     public async Task<(bool Success, string Message, AuthResponseDto? Data)> LoginAsync(LoginDto dto)
@@ -45,7 +55,23 @@ public class AuthService : IAuthService
         var roles = await _userManager.GetRolesAsync(user);
         var role = roles.FirstOrDefault() ?? "Client";
 
-        var token = _jwt.GenerateToken(user, role);
+        // Fetch admin staff sub-roles if applicable
+        List<string>? adminStaffRoles = null;
+        if (role == "AdminStaff")
+        {
+            var staffProfile = await _db.AdminStaffProfiles
+                .Include(a => a.RoleAssignments)
+                .FirstOrDefaultAsync(a => a.UserId == user.Id && a.IsActive);
+
+            if (staffProfile == null)
+                return (false, "Admin staff profile not found or inactive.", null);
+
+            adminStaffRoles = staffProfile.RoleAssignments
+                .Select(r => r.Role.ToString())
+                .ToList();
+        }
+
+        var token = _jwt.GenerateToken(user, role, adminStaffRoles);
         var response = new AuthResponseDto
         {
             Token = token,
@@ -53,7 +79,8 @@ public class AuthService : IAuthService
             FullName = user.FullName,
             Role = role,
             ExpiresAt = _jwt.GetExpiry(),
-            ProfilePictureUrl = user.ProfilePictureUrl
+            ProfilePictureUrl = user.ProfilePictureUrl,
+            AdminStaffRoles = adminStaffRoles
         };
 
         return (true, "Login successful.", response);
@@ -99,6 +126,9 @@ public class AuthService : IAuthService
 
     public async Task<(bool Success, string Message)> RegisterLawyerAsync(RegisterLawyerDto dto)
     {
+        if (!dto.AcceptedTnC)
+            return (false, "You must accept the Terms & Conditions to register.");
+
         var existing = await _userManager.FindByEmailAsync(dto.Email);
         if (existing != null)
             return (false, "Email is already registered.");
@@ -136,6 +166,19 @@ public class AuthService : IAuthService
 
         _db.LawyerProfiles.Add(lawyerProfile);
         await _db.SaveChangesAsync();
+
+        // Generate T&C registration contract PDF
+        try
+        {
+            var tncText = await _settingsService.GetValueAsync(SystemSettingKeys.LawyerRegistrationTnC)
+                ?? "Please review the platform terms on LegalConnect.";
+            var lawyerName = $"{dto.FirstName} {dto.LastName}";
+            await _contractService.GenerateAndSaveRegistrationTnCAsync(lawyerProfile.Id, lawyerName, dto.Email, tncText);
+        }
+        catch (Exception)
+        {
+            // Non-fatal: registration still succeeds if PDF fails
+        }
 
         return (true, "Registration successful. Your account is pending verification by an admin.");
     }

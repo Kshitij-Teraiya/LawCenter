@@ -1,0 +1,175 @@
+@page "/staff/dashboard"
+@attribute [Authorize(Roles = "Staff")]
+@inject IStaffService StaffService
+
+<PageTitle>Staff Dashboard</PageTitle>
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+        <h4 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2 text-primary"></i>My Dashboard</h4>
+        <p class="text-muted small mb-0">Overview of your assigned tasks</p>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    else
+    {
+        @* ── Summary Cards ──────────────────────────────────────────────── *@
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-primary-subtle text-primary">
+                            <i class="bi bi-list-task"></i>
+                        </div>
+                        <div>
+                            <div class="fs-3 fw-bold">@_tasks.Count</div>
+                            <div class="text-muted small">Total Tasks</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-warning-subtle text-warning">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <div>
+                            <div class="fs-3 fw-bold">@_pending</div>
+                            <div class="text-muted small">Pending</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-info-subtle text-info">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </div>
+                        <div>
+                            <div class="fs-3 fw-bold">@_inProgress</div>
+                            <div class="text-muted small">In Progress</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-danger-subtle text-danger">
+                            <i class="bi bi-exclamation-circle"></i>
+                        </div>
+                        <div>
+                            <div class="fs-3 fw-bold">@_overdue</div>
+                            <div class="text-muted small">Overdue</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ── Recent Tasks ───────────────────────────────────────────────── *@
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Recent Tasks</span>
+                <a href="/staff/my-tasks" class="btn btn-sm btn-outline-primary py-0 px-2">View All</a>
+            </div>
+            @if (_recent.Count == 0)
+            {
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-clipboard-check text-muted" style="font-size:2rem;"></i>
+                    <p class="text-muted mt-2 mb-0">No tasks assigned yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Case</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Due Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var task in _recent)
+                                {
+                                    <tr class="@(task.IsOverdue ? "table-danger" : "")">
+                                        <td class="fw-medium">@task.Title</td>
+                                        <td class="text-muted">@(task.CaseTitle ?? "—")</td>
+                                        <td><span class="badge @GetPriorityBadge(task.Priority)">@task.Priority</span></td>
+                                        <td><span class="badge @GetStatusBadge(task.Status)">@task.Status</span></td>
+                                        <td class="@(task.IsOverdue ? "fw-bold text-danger" : "text-muted")">
+                                            @(task.DueDate.HasValue ? task.DueDate.Value.ToString("MMM d, yyyy") : "—")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .stat-icon {
+        width: 48px; height: 48px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+</style>
+
+@code {
+    private List<StaffTaskModel> _tasks   = [];
+    private List<StaffTaskModel> _recent  = [];
+    private bool _loading = true;
+    private int _pending = 0, _inProgress = 0, _overdue = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await StaffService.GetMyTasksAsync();
+        if (result?.Success == true)
+        {
+            _tasks      = result.Data ?? [];
+            _pending    = _tasks.Count(t => t.Status == StaffTaskStatusType.Pending);
+            _inProgress = _tasks.Count(t => t.Status == StaffTaskStatusType.InProgress);
+            _overdue    = _tasks.Count(t => t.IsOverdue);
+            _recent     = _tasks
+                .OrderBy(t => t.DueDate ?? DateTime.MaxValue)
+                .Take(10)
+                .ToList();
+        }
+        _loading = false;
+    }
+
+    private static string GetPriorityBadge(string p) => p switch
+    {
+        "Urgent" => "bg-danger",
+        "High"   => "bg-warning text-dark",
+        "Low"    => "bg-info-subtle text-info",
+        _        => "bg-secondary-subtle text-secondary"
+    };
+
+    private static string GetStatusBadge(string s) => s switch
+    {
+        "Completed"  => "bg-success",
+        "InProgress" => "bg-primary",
+        "Cancelled"  => "bg-secondary",
+        _            => "bg-warning text-dark"
+    };
+}

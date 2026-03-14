@@ -2,7 +2,7 @@
 @attribute [Authorize(Roles = "Client")]
 @inject IAppointmentService AppointmentService
 
-<PageTitle>Payment History – LegalConnect</PageTitle>
+<PageTitle>Payment History – LawCity</PageTitle>
 
 <div class="container-fluid">
     <h4 class="fw-bold mb-4">Payment History</h4>
@@ -32,7 +32,7 @@
                         <i class="bi bi-cash-stack"></i>
                     </div>
                     <div>
-                        <div class="stat-value">৳@_totalSpent.ToString("N0")</div>
+                        <div class="stat-value">Rs.@_totalSpent.ToString("N0")</div>
                         <div class="stat-label">Total Spent</div>
                     </div>
                 </div>
@@ -70,9 +70,9 @@
                                     <td class="text-muted">@appt.Id</td>
                                     <td>@appt.LawyerName</td>
                                     <td>@appt.AppointmentDate.ToString("MMM dd, yyyy")</td>
-                                    <td>৳@appt.ConsultationFee.ToString("N2")</td>
-                                    <td class="text-muted">৳@appt.PlatformCommission.ToString("N2")</td>
-                                    <td class="fw-semibold">৳@appt.TotalAmount.ToString("N2")</td>
+                                    <td>Rs.@appt.ConsultationFee.ToString("N2")</td>
+                                    <td class="text-muted">Rs.@appt.PlatformCommission.ToString("N2")</td>
+                                    <td class="fw-semibold">Rs.@appt.TotalAmount.ToString("N2")</td>
                                     <td>
                                         <span class="badge @(appt.Status == AppointmentStatus.Completed ? "bg-success" : "bg-secondary")">
                                             @appt.Status

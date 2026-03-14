@@ -1,47 +1,26 @@
 @page "/lawyer/earnings"
 @attribute [Authorize(Roles = "Lawyer")]
 @inject IAppointmentService AppointmentService
+@inject IDealService DealService
 
-<PageTitle>Earnings – LegalConnect</PageTitle>
+<PageTitle>Earnings – LawCity</PageTitle>
 
 <div class="container-fluid">
-    <h4 class="fw-bold mb-4">Earnings Summary</h4>
+    <h4 class="fw-bold mb-4"><i class="bi bi-cash-stack me-2 text-success"></i>Earnings Summary</h4>
 
     @if (_loading) { <LoadingSpinner /> }
     else
     {
         <!-- Summary Cards -->
-        <div class="row g-3 mb-5">
+        <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="stat-card">
                     <div class="stat-icon bg-success bg-opacity-10 text-success">
                         <i class="bi bi-cash-stack"></i>
                     </div>
                     <div>
-                        <div class="stat-value">৳@_totalEarned.ToString("N0")</div>
-                        <div class="stat-label">Total Earned</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-                        <i class="bi bi-calendar-check"></i>
-                    </div>
-                    <div>
-                        <div class="stat-value">@_totalCompleted</div>
-                        <div class="stat-label">Sessions Done</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-                        <i class="bi bi-graph-up"></i>
-                    </div>
-                    <div>
-                        <div class="stat-value">৳@_avgEarned.ToString("N0")</div>
-                        <div class="stat-label">Avg. Per Session</div>
+                        <div class="stat-value">Rs.@_totalNet.ToString("N0")</div>
+                        <div class="stat-label">Total Net Earned</div>
                     </div>
                 </div>
             </div>
@@ -51,19 +30,41 @@
                         <i class="bi bi-calendar-month"></i>
                     </div>
                     <div>
-                        <div class="stat-value">৳@_monthEarned.ToString("N0")</div>
+                        <div class="stat-value">Rs.@_monthNet.ToString("N0")</div>
                         <div class="stat-label">This Month</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">@_totalAppointments</div>
+                        <div class="stat-label">Appointments Done</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">@_totalInvoicesPaid</div>
+                        <div class="stat-label">Invoices Paid</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Monthly Breakdown -->
-        <div class="lc-card">
+        <div class="lc-card mb-4">
             <h6 class="fw-bold mb-3">Monthly Breakdown</h6>
             @if (_monthly.Count == 0)
             {
-                <p class="text-muted text-center py-3">No completed sessions yet.</p>
+                <p class="text-muted text-center py-3">No earnings recorded yet.</p>
             }
             else
             {
@@ -72,8 +73,9 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Month</th>
-                                <th>Sessions</th>
-                                <th>Gross Earned</th>
+                                <th>Appointments</th>
+                                <th>Invoices</th>
+                                <th>Gross</th>
                                 <th>Platform Fee</th>
                                 <th>Net Received</th>
                             </tr>
@@ -83,10 +85,11 @@
                             {
                                 <tr>
                                     <td>@m.Month</td>
-                                    <td>@m.Sessions</td>
-                                    <td>৳@m.Gross.ToString("N2")</td>
-                                    <td class="text-muted">৳@m.Commission.ToString("N2")</td>
-                                    <td class="fw-semibold text-success">৳@m.Net.ToString("N2")</td>
+                                    <td>@m.Appointments</td>
+                                    <td>@m.Invoices</td>
+                                    <td>Rs.@m.Gross.ToString("N2")</td>
+                                    <td class="text-muted">Rs.@m.Commission.ToString("N2")</td>
+                                    <td class="fw-semibold text-success">Rs.@m.Net.ToString("N2")</td>
                                 </tr>
                             }
                         </tbody>
@@ -94,43 +97,98 @@
                 </div>
             }
         </div>
+
+        <!-- Paid Invoices Detail -->
+        @if (_paidInvoices.Count > 0)
+        {
+            <div class="lc-card mb-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-receipt me-2"></i>Paid Invoices (@_paidInvoices.Count)</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Client</th>
+                                <th>Charge Type</th>
+                                <th>Amount</th>
+                                <th>GST</th>
+                                <th>Total</th>
+                                <th>Paid Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var inv in _paidInvoices)
+                            {
+                                <tr>
+                                    <td><code class="small">@inv.InvoiceNumber</code></td>
+                                    <td>@inv.ClientName</td>
+                                    <td><span class="badge bg-light text-dark">@inv.ChargeType</span></td>
+                                    <td>Rs.@inv.Amount.ToString("N2")</td>
+                                    <td class="text-muted">Rs.@inv.GstAmount.ToString("N2")</td>
+                                    <td class="fw-semibold text-success">Rs.@inv.TotalAmount.ToString("N2")</td>
+                                    <td class="text-muted">@inv.PaidAt.ToLocalTime().ToString("d MMM yyyy")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light fw-semibold">
+                            <tr>
+                                <td colspan="5" class="text-end">Total Invoices:</td>
+                                <td class="text-success">Rs.@_paidInvoices.Sum(i => i.TotalAmount).ToString("N2")</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        }
     }
 </div>
 
 @code {
     private bool _loading = true;
-    private decimal _totalEarned;
-    private decimal _monthEarned;
-    private decimal _avgEarned;
-    private int _totalCompleted;
-    private List<(string Month, int Sessions, decimal Gross, decimal Commission, decimal Net)> _monthly = [];
+    private decimal _totalNet;
+    private decimal _monthNet;
+    private int _totalAppointments;
+    private int _totalInvoicesPaid;
+    private List<LawyerPaidInvoiceDto> _paidInvoices = [];
+
+    private record MonthRow(string Month, int Appointments, int Invoices, decimal Gross, decimal Commission, decimal Net);
+    private List<MonthRow> _monthly = [];
 
     protected override async Task OnInitializedAsync()
     {
-        var all = await AppointmentService.GetLawyerAppointmentsAsync(
-            DateTime.Today.AddYears(-1), DateTime.Today.AddDays(1));
+        // Fetch both data sources in parallel
+        var apptTask    = AppointmentService.GetLawyerAppointmentsAsync(null, null);  // all appointments, no filter
+        var invoiceTask = DealService.GetMyPaidInvoicesAsync();
+        await Task.WhenAll(apptTask, invoiceTask);
 
-        var completed = all.Where(a => a.Status == AppointmentStatus.Completed).ToList();
+        var allAppts = apptTask.Result;
+        _paidInvoices = invoiceTask.Result?.Data ?? [];
 
-        _totalCompleted = completed.Count;
-        _totalEarned    = completed.Sum(a => a.ConsultationFee);
-        _avgEarned      = _totalCompleted > 0 ? _totalEarned / _totalCompleted : 0;
-        _monthEarned    = completed
-            .Where(a => a.AppointmentDate.Month == DateTime.Today.Month
-                     && a.AppointmentDate.Year  == DateTime.Today.Year)
-            .Sum(a => a.ConsultationFee);
+        var completedAppts = allAppts.Where(a => a.Status == AppointmentStatus.Completed).ToList();
+        _totalAppointments = completedAppts.Count;
+        _totalInvoicesPaid = _paidInvoices.Count;
 
-        _monthly = completed
-            .GroupBy(a => new { a.AppointmentDate.Year, a.AppointmentDate.Month })
-            .OrderByDescending(g => g.Key.Year).ThenByDescending(g => g.Key.Month)
-            .Select(g =>
-            {
-                var month      = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMMM yyyy");
-                var gross      = g.Sum(a => a.ConsultationFee);
-                var commission = g.Sum(a => a.PlatformCommission);
-                return (month, g.Count(), gross, commission, gross - commission);
-            })
-            .ToList();
+        // Build combined monthly breakdown — collect all (year,month) keys
+        var apptKeys = completedAppts.Select(a => (a.AppointmentDate.Year, a.AppointmentDate.Month));
+        var invKeys  = _paidInvoices.Select(i => (i.PaidAt.Year,           i.PaidAt.Month));
+        var allKeys  = apptKeys.Union(invKeys).Distinct()
+                               .OrderByDescending(k => k.Item1).ThenByDescending(k => k.Item2);
+
+        _monthly = allKeys.Select(k =>
+        {
+            var y = k.Item1; var mo = k.Item2;
+            var monthLabel  = new DateTime(y, mo, 1).ToString("MMMM yyyy");
+            var monthAppts  = completedAppts.Where(a => a.AppointmentDate.Year == y && a.AppointmentDate.Month == mo).ToList();
+            var monthInvs   = _paidInvoices.Where(i  => i.PaidAt.Year         == y && i.PaidAt.Month          == mo).ToList();
+            var gross       = monthAppts.Sum(a => a.ConsultationFee) + monthInvs.Sum(i => i.TotalAmount);
+            var commission  = monthAppts.Sum(a => a.PlatformCommission);
+            return new MonthRow(monthLabel, monthAppts.Count, monthInvs.Count, gross, commission, gross - commission);
+        }).ToList();
+
+        _totalNet  = _monthly.Sum(m => m.Net);
+        _monthNet  = _monthly
+            .FirstOrDefault(m => m.Month == DateTime.Today.ToString("MMMM yyyy"))?.Net ?? 0;
 
         _loading = false;
     }

@@ -1,0 +1,111 @@
+@page "/admin/disputes"
+@attribute [Authorize(Roles = "Admin,AdminStaff")]
+@inject ILitigationDisputeService DisputeService
+@inject ToastService Toast
+
+<PageTitle>Litigation Disputes – Admin</PageTitle>
+
+<div class="container-fluid py-4">
+    <h4 class="fw-bold mb-4"><i class="bi bi-exclamation-triangle me-2"></i>Litigation Disputes</h4>
+
+    <div class="mb-3 d-flex gap-2">
+        @foreach (var s in new[] { "", "Pending", "AdminApproved", "LawyerApproved", "BothApproved", "Rejected" })
+        {
+            <button class='btn btn-sm @(_status == s ? "btn-primary" : "btn-outline-secondary")'
+                    @onclick='() => SetStatus(s)'>
+                @(string.IsNullOrEmpty(s) ? "All" : s)
+            </button>
+        }
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    }
+    else if (_disputes?.Items.Count == 0)
+    {
+        <div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2"></i>No disputes found.</div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var d in _disputes!.Items)
+            {
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="fw-semibold">Invoice: @d.InvoiceNumber</span>
+                                    <span class="badge bg-secondary-subtle text-secondary ms-2">@d.DisputeType</span>
+                                </div>
+                                <span class='badge @StatusBadge(d.Status)'>@d.Status</span>
+                            </div>
+                            <div class="row g-2 small text-muted mb-2">
+                                <div class="col-md-3"><i class="bi bi-person me-1"></i>Client: @d.ClientName</div>
+                                <div class="col-md-3"><i class="bi bi-briefcase me-1"></i>Lawyer: @d.LawyerName</div>
+                                <div class="col-md-3"><i class="bi bi-currency-rupee me-1"></i>Disputed: ₹@d.DisputedAmount.ToString("N2")</div>
+                                <div class="col-md-3"><i class="bi bi-calendar me-1"></i>@d.CreatedAt.ToString("dd MMM yyyy")</div>
+                            </div>
+                            <p class="small mb-2"><strong>Reason:</strong> @d.Reason</p>
+                            <div class="d-flex gap-2 small">
+                                <span class='@(d.AdminApproved ? "text-success" : "text-muted")'><i class='bi bi-@(d.AdminApproved ? "check-circle-fill" : "circle") me-1'></i>Admin</span>
+                                <span class='@(d.LawyerApproved ? "text-success" : "text-muted")'><i class='bi bi-@(d.LawyerApproved ? "check-circle-fill" : "circle") me-1'></i>Lawyer</span>
+                            </div>
+                            @if (d.Status == "Pending" || d.Status == "LawyerApproved")
+                            {
+                                <div class="mt-2 d-flex gap-2">
+                                    <button class="btn btn-success btn-sm"
+                                            @onclick='() => Approve(d.Id, true)'>
+                                        <i class="bi bi-check-lg me-1"></i>Approve
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm"
+                                            @onclick='() => Approve(d.Id, false)'>
+                                        <i class="bi bi-x-lg me-1"></i>Reject
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private PagedResult<LitigationDisputeModel>? _disputes;
+    private bool _loading;
+    private string _status = "";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task SetStatus(string s) { _status = s; await LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; StateHasChanged();
+        try
+        {
+            var resp = await DisputeService.GetDisputesAsync(string.IsNullOrEmpty(_status) ? null : _status);
+            _disputes = resp?.Data ?? new PagedResult<LitigationDisputeModel>();
+        }
+        catch { Toast.ShowError("Failed to load disputes."); }
+        finally { _loading = false; }
+    }
+
+    private async Task Approve(int id, bool approve)
+    {
+        await DisputeService.AdminApproveAsync(id, new ApproveDisputeModel { Approve = approve });
+        Toast.ShowSuccess(approve ? "Dispute approved." : "Dispute rejected.");
+        await LoadAsync();
+    }
+
+    private static string StatusBadge(string s) => s switch
+    {
+        "BothApproved" => "bg-success-subtle text-success",
+        "Rejected"     => "bg-danger-subtle text-danger",
+        "Pending"      => "bg-warning-subtle text-warning",
+        _              => "bg-info-subtle text-info"
+    };
+}

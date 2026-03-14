@@ -1,0 +1,2895 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "LegalConnect API",
+    "description": "Lawyer Marketplace Platform API",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/admin/lawyers/pending": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/lawyers/{lawyerId}/approve": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lawyerId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/lawyers/{lawyerId}/reject": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lawyerId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/RejectLawyerDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/commission": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SetCommissionDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/categories": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateCategoryDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/categories/{id}": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateCategoryDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/admin/revenue": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/appointments/slots": {
+      "get": {
+        "tags": [
+          "Appointments"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lawyerId",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/appointments": {
+      "post": {
+        "tags": [
+          "Appointments"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/BookAppointmentDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/appointments/my": {
+      "get": {
+        "tags": [
+          "Appointments"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "type": "integer",
+            "format": "int32",
+            "default": 1
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "type": "integer",
+            "format": "int32",
+            "default": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/appointments/{id}": {
+      "get": {
+        "tags": [
+          "Appointments"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/appointments/{id}/cancel": {
+      "put": {
+        "tags": [
+          "Appointments"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CancelAppointmentDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/appointments/lawyer": {
+      "get": {
+        "tags": [
+          "Appointments"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/appointments/{id}/confirm": {
+      "put": {
+        "tags": [
+          "Appointments"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/appointments/{id}/complete": {
+      "put": {
+        "tags": [
+          "Appointments"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/LoginDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/register/client": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/RegisterClientDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/register/lawyer": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/RegisterLawyerDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ForgotPasswordDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/google-login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/GoogleLoginDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cases/{caseId}/activities": {
+      "get": {
+        "tags": [
+          "CaseActivities"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "caseId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CaseActivities"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "caseId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/AddCaseActivityDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cases/{caseId}/documents": {
+      "get": {
+        "tags": [
+          "CaseDocuments"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "caseId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "DocumentType",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "IsPrivate",
+            "type": "boolean"
+          },
+          {
+            "in": "query",
+            "name": "PageNumber",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "PageSize",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "CaseDocuments"
+        ],
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "caseId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "formData",
+            "name": "file",
+            "type": "file"
+          },
+          {
+            "in": "formData",
+            "name": "DocumentType",
+            "required": true,
+            "type": "string",
+            "maxLength": 100
+          },
+          {
+            "in": "formData",
+            "name": "IsPrivate",
+            "type": "boolean"
+          },
+          {
+            "in": "formData",
+            "name": "SharedWithLawyerIds",
+            "type": "array",
+            "items": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/case-documents/{id}/download": {
+      "get": {
+        "tags": [
+          "CaseDocuments"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/case-documents/{id}": {
+      "delete": {
+        "tags": [
+          "CaseDocuments"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cases": {
+      "get": {
+        "tags": [
+          "Cases"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "SearchTerm",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "Status"
+          },
+          {
+            "in": "query",
+            "name": "CaseType",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "Court",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "ClientProfileId",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "FilingDateFrom",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "in": "query",
+            "name": "FilingDateTo",
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "in": "query",
+            "name": "SortBy",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "SortDescending",
+            "type": "boolean"
+          },
+          {
+            "in": "query",
+            "name": "PageNumber",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "PageSize",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cases"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateCaseDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cases/{id}": {
+      "get": {
+        "tags": [
+          "Cases"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Cases"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateCaseDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cases"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cases/my-lawyers": {
+      "get": {
+        "tags": [
+          "Cases"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cases/{id}/status": {
+      "put": {
+        "tags": [
+          "Cases"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateStatusDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cases/{id}/close": {
+      "put": {
+        "tags": [
+          "Cases"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CloseCaseDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cases/{id}/lawyers": {
+      "get": {
+        "tags": [
+          "Cases"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cases"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/AddCaseLawyerDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/cases/{id}/lawyers/{lawyerProfileId}": {
+      "delete": {
+        "tags": [
+          "Cases"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "path",
+            "name": "lawyerProfileId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": [
+          "Categories"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-requests": {
+      "post": {
+        "tags": [
+          "ClientLawyerRequests"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateClientLawyerRequestDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-requests/my": {
+      "get": {
+        "tags": [
+          "ClientLawyerRequests"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-requests/incoming": {
+      "get": {
+        "tags": [
+          "ClientLawyerRequests"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-requests/{id}/accept": {
+      "put": {
+        "tags": [
+          "ClientLawyerRequests"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/RespondToRequestDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-requests/{id}/reject": {
+      "put": {
+        "tags": [
+          "ClientLawyerRequests"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/RespondToRequestDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-requests/{id}": {
+      "delete": {
+        "tags": [
+          "ClientLawyerRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/client-profiles/me": {
+      "get": {
+        "tags": [
+          "ClientProfiles"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ClientProfiles"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateClientProfileDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests": {
+      "post": {
+        "tags": [
+          "HireRequests"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateHireRequestDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/my": {
+      "get": {
+        "tags": [
+          "HireRequests"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/incoming": {
+      "get": {
+        "tags": [
+          "HireRequests"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/{id}": {
+      "get": {
+        "tags": [
+          "HireRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "HireRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/{id}/accept": {
+      "put": {
+        "tags": [
+          "HireRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/{id}/reject": {
+      "put": {
+        "tags": [
+          "HireRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/{id}/messages": {
+      "get": {
+        "tags": [
+          "HireRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "HireRequests"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SendMessageDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/{id}/messages/read": {
+      "put": {
+        "tags": [
+          "HireRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/deals/{dealId}/proposals": {
+      "post": {
+        "tags": [
+          "HireRequests"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dealId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateProposalDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/proposals/{proposalId}/accept": {
+      "put": {
+        "tags": [
+          "HireRequests"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposalId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/RespondToProposalDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/proposals/{proposalId}/reject": {
+      "put": {
+        "tags": [
+          "HireRequests"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposalId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/RespondToProposalDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/proposals/{proposalId}/invoice": {
+      "post": {
+        "tags": [
+          "HireRequests"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposalId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateInvoiceDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/invoices/{invoiceId}/accept": {
+      "put": {
+        "tags": [
+          "HireRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoiceId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/invoices/{invoiceId}/paid": {
+      "put": {
+        "tags": [
+          "HireRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoiceId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hire-requests/invoices/{invoiceId}/reject": {
+      "put": {
+        "tags": [
+          "HireRequests"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoiceId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-clients": {
+      "get": {
+        "tags": [
+          "LawyerClients"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "SearchTerm",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "IsActive",
+            "type": "boolean"
+          },
+          {
+            "in": "query",
+            "name": "SortBy",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "SortDescending",
+            "type": "boolean"
+          },
+          {
+            "in": "query",
+            "name": "PageNumber",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "PageSize",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LawyerClients"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/AddLawyerClientDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-clients/eligible": {
+      "get": {
+        "tags": [
+          "LawyerClients"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-clients/{id}": {
+      "get": {
+        "tags": [
+          "LawyerClients"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "LawyerClients"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyer-clients/{id}/notes": {
+      "put": {
+        "tags": [
+          "LawyerClients"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateLawyerClientNotesDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers": {
+      "get": {
+        "tags": [
+          "Lawyers"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "SearchTerm",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "City",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "CategoryId",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "Court",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "MinExperience",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "MaxExperience",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "MinFee",
+            "type": "number",
+            "format": "double"
+          },
+          {
+            "in": "query",
+            "name": "MaxFee",
+            "type": "number",
+            "format": "double"
+          },
+          {
+            "in": "query",
+            "name": "MinRating",
+            "type": "number",
+            "format": "double"
+          },
+          {
+            "in": "query",
+            "name": "IsVerified",
+            "type": "boolean"
+          },
+          {
+            "in": "query",
+            "name": "IsAvailable",
+            "type": "boolean"
+          },
+          {
+            "in": "query",
+            "name": "SortBy",
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "SortDescending",
+            "type": "boolean"
+          },
+          {
+            "in": "query",
+            "name": "PageNumber",
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "query",
+            "name": "PageSize",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers/cities": {
+      "get": {
+        "tags": [
+          "Lawyers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers/courts": {
+      "get": {
+        "tags": [
+          "Lawyers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers/{id}": {
+      "get": {
+        "tags": [
+          "Lawyers"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers/me": {
+      "get": {
+        "tags": [
+          "Lawyers"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Lawyers"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateLawyerProfileDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers/me/experiences": {
+      "post": {
+        "tags": [
+          "Lawyers"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/AddExperienceDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers/me/experiences/{experienceId}": {
+      "delete": {
+        "tags": [
+          "Lawyers"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "experienceId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers/me/case-results": {
+      "post": {
+        "tags": [
+          "Lawyers"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/AddCaseResultDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers/me/case-results/{caseResultId}": {
+      "delete": {
+        "tags": [
+          "Lawyers"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "caseResultId",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lawyers/me/service-charge": {
+      "put": {
+        "tags": [
+          "Lawyers"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SetServiceChargeDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ActivityType": {
+      "format": "int32",
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "type": "integer"
+    },
+    "AddCaseActivityDto": {
+      "required": [
+        "activityType",
+        "description"
+      ],
+      "type": "object",
+      "properties": {
+        "activityType": {
+          "$ref": "#/definitions/ActivityType"
+        },
+        "description": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "activityDate": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AddCaseLawyerDto": {
+      "type": "object",
+      "properties": {
+        "lawyerProfileId": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AddCaseResultDto": {
+      "required": [
+        "caseTitle",
+        "court",
+        "outcome"
+      ],
+      "type": "object",
+      "properties": {
+        "caseTitle": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "court": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "outcome": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "year": {
+          "format": "int32",
+          "maximum": 2100,
+          "minimum": 1950,
+          "type": "integer"
+        },
+        "description": {
+          "maxLength": 500,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AddExperienceDto": {
+      "required": [
+        "organization",
+        "startDate",
+        "title"
+      ],
+      "type": "object",
+      "properties": {
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "organization": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "startDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "endDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "isCurrent": {
+          "type": "boolean"
+        },
+        "description": {
+          "maxLength": 500,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AddLawyerClientDto": {
+      "required": [
+        "clientProfileId"
+      ],
+      "type": "object",
+      "properties": {
+        "clientProfileId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "firstAppointmentId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "notes": {
+          "maxLength": 2000,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BookAppointmentDto": {
+      "required": [
+        "appointmentDate",
+        "lawyerId",
+        "startTime"
+      ],
+      "type": "object",
+      "properties": {
+        "lawyerId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "appointmentDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "startTime": {
+          "format": "date-span",
+          "type": "string"
+        },
+        "notes": {
+          "maxLength": 500,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CancelAppointmentDto": {
+      "required": [
+        "reason"
+      ],
+      "type": "object",
+      "properties": {
+        "reason": {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CaseStatus": {
+      "format": "int32",
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "type": "integer"
+    },
+    "CloseCaseDto": {
+      "required": [
+        "outcome"
+      ],
+      "type": "object",
+      "properties": {
+        "outcome": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CreateCaseDto": {
+      "required": [
+        "caseTitle",
+        "caseType",
+        "court",
+        "description"
+      ],
+      "type": "object",
+      "properties": {
+        "caseTitle": {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        "caseNumber": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "caseType": {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "court": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "clientProfileId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "lawyerProfileIds": {
+          "type": "array",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "appointmentId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "lawyerClientId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "filingDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "nextHearingDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 3000,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CreateCategoryDto": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 255,
+          "type": "string"
+        },
+        "iconClass": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CreateClientLawyerRequestDto": {
+      "required": [
+        "lawyerProfileId"
+      ],
+      "type": "object",
+      "properties": {
+        "lawyerProfileId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "message": {
+          "maxLength": 1000,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CreateHireRequestDto": {
+      "required": [
+        "caseType",
+        "court",
+        "description",
+        "lawyerProfileId"
+      ],
+      "type": "object",
+      "properties": {
+        "lawyerProfileId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "description": {
+          "maxLength": 3000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "caseType": {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "court": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 1000,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CreateInvoiceDto": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        "dueDate": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CreateProposalDto": {
+      "required": [
+        "amount",
+        "description",
+        "title"
+      ],
+      "type": "object",
+      "properties": {
+        "title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 3000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "amount": {
+          "format": "double",
+          "minimum": 0.01,
+          "type": "number"
+        },
+        "isNegotiable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ForgotPasswordDto": {
+      "required": [
+        "email"
+      ],
+      "type": "object",
+      "properties": {
+        "email": {
+          "format": "email",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "GoogleLoginDto": {
+      "required": [
+        "credential"
+      ],
+      "type": "object",
+      "properties": {
+        "credential": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LoginDto": {
+      "required": [
+        "email",
+        "password"
+      ],
+      "type": "object",
+      "properties": {
+        "email": {
+          "format": "email",
+          "minLength": 1,
+          "type": "string"
+        },
+        "password": {
+          "minLength": 6,
+          "type": "string"
+        },
+        "rememberMe": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RegisterClientDto": {
+      "required": [
+        "confirmPassword",
+        "email",
+        "firstName",
+        "lastName",
+        "password",
+        "phoneNumber"
+      ],
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "maxLength": 50,
+          "minLength": 1,
+          "type": "string"
+        },
+        "lastName": {
+          "maxLength": 50,
+          "minLength": 1,
+          "type": "string"
+        },
+        "email": {
+          "format": "email",
+          "minLength": 1,
+          "type": "string"
+        },
+        "phoneNumber": {
+          "format": "tel",
+          "minLength": 1,
+          "type": "string"
+        },
+        "password": {
+          "minLength": 8,
+          "type": "string"
+        },
+        "confirmPassword": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RegisterLawyerDto": {
+      "required": [
+        "barCouncilNumber",
+        "categoryId",
+        "city",
+        "confirmPassword",
+        "court",
+        "email",
+        "firstName",
+        "lastName",
+        "password",
+        "phoneNumber"
+      ],
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "maxLength": 50,
+          "minLength": 1,
+          "type": "string"
+        },
+        "lastName": {
+          "maxLength": 50,
+          "minLength": 1,
+          "type": "string"
+        },
+        "email": {
+          "format": "email",
+          "minLength": 1,
+          "type": "string"
+        },
+        "phoneNumber": {
+          "format": "tel",
+          "minLength": 1,
+          "type": "string"
+        },
+        "password": {
+          "minLength": 8,
+          "type": "string"
+        },
+        "confirmPassword": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "barCouncilNumber": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "categoryId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "city": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "court": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "yearsOfExperience": {
+          "format": "int32",
+          "maximum": 50,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "consultationFee": {
+          "format": "double",
+          "maximum": 1000000,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RejectLawyerDto": {
+      "required": [
+        "reason"
+      ],
+      "type": "object",
+      "properties": {
+        "reason": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RespondToProposalDto": {
+      "type": "object",
+      "properties": {
+        "note": {
+          "maxLength": 500,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "RespondToRequestDto": {
+      "required": [
+        "accept"
+      ],
+      "type": "object",
+      "properties": {
+        "accept": {
+          "type": "boolean"
+        },
+        "note": {
+          "maxLength": 500,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SendMessageDto": {
+      "required": [
+        "content"
+      ],
+      "type": "object",
+      "properties": {
+        "content": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SetCommissionDto": {
+      "type": "object",
+      "properties": {
+        "commissionPercentage": {
+          "format": "double",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SetServiceChargeDto": {
+      "type": "object",
+      "properties": {
+        "consultationFee": {
+          "format": "double",
+          "maximum": 1000000,
+          "minimum": 0,
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UpdateCaseDto": {
+      "required": [
+        "caseTitle",
+        "caseType",
+        "court",
+        "description"
+      ],
+      "type": "object",
+      "properties": {
+        "caseTitle": {
+          "maxLength": 300,
+          "minLength": 1,
+          "type": "string"
+        },
+        "caseNumber": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "caseType": {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "court": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "filingDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "nextHearingDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/CaseStatus"
+        },
+        "description": {
+          "maxLength": 3000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "outcome": {
+          "maxLength": 2000,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UpdateCategoryDto": {
+      "required": [
+        "name"
+      ],
+      "type": "object",
+      "properties": {
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 255,
+          "type": "string"
+        },
+        "iconClass": {
+          "type": "string"
+        },
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UpdateClientProfileDto": {
+      "required": [
+        "firstName",
+        "lastName"
+      ],
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "maxLength": 50,
+          "minLength": 1,
+          "type": "string"
+        },
+        "lastName": {
+          "maxLength": 50,
+          "minLength": 1,
+          "type": "string"
+        },
+        "phoneNumber": {
+          "maxLength": 20,
+          "type": "string"
+        },
+        "city": {
+          "maxLength": 100,
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UpdateLawyerClientNotesDto": {
+      "type": "object",
+      "properties": {
+        "notes": {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UpdateLawyerProfileDto": {
+      "required": [
+        "city",
+        "court",
+        "firstName",
+        "lastName"
+      ],
+      "type": "object",
+      "properties": {
+        "firstName": {
+          "maxLength": 50,
+          "minLength": 1,
+          "type": "string"
+        },
+        "lastName": {
+          "maxLength": 50,
+          "minLength": 1,
+          "type": "string"
+        },
+        "phoneNumber": {
+          "format": "tel",
+          "type": "string"
+        },
+        "city": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "court": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "bio": {
+          "maxLength": 1000,
+          "type": "string"
+        },
+        "consultationFee": {
+          "format": "double",
+          "maximum": 1000000,
+          "minimum": 0,
+          "type": "number"
+        },
+        "isAvailable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UpdateStatusDto": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/CaseStatus"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "securityDefinitions": {
+    "Bearer": { }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}

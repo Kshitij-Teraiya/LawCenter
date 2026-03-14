@@ -1,6 +1,10 @@
 {
   "Files": [
     {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Components\\InvoicePrintView.razor.js",
+      "PackagePath": "staticwebassets\\Components\\InvoicePrintView.razor.js"
+    },
+    {
       "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\bin\\Release\\net8.0\\wwwroot\\_framework\\blazor.webassembly.js",
       "PackagePath": "staticwebassets\\_framework\\blazor.webassembly.js"
     },
@@ -17,6 +21,10 @@
       "PackagePath": "staticwebassets\\service-worker.js"
     },
     {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\appsettings.Production.json",
+      "PackagePath": "staticwebassets\\appsettings.Production.json"
+    },
+    {
       "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\appsettings.json",
       "PackagePath": "staticwebassets\\appsettings.json"
     },
@@ -31,6 +39,10 @@
     {
       "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\index.html",
       "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\js\\app.js",
+      "PackagePath": "staticwebassets\\js\\app.js"
     },
     {
       "Id": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\js\\google-auth.js",

@@ -3,8 +3,10 @@
 @inject ICaseService CaseService
 @inject ToastService Toast
 @inject NavigationManager Nav
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JSRuntime
 
-<PageTitle>Case Details — LegalConnect</PageTitle>
+<PageTitle>Case Details — LawCity</PageTitle>
 
 @if (_loading)
 {
@@ -76,6 +78,15 @@ else
                             <dd class="col-7"><span class="@_case.StatusBadgeClass">@_case.Status</span></dd>
                             <dt class="col-5 text-muted small">Opened</dt>
                             <dd class="col-7">@_case.CreatedDate.ToString("d MMM yyyy")</dd>
+                            @if (_case.DealId.HasValue && _case.DealHireRequestId.HasValue)
+                            {
+                                <dt class="col-5 text-muted small">Deal</dt>
+                                <dd class="col-7">
+                                    <a href="/client/deals/@_case.DealHireRequestId" class="btn btn-sm btn-outline-info py-0 px-2">
+                                        <i class="bi bi-briefcase me-1"></i>View Deal
+                                    </a>
+                                </dd>
+                            }
                         </dl>
                     </div>
                 </div>
@@ -204,14 +215,32 @@ else
                                                 {
                                                     <span class="badge bg-info text-white ms-1">@doc.SharedWithLawyerIds.Count lawyer(s)</span>
                                                 }
+                                                @if (doc.IsAvailableForDeal)
+                                                {
+                                                    <span class="badge bg-primary ms-1"><i class="bi bi-briefcase me-1"></i>For Hire Requests</span>
+                                                }
                                             </div>
                                         </div>
-                                        <a href="/api/case-documents/@doc.Id/download"
-                                           target="_blank"
-                                           class="btn btn-sm btn-outline-secondary"
-                                           title="Download">
+                                        @if (!doc.IsPrivate && doc.UploadedByRole == "Client")
+                                        {
+                                            <button class="btn btn-sm @(doc.IsAvailableForDeal ? "btn-primary" : "btn-outline-primary")"
+                                                    title="@(doc.IsAvailableForDeal ? "Remove from Hire Request sharing" : "Share with evaluating lawyers")"
+                                                    disabled="@(_togglingDealShareId == doc.Id)"
+                                                    @onclick="() => ToggleDealShareAsync(doc)">
+                                                @if (_togglingDealShareId == doc.Id)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm" style="width:12px;height:12px;"></span>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-briefcase"></i>
+                                                }
+                                            </button>
+                                        }
+                                        <button class="btn btn-sm btn-outline-secondary" title="Download"
+                                                @onclick="() => DownloadDocAsync(doc.Id, doc.FileName)">
                                             <i class="bi bi-download"></i>
-                                        </a>
+                                        </button>
                                     </li>
                                 }
                             </ul>
@@ -309,6 +338,7 @@ else
     private List<HiredLawyerDto>? _availableLawyers;
     private int _removingId;
     private int _addingId;
+    private int _togglingDealShareId;
     protected override async Task OnInitializedAsync()
     {
         await Task.WhenAll(LoadCaseAsync(), LoadActivitiesAsync());
@@ -384,6 +414,40 @@ else
             Toast.ShowError(resp?.Message ?? "Failed to add lawyer.");
         }
         _addingId = 0;
+    }
+
+    private async Task DownloadDocAsync(int docId, string fileName)
+    {
+        try
+        {
+            var http = HttpClientFactory.CreateClient("secured");
+            var response = await http.GetAsync($"case-documents/{docId}/download");
+            if (!response.IsSuccessStatusCode) { Toast.ShowError("Download failed or access denied."); return; }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            await JSRuntime.InvokeVoidAsync("downloadFileFromBytes", fileName, contentType, Convert.ToBase64String(bytes));
+        }
+        catch { Toast.ShowError("Download failed."); }
+    }
+
+    private async Task ToggleDealShareAsync(CaseDocumentDto doc)
+    {
+        _togglingDealShareId = doc.Id;
+        var resp = await CaseService.ToggleAvailableForDealAsync(doc.Id);
+        if (resp?.Success == true)
+        {
+            doc.IsAvailableForDeal = resp.Data;
+            var msg = resp.Data
+                ? "Document is now shared with lawyers evaluating this case."
+                : "Document removed from hire request sharing.";
+            Toast.ShowSuccess(msg);
+        }
+        else
+        {
+            Toast.ShowError(resp?.Message ?? "Failed to update sharing setting.");
+        }
+        _togglingDealShareId = 0;
     }
 
 }

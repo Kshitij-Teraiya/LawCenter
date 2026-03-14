@@ -77,8 +77,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy("BlazorClient", policy =>
     {
         policy.WithOrigins(
+                "https://lawcity.in",
+                "https://api.lawcity.in",
                 "http://localhost:5000",
-                "https://localhost:5001")
+                "https://localhost:5000",
+                "https://lawcity-dcacfbbaage6brcz.southindia-01.azurewebsites.net")
+        
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
@@ -102,9 +106,30 @@ builder.Services.AddScoped<ICaseActivityService, CaseActivityService>();
 builder.Services.AddScoped<ICaseDocumentService, CaseDocumentService>();
 builder.Services.AddScoped<IClientLawyerRequestService, ClientLawyerRequestService>();
 builder.Services.AddScoped<IDealService, DealService>();
+builder.Services.AddScoped<IHireRequestDocumentService, HireRequestDocumentService>();
 builder.Services.AddScoped<IClientProfileService, ClientProfileService>();
+builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddSingleton<IFileValidationService, FileValidationService>();
 builder.Services.AddSingleton<IFileUploadService, FileUploadService>();
+
+// ── Contracts & Billing Services ──────────────────────────────────────────
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+builder.Services.AddScoped<IContractFileService, ContractFileService>();
+builder.Services.AddScoped<IPdfGenerationService, PdfGenerationService>();
+builder.Services.AddScoped<ISystemSettingsService, SystemSettingsService>();
+builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IDuesService, DuesService>();
+builder.Services.AddScoped<ILitigationDisputeService, LitigationDisputeService>();
+builder.Services.AddScoped<IRefundInvoiceService, RefundInvoiceService>();
+builder.Services.AddScoped<ISupportService, SupportService>();
+builder.Services.AddScoped<IAdminStaffService, AdminStaffService>();
+
+// ── Appointment Slot Management Services ──────────────────────────────────
+builder.Services.AddScoped<ILawyerTimeSlotConfigurationService, LawyerTimeSlotConfigurationService>();
+builder.Services.AddScoped<ILawyerWorkingHoursService, LawyerWorkingHoursService>();
+builder.Services.AddScoped<ILawyerBlackoutBlockService, LawyerBlackoutBlockService>();
+builder.Services.AddScoped<IHolidayManagementService, HolidayManagementService>();
+builder.Services.AddScoped<IAppointmentSlotService, AppointmentSlotService>();
 
 // ─────────────────────────────────────────
 // Controllers & Swagger
@@ -189,7 +214,7 @@ static async Task SeedDataAsync(
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole<int>> roleManager)
 {
-    string[] roles = ["Admin", "Lawyer", "Client"];
+    string[] roles = ["Admin", "Lawyer", "Client", "Staff", "AdminStaff"];
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))

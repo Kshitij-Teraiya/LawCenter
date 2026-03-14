@@ -1,11 +1,13 @@
 @page "/client/hire-lawyers"
 @attribute [Authorize(Roles = "Client")]
 @using LegalConnect.Client.Models.Lawyer
+@using LegalConnect.Client.Models.Cases
 @inject ILawyerService LawyerService
 @inject IDealService DealService
+@inject ICaseService CaseService
 @inject ToastService Toast
 
-<PageTitle>Hire Lawyers &mdash; LegalConnect</PageTitle>
+<PageTitle>Hire Lawyers &mdash; LawCity</PageTitle>
 
 <div class="container py-4">
     <div class="mb-4">
@@ -158,11 +160,11 @@
 @if (_sendTarget != null)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-send text-primary me-2"></i>Send Hire Request</h5>
-                    <button class="btn-close" @onclick="() => _sendTarget = null" disabled="@_sending"></button>
+                    <button class="btn-close" @onclick='() => _sendTarget = null' disabled="@_sending"></button>
                 </div>
                 <EditForm Model="_hireModel" OnValidSubmit="SendRequestAsync">
                     <DataAnnotationsValidator />
@@ -171,16 +173,61 @@
                             Sending a hire request to <strong>@_sendTarget.FullName</strong>.
                             Describe your legal matter so the lawyer can evaluate.
                         </p>
+
+                        @* ── Case Link Selection ──────────────────────────── *@
+                        @if (_myCases.Count > 0)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Case</label>
+                                <div class="d-flex gap-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="rNewCase"
+                                               checked="@(_caseMode == CaseMode.New)"
+                                               @onchange='() => SetCaseMode(CaseMode.New)' />
+                                        <label class="form-check-label" for="rNewCase">
+                                            <i class="bi bi-folder-plus me-1"></i>Open new case
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" id="rExistingCase"
+                                               checked="@(_caseMode == CaseMode.Existing)"
+                                               @onchange='() => SetCaseMode(CaseMode.Existing)' />
+                                        <label class="form-check-label" for="rExistingCase">
+                                            <i class="bi bi-folder-symlink me-1"></i>Link to existing case
+                                        </label>
+                                    </div>
+                                </div>
+
+                                @if (_caseMode == CaseMode.Existing)
+                                {
+                                    <select class="form-select" @onchange="OnLinkedCaseSelected">
+                                        <option value="0">— Select a case —</option>
+                                        @foreach (var c in _myCases)
+                                        {
+                                            <option value="@c.Id">@c.CaseTitle (@c.CaseType &middot; @c.Court)</option>
+                                        }
+                                    </select>
+                                    @if (_hireModel.LinkedCaseId == null)
+                                    {
+                                        <div class="text-danger small mt-1">Please select a case.</div>
+                                    }
+                                }
+                            </div>
+                        }
+
+                        @* ── Case Type / Court ───────────────────────────── *@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Case Type <span class="text-danger">*</span></label>
                             <InputText class="form-control" @bind-Value="_hireModel.CaseType"
-                                       placeholder="e.g. Criminal, Civil, Property..." />
+                                       placeholder="e.g. Criminal, Civil, Property..."
+                                       disabled="@(_caseMode == CaseMode.Existing && _hireModel.LinkedCaseId.HasValue)" />
                             <ValidationMessage For="() => _hireModel.CaseType" />
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Court <span class="text-danger">*</span></label>
                             <InputText class="form-control" @bind-Value="_hireModel.Court"
-                                       placeholder="e.g. Delhi High Court, Supreme Court..." />
+                                       placeholder="e.g. Delhi High Court, Supreme Court..."
+                                       disabled="@(_caseMode == CaseMode.Existing && _hireModel.LinkedCaseId.HasValue)" />
                             <ValidationMessage For="() => _hireModel.Court" />
                         </div>
                         <div class="mb-3">
@@ -196,7 +243,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="() => _sendTarget = null" disabled="@_sending">Cancel</button>
+                        <button type="button" class="btn btn-secondary"
+                                @onclick='() => _sendTarget = null' disabled="@_sending">Cancel</button>
                         <button type="submit" class="btn btn-primary" disabled="@_sending">
                             @if (_sending) { <span class="spinner-border spinner-border-sm me-1"></span> }
                             <i class="bi bi-send me-1"></i>Send Request
@@ -209,22 +257,26 @@
 }
 
 @code {
+    private enum CaseMode { New, Existing }
+
     private LawyerFilterDto _filter = new() { PageSize = 12, IsVerified = true };
     private List<LawyerSummaryDto> _lawyers = [];
     private List<CategoryDto> _categories = [];
     private List<string> _cities = [];
     private List<HireRequestDto> _myRequests = [];
+    private List<CaseSummaryDto> _myCases = [];
     private bool _loading = true;
     private int _totalPages = 1;
     private System.Threading.CancellationTokenSource? _searchCts;
 
     private LawyerSummaryDto? _sendTarget;
     private CreateHireRequestDto _hireModel = new();
+    private CaseMode _caseMode = CaseMode.New;
     private bool _sending;
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.WhenAll(LoadAsync(), LoadMetaAsync(), LoadMyRequestsAsync());
+        await Task.WhenAll(LoadAsync(), LoadMetaAsync(), LoadMyRequestsAsync(), LoadMyCasesAsync());
     }
 
     private async Task LoadAsync()
@@ -249,11 +301,23 @@
         _myRequests = resp?.Data ?? [];
     }
 
-    private HireRequestDto? GetExistingRequest(int lawyerProfileId)
+    private async Task LoadMyCasesAsync()
     {
-        return _myRequests.FirstOrDefault(r => r.LawyerProfileId == lawyerProfileId
-            && r.Status != "Rejected");
+        try
+        {
+            var resp = await CaseService.GetCasesAsync(new CaseFilterDto { PageSize = 100 });
+            // Only show Open / InProgress cases for linking
+            _myCases = (resp?.Data?.Items ?? [])
+                .Where(c => c.Status is CaseStatus.Open or CaseStatus.InProgress)
+                .ToList();
+        }
+        catch { /* non-fatal */ }
     }
+
+    private HireRequestDto? GetExistingRequest(int lawyerProfileId) =>
+        _myRequests.FirstOrDefault(r => r.LawyerProfileId == lawyerProfileId
+            && r.Status != "Rejected"
+            && r.Status != "ConvertedToCase");
 
     private void OnSearch()
     {
@@ -288,14 +352,50 @@
     private void OpenSendRequest(LawyerSummaryDto lawyer)
     {
         _sendTarget = lawyer;
+        _caseMode = CaseMode.New;
         _hireModel = new CreateHireRequestDto { LawyerProfileId = lawyer.Id };
+    }
+
+    private void SetCaseMode(CaseMode mode)
+    {
+        _caseMode = mode;
+        _hireModel.LinkedCaseId = null;
+        _hireModel.CaseType = string.Empty;
+        _hireModel.Court = string.Empty;
+    }
+
+    private void OnLinkedCaseSelected(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id) && id > 0)
+        {
+            var c = _myCases.FirstOrDefault(x => x.Id == id);
+            if (c != null)
+            {
+                _hireModel.LinkedCaseId = c.Id;
+                _hireModel.CaseType    = c.CaseType;
+                _hireModel.Court       = c.Court;
+                return;
+            }
+        }
+        _hireModel.LinkedCaseId = null;
+        _hireModel.CaseType = string.Empty;
+        _hireModel.Court = string.Empty;
     }
 
     private async Task SendRequestAsync()
     {
         if (_sendTarget == null) return;
-        _sending = true;
 
+        if (_caseMode == CaseMode.Existing && _hireModel.LinkedCaseId == null)
+        {
+            Toast.ShowError("Please select an existing case or switch to 'Open new case'.");
+            return;
+        }
+
+        if (_caseMode == CaseMode.New)
+            _hireModel.LinkedCaseId = null;
+
+        _sending = true;
         var resp = await DealService.CreateHireRequestAsync(_hireModel);
         if (resp?.Success == true)
         {

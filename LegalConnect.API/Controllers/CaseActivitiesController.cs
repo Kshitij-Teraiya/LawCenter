@@ -9,7 +9,7 @@ namespace LegalConnect.API.Controllers;
 
 [ApiController]
 [Route("api/cases/{caseId:int}/activities")]
-[Authorize(Roles = "Lawyer,Client,Admin")]
+[Authorize(Roles = "Lawyer,Client,Admin,Staff")]
 public class CaseActivitiesController : ControllerBase
 {
     private readonly ICaseActivityService _service;
@@ -40,6 +40,16 @@ public class CaseActivitiesController : ControllerBase
 
         if (!success) return BadRequest(ApiResponse.Fail(message));
         return Ok(ApiResponse<CaseActivityDto>.Ok(data!, message));
+    }
+
+    /// <summary>Link an existing case document to an activity.</summary>
+    [HttpPost("{activityId:int}/link-document/{documentId:int}")]
+    [Authorize(Roles = "Lawyer")]
+    public async Task<IActionResult> LinkDocument(int caseId, int activityId, int documentId)
+    {
+        var (success, message) = await _service.LinkDocumentAsync(GetUserId(), GetUserRole(), caseId, activityId, documentId);
+        if (!success) return BadRequest(ApiResponse.Fail(message));
+        return Ok(ApiResponse.Ok(message));
     }
 
     private int GetUserId() =>

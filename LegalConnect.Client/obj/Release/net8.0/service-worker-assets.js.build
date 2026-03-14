@@ -9,8 +9,12 @@
       "url": "image\/logo.jpeg"
     },
     {
-      "hash": "sha256-8xHBUZTQMl36DaEeIF7vS35Btj+gdBY8tw3J99uFbdI=",
+      "hash": "sha256-om7HAaa8+RtNY0TJBtnJBDhiaU7HxxqOEXvkb1Lh+iM=",
       "url": "index.html"
+    },
+    {
+      "hash": "sha256-vWgDZVgyEjo0NsKVPIRt5jjBLf3Qde8xvj8hRbif9tw=",
+      "url": "js\/app.js"
     },
     {
       "hash": "sha256-YIQjRgCqpNuyS0CcYpaGelj0fQCqUdw0dRygQpjo5Lw=",
@@ -21,8 +25,16 @@
       "url": "appsettings.json"
     },
     {
+      "hash": "sha256-PWj\/9v7YRWlrkryStPF4CA2t4OtybwPcaQW6+yMOoDM=",
+      "url": "appsettings.Production.json"
+    },
+    {
       "hash": "sha256-gvHfnndfEu1tRf0rFb5988rWq7ITIotOaE8+AMbKYbc=",
       "url": "_framework\/blazor.webassembly.js"
+    },
+    {
+      "hash": "sha256-Z\/qvX5qpXYKKdifh\/wcpM6E6bPppAjHS+Y+yCJM+IXc=",
+      "url": "Components\/InvoicePrintView.razor.js"
     },
     {
       "hash": "sha256-OaMAAd5n7ORfyur5e3QIyEVKJ76MKIvwbg7\/icnnYcU=",
@@ -873,15 +885,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-9Y2u\/qocmF4gynTgvQMyAmJb5vHrO+5xoSZWitgA5SM=",
+      "hash": "sha256-mCmpxZi4FO1UF1z2edYl2uC3Ch9\/qhyVMSWCxTrBr\/c=",
       "url": "_framework\/LegalConnect.Client.wasm"
     },
     {
-      "hash": "sha256-25QITf\/k10vXGIKvYN3HZEdQHOdtBnmN6n80RBZhYuI=",
+      "hash": "sha256-mGCd1VxzPhwMeSwj\/fcIe2l3scIIeEltbmGlFSj0J90=",
       "url": "_framework\/LegalConnect.Client.pdb"
     },
     {
-      "hash": "sha256-1Zd1pfQP6v73\/h1+xn0kpuQU9dMZvvTeArjD1\/pRt4o=",
+      "hash": "sha256-uaAV3y7nYWYA7cpBxog9z5zhXsMpN+GtYaf4fiIEio0=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -889,5 +901,5 @@
       "url": "_content\/Microsoft.AspNetCore.Components.WebAssembly.Authentication\/AuthenticationService.js"
     }
   ],
-  "version": "wY2lMAcf"
+  "version": "rA8ZBQJA"
 };

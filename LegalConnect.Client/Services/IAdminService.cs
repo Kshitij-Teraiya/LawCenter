@@ -19,4 +19,8 @@ public interface IAdminService
     Task<(bool Success, string? Error)> DeleteCategoryAsync(int id);
 
     Task<RevenueStatsDto?> GetRevenueStatsAsync();
+
+    Task<List<AdminLawyerDto>> GetAllLawyersAsync();
+    Task<List<AdminClientDto>> GetAllClientsAsync();
+    Task<(bool Success, string? Error)> ToggleUserActiveAsync(int userId);
 }

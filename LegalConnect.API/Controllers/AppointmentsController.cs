@@ -104,6 +104,18 @@ public class AppointmentsController : ControllerBase
         return Ok(ApiResponse.Ok(message));
     }
 
+    [HttpPut("{id:int}/reschedule")]
+    [Authorize(Roles = "Client,Lawyer")]
+    public async Task<IActionResult> RescheduleAppointment(int id, [FromBody] RescheduleAppointmentDto dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ApiResponse.Fail("Validation failed"));
+
+        var (success, message) = await _appointmentService.RescheduleAppointmentAsync(GetUserId(), GetUserRole(), id, dto);
+        if (!success) return BadRequest(ApiResponse.Fail(message));
+        return Ok(ApiResponse.Ok(message));
+    }
+
     private int GetUserId() =>
         int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.FindFirstValue("sub")

@@ -15,4 +15,5 @@ public class ApplicationUser : IdentityUser<int>
     // Navigation
     public LawyerProfile? LawyerProfile { get; set; }
     public ClientProfile? ClientProfile { get; set; }
+    public AdminStaffProfile? AdminStaffProfile { get; set; }
 }

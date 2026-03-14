@@ -64,6 +64,16 @@
   },
   {
     "ContainingType": "LegalConnect.API.Controllers.AdminController",
+    "Method": "GetAllClients",
+    "RelativePath": "api/admin/clients",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.AdminController",
     "Method": "GetCommission",
     "RelativePath": "api/admin/commission",
     "HttpMethod": "GET",
@@ -86,6 +96,16 @@
         "IsRequired": true
       }
     ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.AdminController",
+    "Method": "GetAllLawyers",
+    "RelativePath": "api/admin/lawyers",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
     "ReturnTypes": []
   },
   {
@@ -143,6 +163,22 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.AdminController",
+    "Method": "ToggleUserActive",
+    "RelativePath": "api/admin/users/{userId}/toggle-active",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {
@@ -225,6 +261,27 @@
       {
         "Name": "id",
         "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.AppointmentsController",
+    "Method": "RescheduleAppointment",
+    "RelativePath": "api/appointments/{id}/reschedule",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Appointment.RescheduleAppointmentDto",
         "IsRequired": true
       }
     ],
@@ -374,6 +431,241 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "GetBlackoutBlocks",
+    "RelativePath": "api/availability/blackout-blocks",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "CreateBlackoutBlock",
+    "RelativePath": "api/availability/blackout-blocks",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.TimeSlots.CreateBlackoutBlockDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "DeleteBlackoutBlock",
+    "RelativePath": "api/availability/blackout-blocks/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "GetConfiguration",
+    "RelativePath": "api/availability/configuration",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "UpdateConfiguration",
+    "RelativePath": "api/availability/configuration",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.TimeSlots.UpdateTimeSlotConfigurationDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "GetMasterHolidays",
+    "RelativePath": "api/availability/holidays/master",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "CreateMasterHoliday",
+    "RelativePath": "api/availability/holidays/master",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.TimeSlots.CreateMasterHolidayDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "UpdateMasterHoliday",
+    "RelativePath": "api/availability/holidays/master/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.TimeSlots.UpdateMasterHolidayDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "DeleteMasterHoliday",
+    "RelativePath": "api/availability/holidays/master/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "GetPersonalHolidays",
+    "RelativePath": "api/availability/holidays/personal",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "CreatePersonalHoliday",
+    "RelativePath": "api/availability/holidays/personal",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.TimeSlots.CreatePersonalHolidayDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "DeletePersonalHoliday",
+    "RelativePath": "api/availability/holidays/personal/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "GetHolidayPreferences",
+    "RelativePath": "api/availability/holidays/preferences",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "SetHolidayPreference",
+    "RelativePath": "api/availability/holidays/preferences/{masterHolidayId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "masterHolidayId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.TimeSlots.SetHolidayPreferenceDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "GetWorkingHours",
+    "RelativePath": "api/availability/working-hours",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LawyerAvailabilityController",
+    "Method": "UpdateWorkingHours",
+    "RelativePath": "api/availability/working-hours/{dayOfWeek}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dayOfWeek",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.TimeSlots.UpdateWorkingHoursDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LegalConnect.API.Controllers.CaseDocumentsController",
     "Method": "DeleteDocument",
     "RelativePath": "api/case-documents/{id}",
@@ -394,6 +686,38 @@
     "Method": "DownloadDocument",
     "RelativePath": "api/case-documents/{id}/download",
     "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.CaseDocumentsController",
+    "Method": "ToggleDealShare",
+    "RelativePath": "api/case-documents/{id}/toggle-deal-share",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.CaseDocumentsController",
+    "Method": "TogglePrivate",
+    "RelativePath": "api/case-documents/{id}/toggle-private",
+    "HttpMethod": "PUT",
     "IsController": true,
     "Order": 0,
     "Parameters": [
@@ -525,6 +849,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "LegalConnect.API.Controllers.CaseActivitiesController",
+    "Method": "LinkDocument",
+    "RelativePath": "api/cases/{caseId}/activities/{activityId}/link-document/{documentId}",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "caseId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "activityId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "documentId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LegalConnect.API.Controllers.CaseDocumentsController",
     "Method": "GetDocuments",
     "RelativePath": "api/cases/{caseId}/documents",
@@ -585,6 +935,11 @@
       },
       {
         "Name": "IsPrivate",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      },
+      {
+        "Name": "IsAvailableForDeal",
         "Type": "System.Boolean",
         "IsRequired": false
       },
@@ -796,6 +1151,126 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "LegalConnect.API.Controllers.ContractsController",
+    "Method": "GetContracts",
+    "RelativePath": "api/contracts",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "ContractType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "LawyerName",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "DateFrom",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "DateTo",
+        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "Page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.ContractsController",
+    "Method": "GetContract",
+    "RelativePath": "api/contracts/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.ContractsController",
+    "Method": "Download",
+    "RelativePath": "api/contracts/{id}/download",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.DuesController",
+    "Method": "GetAll",
+    "RelativePath": "api/dues/all",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.DuesController",
+    "Method": "GetLawyerDues",
+    "RelativePath": "api/dues/lawyer/{lawyerProfileId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "lawyerProfileId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.DuesController",
+    "Method": "GetMy",
+    "RelativePath": "api/dues/my",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
     "Method": "Create",
     "RelativePath": "api/hire-requests",
@@ -853,6 +1328,122 @@
     "Parameters": [
       {
         "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "CancelByParty",
+    "RelativePath": "api/hire-requests/{id}/cancel",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "DownloadCaseDocumentViaHireRequest",
+    "RelativePath": "api/hire-requests/{id}/case-documents/{caseDocId}/download",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "caseDocId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "GetDocuments",
+    "RelativePath": "api/hire-requests/{id}/documents",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "UploadDocument",
+    "RelativePath": "api/hire-requests/{id}/documents",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "file",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "DeleteDocument",
+    "RelativePath": "api/hire-requests/{id}/documents/{docId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "docId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "DownloadDocument",
+    "RelativePath": "api/hire-requests/{id}/documents/{docId}/download",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "docId",
         "Type": "System.Int32",
         "IsRequired": true
       }
@@ -930,6 +1521,27 @@
   },
   {
     "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "GenerateInvoice",
+    "RelativePath": "api/hire-requests/deals/{dealId}/invoices",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dealId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Deals.CreateInvoiceDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
     "Method": "CreateProposal",
     "RelativePath": "api/hire-requests/deals/{dealId}/proposals",
     "HttpMethod": "POST",
@@ -957,6 +1569,32 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "GetInvoiceSettings",
+    "RelativePath": "api/hire-requests/invoice-settings",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "UpsertInvoiceSettings",
+    "RelativePath": "api/hire-requests/invoice-settings",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Deals.UpsertLawyerInvoiceSettingsDto",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {
@@ -1019,6 +1657,26 @@
   },
   {
     "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "GetMyInvoices",
+    "RelativePath": "api/hire-requests/my-invoices",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
+    "Method": "GetMyPaidInvoices",
+    "RelativePath": "api/hire-requests/my-paid-invoices",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
     "Method": "AcceptProposal",
     "RelativePath": "api/hire-requests/proposals/{proposalId}/accept",
     "HttpMethod": "PUT",
@@ -1034,27 +1692,6 @@
         "Name": "dto",
         "Type": "LegalConnect.API.DTOs.Deals.RespondToProposalDto",
         "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "LegalConnect.API.Controllers.HireRequestsController",
-    "Method": "GenerateInvoice",
-    "RelativePath": "api/hire-requests/proposals/{proposalId}/invoice",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "proposalId",
-        "Type": "System.Int32",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "LegalConnect.API.DTOs.Deals.CreateInvoiceDto",
-        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -1517,6 +2154,590 @@
       {
         "Name": "dto",
         "Type": "LegalConnect.API.DTOs.Lawyer.SetServiceChargeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LitigationDisputesController",
+    "Method": "GetAll",
+    "RelativePath": "api/litigation-disputes",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Status",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LitigationDisputesController",
+    "Method": "Raise",
+    "RelativePath": "api/litigation-disputes",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Dues.RaiseDisputeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LitigationDisputesController",
+    "Method": "GetById",
+    "RelativePath": "api/litigation-disputes/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LitigationDisputesController",
+    "Method": "AdminApprove",
+    "RelativePath": "api/litigation-disputes/{id}/admin-approve",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Dues.ApproveDisputeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.LitigationDisputesController",
+    "Method": "LawyerApprove",
+    "RelativePath": "api/litigation-disputes/{id}/lawyer-approve",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Dues.ApproveDisputeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.RefundInvoicesController",
+    "Method": "GetAll",
+    "RelativePath": "api/refund-invoices",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.RefundInvoicesController",
+    "Method": "Create",
+    "RelativePath": "api/refund-invoices",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Dues.CreateRefundInvoiceDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.RefundInvoicesController",
+    "Method": "GetById",
+    "RelativePath": "api/refund-invoices/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.RefundInvoicesController",
+    "Method": "Download",
+    "RelativePath": "api/refund-invoices/{id}/download",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.RefundInvoicesController",
+    "Method": "GetMy",
+    "RelativePath": "api/refund-invoices/my",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "GetStaffById",
+    "RelativePath": "api/staff/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "ToggleStaffActive",
+    "RelativePath": "api/staff/{id}/toggle",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "AssignStaffToCase",
+    "RelativePath": "api/staff/cases/{caseId}/assign",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "caseId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Staff.AssignStaffDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "GetMyPermissions",
+    "RelativePath": "api/staff/cases/{caseId}/my-permissions",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "caseId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "GetCaseStaff",
+    "RelativePath": "api/staff/cases/{caseId}/staff",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "caseId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "RemoveStaffFromCase",
+    "RelativePath": "api/staff/cases/{caseId}/staff/{staffId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "caseId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "staffId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "CreateStaff",
+    "RelativePath": "api/staff/create",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Staff.CreateStaffDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "GetMyStaff",
+    "RelativePath": "api/staff/my-staff",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "GetMyTasks",
+    "RelativePath": "api/staff/my-tasks",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "UpdateMyTaskStatus",
+    "RelativePath": "api/staff/my-tasks/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Staff.UpdateTaskStatusDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "GetAllTasks",
+    "RelativePath": "api/staff/tasks",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "CreateTask",
+    "RelativePath": "api/staff/tasks",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Staff.CreateStaffTaskDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "UpdateTask",
+    "RelativePath": "api/staff/tasks/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Staff.UpdateStaffTaskDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.StaffController",
+    "Method": "DeleteTask",
+    "RelativePath": "api/staff/tasks/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SupportController",
+    "Method": "CreateTicket",
+    "RelativePath": "api/support",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Support.CreateSupportTicketDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SupportController",
+    "Method": "GetTicketById",
+    "RelativePath": "api/support/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SupportController",
+    "Method": "GetMessages",
+    "RelativePath": "api/support/{id}/messages",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SupportController",
+    "Method": "SendMessage",
+    "RelativePath": "api/support/{id}/messages",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Support.SendSupportMessageDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SupportController",
+    "Method": "UpdateStatus",
+    "RelativePath": "api/support/{id}/status",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Support.UpdateTicketStatusDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SupportController",
+    "Method": "GetAllTickets",
+    "RelativePath": "api/support/all",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "status",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "category",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SupportController",
+    "Method": "GetMyTickets",
+    "RelativePath": "api/support/my",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SystemSettingsController",
+    "Method": "GetAll",
+    "RelativePath": "api/system-settings",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SystemSettingsController",
+    "Method": "GetByKey",
+    "RelativePath": "api/system-settings/{key}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "key",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "LegalConnect.API.Controllers.SystemSettingsController",
+    "Method": "Upsert",
+    "RelativePath": "api/system-settings/{key}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "key",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "LegalConnect.API.DTOs.Dues.UpdateSystemSettingDto",
         "IsRequired": true
       }
     ],

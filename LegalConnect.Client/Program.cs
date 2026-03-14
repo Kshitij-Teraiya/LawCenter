@@ -46,7 +46,22 @@ builder.Services.AddScoped<ILawyerClientService, LawyerClientService>();
 builder.Services.AddScoped<ICaseService, CaseService>();
 builder.Services.AddScoped<IClientLawyerRequestService, ClientLawyerRequestService>();
 builder.Services.AddScoped<IDealService, DealService>();
+builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IClientProfileService, ClientProfileService>();
+builder.Services.AddScoped<ILawyerAvailabilityService, LawyerAvailabilityService>();
 builder.Services.AddScoped<ToastService>();
+
+// ── Contracts & Billing Services ──────────────────────────────────────────
+builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<ILitigationDisputeService, LitigationDisputeClientService>();
+builder.Services.AddScoped<IDuesClientService, DuesClientService>();
+builder.Services.AddScoped<IRefundInvoiceClientService, RefundInvoiceClientService>();
+builder.Services.AddScoped<ISystemSettingsClientService, SystemSettingsClientService>();
+
+// ── Support Services ─────────────────────────────────────────────────────
+builder.Services.AddScoped<ISupportService, SupportService>();
+
+// ── Admin Staff Services ─────────────────────────────────────────────────
+builder.Services.AddScoped<IAdminStaffService, AdminStaffService>();
 
 await builder.Build().RunAsync();

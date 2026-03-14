@@ -1,0 +1,132 @@
+@page "/lawyer/disputes"
+@attribute [Authorize(Roles = "Lawyer")]
+@inject ILitigationDisputeService DisputeService
+@inject ToastService Toast
+
+<PageTitle>Disputes – LawCity</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Litigation Disputes</h4>
+    </div>
+
+    @* Status Filter *@
+    <div class="mb-3">
+        @foreach (var status in new[] { "", "Pending", "AdminApproved", "BothApproved", "Rejected" })
+        {
+            var s = status;
+            var label = s == "" ? "All" : s == "AdminApproved" ? "Admin Approved" : s == "BothApproved" ? "Both Approved" : s;
+            <button class='btn btn-sm me-1 @(_statusFilter == s ? "btn-primary" : "btn-outline-secondary")'
+                    @onclick='() => SetFilter(s)'>@label</button>
+        }
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    }
+    else if (_disputes?.Items.Count == 0)
+    {
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>No disputes found.
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var d in _disputes!.Items)
+            {
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <span class='badge @DisputeTypeBadge(d.DisputeType) me-2'>@d.DisputeType</span>
+                                    <span class='badge @StatusBadge(d.Status)'>@StatusLabel(d.Status)</span>
+                                    <div class="fw-semibold mt-1">Invoice #@d.InvoiceId &mdash; ₹@d.DisputedAmount.ToString("N2")</div>
+                                    <div class="small text-muted">Client: @d.ClientName &nbsp;|&nbsp; @d.CreatedAt.ToString("dd MMM yyyy")</div>
+                                    <div class="small mt-1">@d.Reason</div>
+                                </div>
+                                @if ((d.Status == "AdminApproved") && !d.LawyerApproved)
+                                {
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-success btn-sm" @onclick='() => Approve(d.Id, true)'
+                                                disabled="@_processing">
+                                            <i class="bi bi-check-lg me-1"></i>Accept
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" @onclick='() => Approve(d.Id, false)'
+                                                disabled="@_processing">
+                                            <i class="bi bi-x-lg me-1"></i>Reject
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private PagedResult<LitigationDisputeModel>? _disputes;
+    private string _statusFilter = "";
+    private bool _loading;
+    private bool _processing;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task SetFilter(string s)
+    {
+        _statusFilter = s;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; StateHasChanged();
+        try
+        {
+            var resp = await DisputeService.GetDisputesAsync(_statusFilter);
+            _disputes = resp?.Data ?? new();
+        }
+        catch { Toast.ShowError("Failed to load disputes."); }
+        finally { _loading = false; }
+    }
+
+    private async Task Approve(int id, bool approve)
+    {
+        _processing = true;
+        try
+        {
+            var resp = await DisputeService.LawyerApproveAsync(id, new ApproveDisputeModel { Approve = approve });
+            if (resp?.Success == true)
+            {
+                Toast.ShowSuccess(approve ? "Dispute accepted." : "Dispute rejected.");
+                await LoadAsync();
+            }
+            else Toast.ShowError(resp?.Message ?? "Action failed.");
+        }
+        catch { Toast.ShowError("An error occurred."); }
+        finally { _processing = false; }
+    }
+
+    private static string DisputeTypeBadge(string t) =>
+        t == "UnderLitigation" ? "bg-danger-subtle text-danger" : "bg-warning-subtle text-warning";
+
+    private static string StatusBadge(string s) => s switch
+    {
+        "BothApproved" => "bg-success-subtle text-success",
+        "Rejected"     => "bg-danger-subtle text-danger",
+        "AdminApproved" => "bg-info-subtle text-info",
+        _              => "bg-secondary-subtle text-secondary"
+    };
+
+    private static string StatusLabel(string s) => s switch
+    {
+        "AdminApproved" => "Admin Approved",
+        "BothApproved"  => "Both Approved",
+        _               => s
+    };
+}

@@ -1,8 +1,8 @@
 @page "/admin/dashboard"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin,AdminStaff")]
 @inject IAdminService AdminService
 
-<PageTitle>Admin Dashboard – LegalConnect</PageTitle>
+<PageTitle>Admin Dashboard – LawCity</PageTitle>
 
 <div class="container-fluid">
     <h4 class="fw-bold mb-4">
@@ -73,6 +73,18 @@
                     </div>
                 </a>
             </div>
+            <div class="col-md-4">
+                <a href="/admin/holidays"
+                   class="lc-card d-flex align-items-center gap-3 text-decoration-none">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-calendar-heart"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold">Holiday Management</div>
+                        <div class="small text-muted">Manage public holidays</div>
+                    </div>
+                </a>
+            </div>
         </div>
 
         <!-- Monthly Revenue -->
@@ -100,9 +112,9 @@
                                 <tr>
                                     <td>@m.Month</td>
                                     <td>@m.AppointmentCount</td>
-                                    <td>৳@m.Revenue.ToString("N2")</td>
+                                    <td>Rs.@m.Revenue.ToString("N2")</td>
                                     <td class="text-success fw-semibold">
-                                        ৳@(m.Revenue * 0.05m).ToString("N2")
+                                        Rs.@(m.Revenue * 0.05m).ToString("N2")
                                     </td>
                                 </tr>
                             }
@@ -127,9 +139,9 @@
     private IEnumerable<(string, string, string, string)> GetStats()
     {
         if (_stats is null) yield break;
-        yield return ("bi bi-cash-stack",       "Total Revenue",  $"৳{_stats.TotalRevenue:N0}",     "bg-success bg-opacity-10 text-success");
-        yield return ("bi bi-calendar-month",   "Monthly",        $"৳{_stats.MonthlyRevenue:N0}",   "bg-primary bg-opacity-10 text-primary");
-        yield return ("bi bi-percent",          "Commission",     $"৳{_stats.PlatformCommission:N0}","bg-warning bg-opacity-10 text-warning");
+        yield return ("bi bi-cash-stack",       "Total Revenue",  $"Rs.{_stats.TotalRevenue:N0}",     "bg-success bg-opacity-10 text-success");
+        yield return ("bi bi-calendar-month",   "Monthly",        $"Rs.{_stats.MonthlyRevenue:N0}",   "bg-primary bg-opacity-10 text-primary");
+        yield return ("bi bi-percent",          "Commission",     $"Rs.{_stats.PlatformCommission:N0}","bg-warning bg-opacity-10 text-warning");
         yield return ("bi bi-calendar-check",   "Appointments",   _stats.TotalAppointments.ToString(),"bg-info bg-opacity-10 text-info");
         yield return ("bi bi-person-badge",     "Lawyers",        _stats.TotalLawyers.ToString(),    "bg-purple bg-opacity-10" );
         yield return ("bi bi-people",           "Clients",        _stats.TotalClients.ToString(),    "bg-secondary bg-opacity-10 text-secondary");

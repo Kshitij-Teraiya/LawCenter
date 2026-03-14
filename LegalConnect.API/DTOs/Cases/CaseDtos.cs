@@ -42,6 +42,10 @@ public class CaseDto : CaseSummaryDto
     public string? Outcome { get; set; }
     public string? LawyerProfilePicture { get; set; }
     public string? ClientProfilePicture { get; set; }
+    /// <summary>Deal that auto-created this case (null for manually-created cases).</summary>
+    public int? DealId { get; set; }
+    /// <summary>HireRequest.Id that belongs to the linked Deal — used for client/lawyer navigation URLs.</summary>
+    public int? DealHireRequestId { get; set; }
     public List<CaseLawyerDto> AssignedLawyers { get; set; } = [];
     public List<CaseActivityDto> RecentActivities { get; set; } = [];
     public List<CaseDocumentDto> Documents { get; set; } = [];

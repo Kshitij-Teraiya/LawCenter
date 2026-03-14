@@ -1,0 +1,254 @@
+@page "/admin/users"
+@attribute [Authorize(Roles = "Admin,AdminStaff")]
+@inject IAdminService AdminService
+@inject ToastService Toast
+
+<PageTitle>Manage Users &ndash; LawCity</PageTitle>
+
+<div class="container-fluid">
+    <h4 class="fw-bold mb-4">
+        <i class="bi bi-people-fill me-2 text-primary"></i>Manage Users
+    </h4>
+
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <button class="nav-link @(_tab == "lawyers" ? "active" : "")"
+                    @onclick='() => _tab = "lawyers"'>
+                <i class="bi bi-briefcase me-1"></i>Lawyers
+                @if (_lawyers.Count > 0)
+                {
+                    <span class="badge bg-secondary ms-1">@_lawyers.Count</span>
+                }
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(_tab == "clients" ? "active" : "")"
+                    @onclick='() => _tab = "clients"'>
+                <i class="bi bi-person me-1"></i>Clients
+                @if (_clients.Count > 0)
+                {
+                    <span class="badge bg-secondary ms-1">@_clients.Count</span>
+                }
+            </button>
+        </li>
+    </ul>
+
+    @if (_loading)
+    {
+        <LoadingSpinner />
+    }
+    else if (_tab == "lawyers")
+    {
+        <div class="mb-3">
+            <input class="form-control" style="max-width:320px;" placeholder="Search by name, email or city..."
+                   @bind="_lawyerSearch" @bind:event="oninput" />
+        </div>
+
+        @if (FilteredLawyers.Count == 0)
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-search" style="font-size:2rem;"></i>
+                <p class="mt-2">No lawyers found.</p>
+            </div>
+        }
+        else
+        {
+            <div class="lc-card">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>City</th>
+                                <th>Specialization</th>
+                                <th>Bar No.</th>
+                                <th>Registered</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var lawyer in FilteredLawyers)
+                            {
+                                var l = lawyer;
+                                <tr class="@(!lawyer.IsActive ? "table-secondary" : "")">
+                                    <td class="fw-semibold">@lawyer.FullName</td>
+                                    <td class="small text-muted">@lawyer.Email</td>
+                                    <td class="small">@(lawyer.Phone ?? "\u2014")</td>
+                                    <td>@lawyer.City</td>
+                                    <td>@lawyer.CategoryName</td>
+                                    <td><code>@lawyer.BarCouncilNumber</code></td>
+                                    <td class="small text-muted">@lawyer.RegisteredAt.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <span class="badge @(lawyer.IsVerified ? "bg-success" : "bg-warning text-dark")">
+                                            @(lawyer.IsVerified ? "Verified" : "Pending")
+                                        </span>
+                                        <span class="badge @(lawyer.IsActive ? "bg-primary" : "bg-danger") ms-1">
+                                            @(lawyer.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm @(lawyer.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                                disabled="@(_togglingUserId == lawyer.UserId)"
+                                                @onclick="() => ToggleActive(l.UserId)">
+                                            @if (_togglingUserId == lawyer.UserId)
+                                            {
+                                                <span class="spinner-border spinner-border-sm"></span>
+                                            }
+                                            else if (lawyer.IsActive)
+                                            {
+                                                <span><i class="bi bi-slash-circle me-1"></i>Deactivate</span>
+                                            }
+                                            else
+                                            {
+                                                <span><i class="bi bi-check-circle me-1"></i>Activate</span>
+                                            }
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="mb-3">
+            <input class="form-control" style="max-width:320px;" placeholder="Search by name, email or city..."
+                   @bind="_clientSearch" @bind:event="oninput" />
+        </div>
+
+        @if (FilteredClients.Count == 0)
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-search" style="font-size:2rem;"></i>
+                <p class="mt-2">No clients found.</p>
+            </div>
+        }
+        else
+        {
+            <div class="lc-card">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>City</th>
+                                <th>Cases</th>
+                                <th>Registered</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var client in FilteredClients)
+                            {
+                                var c = client;
+                                <tr class="@(!client.IsActive ? "table-secondary" : "")">
+                                    <td class="fw-semibold">@client.FullName</td>
+                                    <td class="small text-muted">@client.Email</td>
+                                    <td class="small">@(client.Phone ?? "\u2014")</td>
+                                    <td>@(client.City ?? "\u2014")</td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">@client.TotalCases cases</span>
+                                    </td>
+                                    <td class="small text-muted">@client.RegisteredAt.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <span class="badge @(client.IsActive ? "bg-primary" : "bg-danger")">
+                                            @(client.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm @(client.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                                disabled="@(_togglingUserId == client.UserId)"
+                                                @onclick="() => ToggleActive(c.UserId)">
+                                            @if (_togglingUserId == client.UserId)
+                                            {
+                                                <span class="spinner-border spinner-border-sm"></span>
+                                            }
+                                            else if (client.IsActive)
+                                            {
+                                                <span><i class="bi bi-slash-circle me-1"></i>Deactivate</span>
+                                            }
+                                            else
+                                            {
+                                                <span><i class="bi bi-check-circle me-1"></i>Activate</span>
+                                            }
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private string _tab = "lawyers";
+    private bool _loading = true;
+    private int _togglingUserId;
+    private string _lawyerSearch = string.Empty;
+    private string _clientSearch = string.Empty;
+
+    private List<AdminLawyerDto> _lawyers = [];
+    private List<AdminClientDto> _clients = [];
+
+    private List<AdminLawyerDto> FilteredLawyers => string.IsNullOrWhiteSpace(_lawyerSearch)
+        ? _lawyers
+        : _lawyers.Where(l =>
+            l.FullName.Contains(_lawyerSearch, StringComparison.OrdinalIgnoreCase) ||
+            l.Email.Contains(_lawyerSearch, StringComparison.OrdinalIgnoreCase) ||
+            l.City.Contains(_lawyerSearch, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    private List<AdminClientDto> FilteredClients => string.IsNullOrWhiteSpace(_clientSearch)
+        ? _clients
+        : _clients.Where(c =>
+            c.FullName.Contains(_clientSearch, StringComparison.OrdinalIgnoreCase) ||
+            c.Email.Contains(_clientSearch, StringComparison.OrdinalIgnoreCase) ||
+            (c.City != null && c.City.Contains(_clientSearch, StringComparison.OrdinalIgnoreCase))).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var lawyersTask = AdminService.GetAllLawyersAsync();
+        var clientsTask = AdminService.GetAllClientsAsync();
+        await Task.WhenAll(lawyersTask, clientsTask);
+        _lawyers = lawyersTask.Result;
+        _clients = clientsTask.Result;
+        _loading = false;
+    }
+
+    private async Task ToggleActive(int userId)
+    {
+        _togglingUserId = userId;
+        var (ok, err) = await AdminService.ToggleUserActiveAsync(userId);
+        if (ok)
+        {
+            var lawyer = _lawyers.FirstOrDefault(l => l.UserId == userId);
+            if (lawyer != null)
+            {
+                lawyer.IsActive = !lawyer.IsActive;
+                Toast.ShowSuccess(lawyer.IsActive ? $"{lawyer.FullName} activated." : $"{lawyer.FullName} deactivated.");
+            }
+            var client = _clients.FirstOrDefault(c => c.UserId == userId);
+            if (client != null)
+            {
+                client.IsActive = !client.IsActive;
+                Toast.ShowSuccess(client.IsActive ? $"{client.FullName} activated." : $"{client.FullName} deactivated.");
+            }
+        }
+        else
+        {
+            Toast.ShowError(err ?? "Failed to update user status.");
+        }
+        _togglingUserId = 0;
+    }
+}

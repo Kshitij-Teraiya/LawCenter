@@ -10,7 +10,7 @@ namespace LegalConnect.API.Controllers;
 
 [ApiController]
 [Route("api/cases")]
-[Authorize(Roles = "Lawyer,Client,Admin")]
+[Authorize(Roles = "Lawyer,Client,Admin,Staff")]
 public class CasesController : ControllerBase
 {
     private readonly ICaseService _caseService;

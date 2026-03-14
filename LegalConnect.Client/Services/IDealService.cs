@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using LegalConnect.Client.Helpers;
 using LegalConnect.Client.Models.Deals;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace LegalConnect.Client.Services;
 
@@ -9,6 +10,7 @@ public interface IDealService
     // HireRequest
     Task<ApiResponse<HireRequestDto>?> CreateHireRequestAsync(CreateHireRequestDto dto);
     Task<ApiResponse<List<HireRequestDto>>?> GetMyHireRequestsAsync();
+    Task<ApiResponse<List<ClientInvoiceSummaryDto>>?> GetMyInvoicesAsync();
     Task<ApiResponse<List<HireRequestDto>>?> GetIncomingHireRequestsAsync();
     Task<ApiResponse<HireRequestDetailDto>?> GetHireRequestByIdAsync(int id);
     Task<ApiResponse<DealDto>?> AcceptHireRequestAsync(int id);
@@ -26,10 +28,24 @@ public interface IDealService
     Task<ApiResponse?> RejectProposalAsync(int proposalId, RespondToProposalDto? dto);
 
     // Invoices (on Deal)
-    Task<ApiResponse<InvoiceDto>?> GenerateInvoiceAsync(int proposalId, CreateInvoiceDto dto);
+    Task<ApiResponse<InvoiceDto>?> GenerateInvoiceAsync(int dealId, CreateInvoiceDto dto);
     Task<ApiResponse?> AcceptInvoiceAsync(int invoiceId);
     Task<ApiResponse?> MarkInvoicePaidAsync(int invoiceId);
     Task<ApiResponse?> RejectInvoiceAsync(int invoiceId);
+
+    // Invoice Settings
+    Task<ApiResponse<LawyerInvoiceSettingsDto>?> GetInvoiceSettingsAsync();
+    Task<ApiResponse<LawyerInvoiceSettingsDto>?> UpsertInvoiceSettingsAsync(UpsertLawyerInvoiceSettingsDto dto);
+
+    // Earnings
+    Task<ApiResponse<List<LawyerPaidInvoiceDto>>?> GetMyPaidInvoicesAsync();
+
+    // Hire Request Documents
+    Task<ApiResponse<List<HireRequestDocumentDto>>?> GetHireRequestDocumentsAsync(int hireRequestId);
+    Task<ApiResponse<HireRequestDocumentDto>?> UploadHireRequestDocumentAsync(int hireRequestId, IBrowserFile file);
+    Task<ApiResponse?> DeleteHireRequestDocumentAsync(int hireRequestId, int docId);
+    Task<byte[]?> DownloadHireRequestDocumentAsync(int hireRequestId, int docId);
+    Task<byte[]?> DownloadCaseDocumentViaHireRequestAsync(int hireRequestId, int caseDocId);
 }
 
 public class DealService : IDealService
@@ -52,6 +68,9 @@ public class DealService : IDealService
     public async Task<ApiResponse<List<HireRequestDto>>?> GetMyHireRequestsAsync()
         => await _http.GetFromJsonAsync<ApiResponse<List<HireRequestDto>>>("hire-requests/my");
 
+    public async Task<ApiResponse<List<ClientInvoiceSummaryDto>>?> GetMyInvoicesAsync()
+        => await _http.GetFromJsonAsync<ApiResponse<List<ClientInvoiceSummaryDto>>>("hire-requests/my-invoices");
+
     public async Task<ApiResponse<List<HireRequestDto>>?> GetIncomingHireRequestsAsync()
         => await _http.GetFromJsonAsync<ApiResponse<List<HireRequestDto>>>("hire-requests/incoming");
 
@@ -72,7 +91,7 @@ public class DealService : IDealService
 
     public async Task<ApiResponse?> CancelHireRequestAsync(int id)
     {
-        var resp = await _http.DeleteAsync($"hire-requests/{id}");
+        var resp = await _http.PutAsync($"hire-requests/{id}/cancel", null);
         return await resp.Content.ReadFromJsonAsync<ApiResponse>();
     }
 
@@ -115,9 +134,9 @@ public class DealService : IDealService
 
     // ── Invoices (on Deal) ───────────────────────────────────────────
 
-    public async Task<ApiResponse<InvoiceDto>?> GenerateInvoiceAsync(int proposalId, CreateInvoiceDto dto)
+    public async Task<ApiResponse<InvoiceDto>?> GenerateInvoiceAsync(int dealId, CreateInvoiceDto dto)
     {
-        var resp = await _http.PostAsJsonAsync($"hire-requests/proposals/{proposalId}/invoice", dto);
+        var resp = await _http.PostAsJsonAsync($"hire-requests/deals/{dealId}/invoices", dto);
         return await resp.Content.ReadFromJsonAsync<ApiResponse<InvoiceDto>>();
     }
 
@@ -138,4 +157,51 @@ public class DealService : IDealService
         var resp = await _http.PutAsync($"hire-requests/invoices/{invoiceId}/reject", null);
         return await resp.Content.ReadFromJsonAsync<ApiResponse>();
     }
+
+    // ── Invoice Settings ─────────────────────────────────────────────
+
+    public async Task<ApiResponse<LawyerInvoiceSettingsDto>?> GetInvoiceSettingsAsync()
+        => await _http.GetFromJsonAsync<ApiResponse<LawyerInvoiceSettingsDto>>("hire-requests/invoice-settings");
+
+    public async Task<ApiResponse<LawyerInvoiceSettingsDto>?> UpsertInvoiceSettingsAsync(UpsertLawyerInvoiceSettingsDto dto)
+    {
+        var resp = await _http.PutAsJsonAsync("hire-requests/invoice-settings", dto);
+        return await resp.Content.ReadFromJsonAsync<ApiResponse<LawyerInvoiceSettingsDto>>();
+    }
+
+    // ── Hire Request Documents ────────────────────────────────────────
+
+    public async Task<ApiResponse<List<HireRequestDocumentDto>>?> GetHireRequestDocumentsAsync(int hireRequestId)
+        => await _http.GetFromJsonAsync<ApiResponse<List<HireRequestDocumentDto>>>($"hire-requests/{hireRequestId}/documents");
+
+    public async Task<ApiResponse<HireRequestDocumentDto>?> UploadHireRequestDocumentAsync(int hireRequestId, IBrowserFile file)
+    {
+        const long maxSize = 20 * 1024 * 1024;
+        using var content = new MultipartFormDataContent();
+        var stream = file.OpenReadStream(maxSize);
+        content.Add(new StreamContent(stream), "file", file.Name);
+        var resp = await _http.PostAsync($"hire-requests/{hireRequestId}/documents", content);
+        return await resp.Content.ReadFromJsonAsync<ApiResponse<HireRequestDocumentDto>>();
+    }
+
+    public async Task<ApiResponse?> DeleteHireRequestDocumentAsync(int hireRequestId, int docId)
+    {
+        var resp = await _http.DeleteAsync($"hire-requests/{hireRequestId}/documents/{docId}");
+        return await resp.Content.ReadFromJsonAsync<ApiResponse>();
+    }
+
+    public async Task<byte[]?> DownloadHireRequestDocumentAsync(int hireRequestId, int docId)
+    {
+        try { return await _http.GetByteArrayAsync($"hire-requests/{hireRequestId}/documents/{docId}/download"); }
+        catch { return null; }
+    }
+
+    public async Task<byte[]?> DownloadCaseDocumentViaHireRequestAsync(int hireRequestId, int caseDocId)
+    {
+        try { return await _http.GetByteArrayAsync($"hire-requests/{hireRequestId}/case-documents/{caseDocId}/download"); }
+        catch { return null; }
+    }
+
+    public async Task<ApiResponse<List<LawyerPaidInvoiceDto>>?> GetMyPaidInvoicesAsync()
+        => await _http.GetFromJsonAsync<ApiResponse<List<LawyerPaidInvoiceDto>>>("hire-requests/my-paid-invoices");
 }

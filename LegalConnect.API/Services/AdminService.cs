@@ -19,6 +19,9 @@ public interface IAdminService
     Task<(bool Success, string Message)> UpdateCategoryAsync(UpdateCategoryDto dto);
     Task<(bool Success, string Message)> DeleteCategoryAsync(int id);
     Task<RevenueStatsDto> GetRevenueStatsAsync();
+    Task<List<AdminLawyerDto>> GetAllLawyersAsync();
+    Task<List<AdminClientDto>> GetAllClientsAsync();
+    Task<(bool Success, string Message)> ToggleUserActiveAsync(int userId);
 }
 
 public class AdminService : IAdminService
@@ -226,5 +229,58 @@ public class AdminService : IAdminService
             PendingApprovals = pendingApprovals,
             MonthlyBreakdown = monthlyBreakdown
         };
+    }
+
+    public async Task<List<AdminLawyerDto>> GetAllLawyersAsync()
+    {
+        return await _db.LawyerProfiles
+            .Include(l => l.User)
+            .Include(l => l.Category)
+            .OrderByDescending(l => l.CreatedAt)
+            .Select(l => new AdminLawyerDto
+            {
+                Id = l.Id,
+                UserId = l.UserId,
+                FullName = l.User.FirstName + " " + l.User.LastName,
+                Email = l.User.Email ?? string.Empty,
+                Phone = l.User.PhoneNumber,
+                City = l.City,
+                CategoryName = l.Category.Name,
+                BarCouncilNumber = l.BarCouncilNumber,
+                IsVerified = l.IsVerified,
+                IsActive = l.User.IsActive,
+                RegisteredAt = l.CreatedAt
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<AdminClientDto>> GetAllClientsAsync()
+    {
+        return await _db.ClientProfiles
+            .Include(c => c.User)
+            .Include(c => c.Cases)
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => new AdminClientDto
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                FullName = c.User.FirstName + " " + c.User.LastName,
+                Email = c.User.Email ?? string.Empty,
+                Phone = c.User.PhoneNumber,
+                City = c.City,
+                IsActive = c.User.IsActive,
+                RegisteredAt = c.CreatedAt,
+                TotalCases = c.Cases.Count
+            })
+            .ToListAsync();
+    }
+
+    public async Task<(bool Success, string Message)> ToggleUserActiveAsync(int userId)
+    {
+        var user = await _db.Users.FindAsync(userId);
+        if (user == null) return (false, "User not found.");
+        user.IsActive = !user.IsActive;
+        await _db.SaveChangesAsync();
+        return (true, user.IsActive ? "User activated successfully." : "User deactivated successfully.");
     }
 }

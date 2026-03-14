@@ -3,29 +3,19 @@
 @inject IAppointmentService AppointmentService
 @inject ToastService Toast
 
-<PageTitle>My Appointments – LegalConnect</PageTitle>
+<PageTitle>My Appointments – LawCity</PageTitle>
 
 <div class="container-fluid">
     <h4 class="fw-bold mb-4">
         <i class="bi bi-calendar3 me-2 text-primary"></i>Appointment Calendar
     </h4>
 
-    <!-- Date Range Filter -->
-    <div class="lc-card mb-4">
-        <div class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label fw-medium">From</label>
-                <input type="date" class="form-control" @bind="_from" />
-            </div>
-            <div class="col-md-3">
-                <label class="form-label fw-medium">To</label>
-                <input type="date" class="form-control" @bind="_to" />
-            </div>
-            <div class="col-md-2">
-                <button class="btn btn-primary w-100" @onclick="Load">
-                    <i class="bi bi-search me-1"></i>Search
-                </button>
-            </div>
+    <!-- Filter -->
+    <div class="mb-3">
+        <div class="form-check form-switch d-inline-flex align-items-center gap-2">
+            <input class="form-check-input" type="checkbox" id="chk-past" role="switch"
+                   @bind="_showPast" @bind:after="Load" />
+            <label class="form-check-label" for="chk-past">Show past appointments</label>
         </div>
     </div>
 
@@ -37,7 +27,7 @@
     {
         <div class="text-center py-5">
             <i class="bi bi-calendar-x text-muted" style="font-size:3rem;"></i>
-            <h5 class="mt-3">No appointments in this range</h5>
+            <h5 class="mt-3">@(_showPast ? "No appointments found" : "No upcoming appointments")</h5>
         </div>
     }
     else
@@ -66,7 +56,7 @@
                         </div>
 
                         <div class="text-end">
-                            <div class="fw-bold text-primary">৳@appt.ConsultationFee.ToString("N0")</div>
+                            <div class="fw-bold text-primary">Rs.@appt.ConsultationFee.ToString("N0")</div>
                             <span class="badge @StatusBadge(appt.Status)">@appt.Status</span>
                         </div>
 
@@ -96,15 +86,17 @@
 @code {
     private List<AppointmentDto> _appointments = [];
     private bool _loading = true;
-    private DateTime _from = DateTime.Today;
-    private DateTime _to   = DateTime.Today.AddDays(30);
+    private bool _showPast;
 
     protected override async Task OnInitializedAsync() => await Load();
 
     private async Task Load()
     {
         _loading = true;
-        _appointments = await AppointmentService.GetLawyerAppointmentsAsync(_from, _to);
+        // When not showing past: from=today, no end limit (all upcoming)
+        // When showing past:    no date filter at all (everything)
+        var from = _showPast ? (DateTime?)null : DateTime.Today;
+        _appointments = await AppointmentService.GetLawyerAppointmentsAsync(from, null);
         _loading = false;
     }
 

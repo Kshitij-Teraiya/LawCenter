@@ -1,11 +1,14 @@
 @page "/lawyer/deals/{Id:int}"
 @attribute [Authorize(Roles = "Lawyer")]
+@using System.Security.Claims
+@using LegalConnect.Client.Models.Deals
 @inject IDealService DealService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject ToastService Toast
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
-<PageTitle>Deal Details &mdash; LegalConnect</PageTitle>
+<PageTitle>Deal Details &mdash; LawCity</PageTitle>
 
 <div class="container py-4" style="max-width: 960px;">
     @if (_loading)
@@ -42,6 +45,21 @@
                     <i class="bi bi-x-lg me-1"></i>Reject
                 </button>
             }
+            @if (_deal.Status == "AcceptedByLawyer" || _deal.Status == "DealInProgress" || _deal.Status == "ConvertedToCase")
+            {
+                <button class="btn btn-sm btn-outline-secondary" @onclick="PrintRequestInfoAsync" title="Print request information">
+                    <i class="bi bi-printer me-1"></i>Print Info
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="PrintDealTimelineAsync" title="Print deal timeline">
+                    <i class="bi bi-printer me-1"></i>Print Timeline
+                </button>
+            }
+            @if (_deal.Status == "AcceptedByLawyer" || _deal.Status == "DealInProgress")
+            {
+                <button class="btn btn-sm btn-outline-danger" @onclick="CancelAsync" disabled="@_actionLoading">
+                    <i class="bi bi-x-circle me-1"></i>Cancel Request
+                </button>
+            }
         </div>
 
         <div class="row g-4">
@@ -55,7 +73,7 @@
             <div class="col-lg-5">
                 @if (_deal.Deal != null)
                 {
-                    <!-- Create Proposal form -->
+                    <!-- Send Proposal form -->
                     @if (_deal.Deal.Status == "Negotiation" || _deal.Deal.Status == "ProposalSent")
                     {
                         <div class="card shadow-sm mb-3">
@@ -74,12 +92,12 @@
                                     <div class="mb-2">
                                         <label class="form-label small fw-semibold">Description <span class="text-danger">*</span></label>
                                         <InputTextArea class="form-control form-control-sm" rows="3" @bind-Value="_proposalModel.Description"
-                                                       placeholder="Describe the scope of services..." />
+                                                       placeholder="Describe scope of services..." />
                                         <ValidationMessage For="() => _proposalModel.Description" />
                                     </div>
                                     <div class="row g-2 mb-2">
                                         <div class="col-7">
-                                            <label class="form-label small fw-semibold">Amount <span class="text-danger">*</span></label>
+                                            <label class="form-label small fw-semibold">Amount (&#8377;) <span class="text-danger">*</span></label>
                                             <InputNumber class="form-control form-control-sm" @bind-Value="_proposalModel.Amount" />
                                             <ValidationMessage For="() => _proposalModel.Amount" />
                                         </div>
@@ -101,103 +119,210 @@
 
                     <!-- Proposals list -->
                     <div class="card shadow-sm mb-3">
-                        <div class="card-header bg-white">
-                            <h6 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Proposals (@_deal.Deal.Proposals.Count)</h6>
+                        <div class="card-header bg-white d-flex align-items-center">
+                            <h6 class="mb-0 flex-grow-1"><i class="bi bi-file-earmark-text me-2"></i>Proposals (@_deal.Deal.Proposals.Count)</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-0">
                             @if (_deal.Deal.Proposals.Count == 0)
                             {
-                                <p class="text-muted small mb-0">No proposals yet. Send one above.</p>
+                                <p class="text-muted small px-3 py-3 mb-0">No proposals yet. Send one above.</p>
                             }
                             else
                             {
                                 @foreach (var proposal in _deal.Deal.Proposals)
                                 {
-                                    <div class="border rounded p-3 mb-2">
+                                    <div class="border-bottom px-3 py-2">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
-                                                <strong>@proposal.Title</strong>
-                                                <span class="@GetProposalBadge(proposal.Status) ms-2">@proposal.Status</span>
+                                                <strong class="small">@proposal.Title</strong>
+                                                <span class="@GetProposalBadge(proposal.Status) ms-1" style="font-size:.65rem">@proposal.Status</span>
                                             </div>
-                                            <span class="fw-bold text-primary">@proposal.Amount.ToString("C")</span>
+                                            <span class="fw-bold text-primary small">&#8377;@proposal.Amount.ToString("N2")</span>
                                         </div>
-                                        <p class="text-muted small mb-1 mt-1">@proposal.Description</p>
+                                        <p class="text-muted mb-0 mt-1" style="font-size:.75rem">@proposal.Description</p>
                                         @if (proposal.IsNegotiable)
                                         {
-                                            <span class="badge bg-info bg-opacity-10 text-info small"><i class="bi bi-arrows-angle-expand me-1"></i>Negotiable</span>
+                                            <span class="badge bg-info bg-opacity-10 text-info mt-1" style="font-size:.65rem">Negotiable</span>
                                         }
                                         @if (!string.IsNullOrEmpty(proposal.ClientNote))
                                         {
-                                            <div class="mt-1 small fst-italic text-muted"><i class="bi bi-chat-square-quote me-1"></i>@proposal.ClientNote</div>
-                                        }
-
-                                        <!-- Generate Invoice button -->
-                                        @if (proposal.Status == "Accepted" && proposal.Invoice == null)
-                                        {
-                                            <div class="mt-2">
-                                                @if (_showInvoiceFormForProposalId == proposal.Id)
-                                                {
-                                                    <div class="p-2 bg-light rounded border">
-                                                        <div class="mb-2">
-                                                            <label class="form-label small fw-semibold">Invoice Description</label>
-                                                            <textarea class="form-control form-control-sm" rows="2" @bind="_invoiceModel.Description"
-                                                                      placeholder="Invoice description..."></textarea>
-                                                        </div>
-                                                        <div class="mb-2">
-                                                            <label class="form-label small fw-semibold">Due Date</label>
-                                                            <input type="date" class="form-control form-control-sm" @bind="_invoiceModel.DueDate" />
-                                                        </div>
-                                                        <div class="d-flex gap-2">
-                                                            <button class="btn btn-sm btn-primary" @onclick="() => GenerateInvoiceAsync(proposal.Id)" disabled="@_actionLoading">
-                                                                @if (_actionLoading) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                                                                Generate Invoice
-                                                            </button>
-                                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => _showInvoiceFormForProposalId = 0">Cancel</button>
-                                                        </div>
-                                                    </div>
-                                                }
-                                                else
-                                                {
-                                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => OpenInvoiceForm(proposal.Id)">
-                                                        <i class="bi bi-receipt me-1"></i>Generate Invoice
-                                                    </button>
-                                                }
-                                            </div>
-                                        }
-
-                                        @if (proposal.Invoice != null)
-                                        {
-                                            <div class="mt-2 p-2 bg-light rounded border">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <small class="text-muted">Invoice</small>
-                                                        <div class="fw-semibold small">@proposal.Invoice.InvoiceNumber</div>
-                                                    </div>
-                                                    <span class="@GetInvoiceBadge(proposal.Invoice.Status)">@proposal.Invoice.Status</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center mt-1">
-                                                    <span class="fw-bold">@proposal.Invoice.Amount.ToString("C")</span>
-                                                    @if (proposal.Invoice.DueDate.HasValue)
-                                                    {
-                                                        <small class="text-muted">Due: @proposal.Invoice.DueDate.Value.ToString("d MMM yyyy")</small>
-                                                    }
-                                                </div>
-
-                                                @if (proposal.Invoice.Status == "Accepted")
-                                                {
-                                                    <div class="mt-2">
-                                                        <button class="btn btn-sm btn-success" @onclick="() => MarkInvoicePaidAsync(proposal.Invoice.Id)" disabled="@_actionLoading">
-                                                            <i class="bi bi-check2-circle me-1"></i>Mark as Paid
-                                                        </button>
-                                                    </div>
-                                                }
-                                            </div>
+                                            <div class="mt-1 fst-italic text-muted" style="font-size:.72rem"><i class="bi bi-chat-square-quote me-1"></i>@proposal.ClientNote</div>
                                         }
                                     </div>
                                 }
                             }
                         </div>
                     </div>
+
+                    <!-- Invoice Amount Tracker -->
+                    @if (_deal.Deal.AcceptedProposalAmount > 0)
+                    {
+                        var pct = _deal.Deal.AcceptedProposalAmount > 0
+                            ? (double)(_deal.Deal.TotalInvoicedAmount / _deal.Deal.AcceptedProposalAmount) * 100
+                            : 0;
+                        <div class="card shadow-sm mb-3 border-primary border-opacity-50">
+                            <div class="card-header bg-primary bg-opacity-10">
+                                <h6 class="mb-0 text-primary"><i class="bi bi-wallet2 me-2"></i>Invoice Budget</h6>
+                            </div>
+                            <div class="card-body pb-2">
+                                <div class="row g-2 text-center mb-2">
+                                    <div class="col-4">
+                                        <div class="small text-muted">Proposal</div>
+                                        <div class="fw-bold text-dark">&#8377;@_deal.Deal.AcceptedProposalAmount.ToString("N0")</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Invoiced</div>
+                                        <div class="fw-bold text-warning">&#8377;@_deal.Deal.TotalInvoicedAmount.ToString("N0")</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Remaining</div>
+                                        <div class="fw-bold @(_deal.Deal.RemainingAmount > 0 ? "text-success" : "text-secondary")">
+                                            &#8377;@_deal.Deal.RemainingAmount.ToString("N0")
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="progress" style="height:6px">
+                                    <div class="progress-bar bg-primary" style="width:@Math.Min(pct, 100)%"></div>
+                                </div>
+                                <div class="text-muted mt-1" style="font-size:.68rem">@pct.ToString("F0")% invoiced</div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Create Invoice form (only when proposal accepted and remaining > 0) -->
+                    @if ((_deal.Deal.Status == "ProposalAccepted" || _deal.Deal.Status == "InvoiceGenerated" || _deal.Deal.Status == "Paid")
+                         && _deal.Deal.AcceptedProposalAmount > 0
+                         && _deal.Deal.RemainingAmount > 0)
+                    {
+                        <div class="card shadow-sm mb-3 border-success border-opacity-25">
+                            <div class="card-header bg-success bg-opacity-10 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 text-success"><i class="bi bi-receipt me-2"></i>Create Invoice</h6>
+                                <button class="btn btn-sm btn-link text-secondary p-0" @onclick="() => _showInvoiceForm = !_showInvoiceForm">
+                                    <i class="bi @(_showInvoiceForm ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                                </button>
+                            </div>
+                            @if (_showInvoiceForm)
+                            {
+                                <div class="card-body">
+                                    <EditForm Model="_invoiceModel" OnValidSubmit="GenerateInvoiceAsync">
+                                        <DataAnnotationsValidator />
+                                        <div class="mb-2">
+                                            <label class="form-label small fw-semibold">Charge Type <span class="text-danger">*</span></label>
+                                            <InputSelect class="form-select form-select-sm" @bind-Value="_invoiceModel.ChargeType">
+                                                <option value="">-- Select type --</option>
+                                                @foreach (var ct in InvoiceChargeType.All)
+                                                {
+                                                    <option value="@ct">@ct</option>
+                                                }
+                                            </InputSelect>
+                                            <ValidationMessage For="() => _invoiceModel.ChargeType" />
+                                        </div>
+                                        <div class="row g-2 mb-2">
+                                            <div class="col-7">
+                                                <label class="form-label small fw-semibold">Amount (&#8377;) <span class="text-danger">*</span></label>
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="_invoiceModel.Amount"
+                                                             placeholder="0.00" @oninput="RecalcGst" />
+                                                <ValidationMessage For="() => _invoiceModel.Amount" />
+                                                <div class="text-muted mt-1" style="font-size:.68rem">
+                                                    Max: &#8377;@_deal.Deal.RemainingAmount.ToString("N2")
+                                                </div>
+                                            </div>
+                                            <div class="col-5">
+                                                <label class="form-label small fw-semibold">GST %</label>
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="_invoiceModel.GstRate"
+                                                             placeholder="0" @oninput="RecalcGst" />
+                                                @if (_gstPreview > 0)
+                                                {
+                                                    <div class="text-muted mt-1" style="font-size:.68rem">+&#8377;@_gstPreview.ToString("N2")</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        @if (_invoiceModel.Amount > 0)
+                                        {
+                                            <div class="alert alert-info py-1 px-2 mb-2" style="font-size:.75rem">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Total: <strong>&#8377;@((_invoiceModel.Amount + _gstPreview).ToString("N2"))</strong>
+                                                @if (_invoiceModel.GstRate > 0) { <span> (incl. @_invoiceModel.GstRate% GST)</span> }
+                                            </div>
+                                        }
+                                        <div class="mb-2">
+                                            <label class="form-label small fw-semibold">Description</label>
+                                            <InputTextArea class="form-control form-control-sm" rows="2" @bind-Value="_invoiceModel.Description"
+                                                           placeholder="Details about this charge..." />
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label small fw-semibold">Due Date</label>
+                                            <input type="date" class="form-control form-control-sm" @bind="_invoiceModel.DueDate" />
+                                        </div>
+                                        <button type="submit" class="btn btn-success btn-sm w-100" disabled="@_actionLoading">
+                                            @if (_actionLoading) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                                            <i class="bi bi-receipt me-1"></i>Create Invoice
+                                        </button>
+                                    </EditForm>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- All Invoices list -->
+                    @if (_deal.Deal.Invoices.Count > 0)
+                    {
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-header bg-white d-flex align-items-center">
+                                <h6 class="mb-0 flex-grow-1">
+                                    <i class="bi bi-receipt me-2"></i>Invoices
+                                    <span class="badge bg-secondary ms-1">@_deal.Deal.Invoices.Count</span>
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                @foreach (var inv in _deal.Deal.Invoices)
+                                {
+                                    <div class="border-bottom p-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <div>
+                                                <div class="fw-semibold small">@inv.InvoiceNumber</div>
+                                                @if (!string.IsNullOrEmpty(inv.ChargeType))
+                                                {
+                                                    <span class="badge bg-light text-secondary border" style="font-size:.65rem">@inv.ChargeType</span>
+                                                }
+                                            </div>
+                                            <span class="@GetInvoiceBadge(inv.Status)" style="font-size:.7rem">@inv.Status</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="fw-bold small">&#8377;@inv.Amount.ToString("N2")</span>
+                                                @if (inv.GstRate > 0)
+                                                {
+                                                    <span class="text-muted ms-1" style="font-size:.7rem">+@inv.GstRate% GST = &#8377;@inv.TotalAmount.ToString("N2")</span>
+                                                }
+                                            </div>
+                                            @if (inv.DueDate.HasValue)
+                                            {
+                                                <small class="text-muted" style="font-size:.68rem">Due: @inv.DueDate.Value.ToString("d MMM yyyy")</small>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(inv.Description))
+                                        {
+                                            <p class="text-muted mb-1 mt-1" style="font-size:.72rem; white-space:pre-wrap">@inv.Description</p>
+                                        }
+                                        <div class="d-flex gap-2 mt-2 flex-wrap">
+                                            @if (inv.Status == "Accepted" || inv.Status == "Pending")
+                                            {
+                                                <button class="btn btn-sm btn-success py-0 px-2" style="font-size:.75rem"
+                                                        @onclick='() => MarkInvoicePaidAsync(inv.Id)' disabled="@_actionLoading">
+                                                    <i class="bi bi-check2-circle me-1"></i>Mark Paid
+                                                </button>
+                                            }
+                                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.75rem"
+                                                    @onclick='() => PrintInvoice(inv)'>
+                                                <i class="bi bi-printer me-1"></i>Print
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
                 }
                 else if (_deal.Status == "Inquiry")
                 {
@@ -205,6 +330,88 @@
                         <div class="card-body text-center py-4">
                             <i class="bi bi-arrow-up-circle display-6 text-primary"></i>
                             <p class="mt-2 mb-0">Accept this request to start a deal and send proposals.</p>
+                        </div>
+                    </div>
+                }
+
+                <!-- Invoice Settings shortcut -->
+                <div class="d-flex justify-content-end mb-3">
+                    <a href="/lawyer/invoice-settings" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-gear me-1"></i>Invoice Settings
+                    </a>
+                </div>
+
+                <!-- Linked Case Preview (read-only, no documents) -->
+                @if (_deal.LinkedCasePreview != null)
+                {
+                    <div class="card shadow-sm mb-3 border-info border-opacity-50">
+                        <div class="card-header bg-info bg-opacity-10">
+                            <h6 class="mb-0 text-info"><i class="bi bi-folder2-open me-2"></i>Linked Case Preview</h6>
+                        </div>
+                        <div class="card-body small">
+                            <div class="mb-2"><strong>Title:</strong> @_deal.LinkedCasePreview.CaseTitle</div>
+                            <div class="mb-2"><strong>Case Type:</strong> @_deal.LinkedCasePreview.CaseType</div>
+                            <div class="mb-2"><strong>Court:</strong> @_deal.LinkedCasePreview.Court</div>
+                            <div class="mb-2"><strong>Status:</strong>
+                                <span class="badge bg-secondary ms-1">@_deal.LinkedCasePreview.Status</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(_deal.LinkedCasePreview.Description))
+                            {
+                                <div class="mb-2"><strong>Description:</strong>
+                                    <span class="text-muted">@_deal.LinkedCasePreview.Description</span>
+                                </div>
+                            }
+                            <div class="text-muted" style="font-size:.7rem">
+                                Created @_deal.LinkedCasePreview.CreatedAt.ToString("dd MMM yyyy")
+                            </div>
+                            <div class="alert alert-warning py-1 px-2 mt-2 mb-0" style="font-size:.72rem">
+                                <i class="bi bi-lock me-1"></i>Full case documents are accessible only after you are hired.
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Client's Hire Request Documents (read-only for lawyer) -->
+                @if (_deal.Documents.Count > 0)
+                {
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-header bg-white d-flex align-items-center">
+                            <h6 class="mb-0 flex-grow-1">
+                                <i class="bi bi-paperclip me-2"></i>Attached by Client
+                                <span class="badge bg-secondary ms-1">@_deal.Documents.Count</span>
+                            </h6>
+                        </div>
+                        <div class="card-body p-0">
+                            @foreach (var doc in _deal.Documents)
+                            {
+                                <div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom">
+                                    <i class="bi bi-file-earmark text-primary"></i>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <div class="small text-truncate">@doc.FileName</div>
+                                        <div class="text-muted" style="font-size:.68rem">
+                                            @doc.FileSizeFormatted &middot; @doc.UploadedAt.ToString("dd MMM yyyy")
+                                            @if (doc.SourceType == "Case")
+                                            {
+                                                <span class="badge bg-info bg-opacity-75 ms-1" style="font-size:.62rem">From Case</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    @if (doc.SourceType == "Case")
+                                    {
+                                        <button class="btn btn-outline-info btn-sm py-0 px-1" title="View in browser"
+                                                @onclick='() => ViewDocInBrowserAsync(doc)'>
+                                            <i class="bi bi-eye" style="font-size:.75rem"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-primary btn-sm py-0 px-1" title="Download"
+                                                @onclick='() => DownloadDocAsync(doc)'>
+                                            <i class="bi bi-download" style="font-size:.75rem"></i>
+                                        </button>
+                                    }
+                                </div>
+                            }
                         </div>
                     </div>
                 }
@@ -232,6 +439,12 @@
     }
 </div>
 
+<!-- Print Invoice Modal -->
+@if (_printInvoice != null)
+{
+    <InvoicePrintView Invoice="_printInvoice" OnClose="() => _printInvoice = null" />
+}
+
 @code {
     [Parameter] public int Id { get; set; }
 
@@ -242,7 +455,9 @@
 
     private CreateProposalDto _proposalModel = new();
     private CreateInvoiceDto _invoiceModel = new();
-    private int _showInvoiceFormForProposalId;
+    private bool _showInvoiceForm = true;
+    private decimal _gstPreview;
+    private InvoiceDto? _printInvoice;
 
     protected override async Task OnInitializedAsync()
     {
@@ -264,11 +479,7 @@
     {
         _actionLoading = true;
         var resp = await DealService.AcceptHireRequestAsync(Id);
-        if (resp?.Success == true)
-        {
-            Toast.ShowSuccess("Hire request accepted. Deal created!");
-            await LoadAsync();
-        }
+        if (resp?.Success == true) { Toast.ShowSuccess("Hire request accepted. Deal created!"); await LoadAsync(); }
         else { Toast.ShowError(resp?.Message ?? "Failed to accept."); }
         _actionLoading = false;
     }
@@ -277,12 +488,17 @@
     {
         _actionLoading = true;
         var resp = await DealService.RejectHireRequestAsync(Id);
-        if (resp?.Success == true)
-        {
-            Toast.ShowSuccess("Hire request rejected.");
-            Nav.NavigateTo("/lawyer/hire-requests");
-        }
+        if (resp?.Success == true) { Toast.ShowSuccess("Hire request rejected."); Nav.NavigateTo("/lawyer/hire-requests"); }
         else { Toast.ShowError(resp?.Message ?? "Failed to reject."); }
+        _actionLoading = false;
+    }
+
+    private async Task CancelAsync()
+    {
+        _actionLoading = true;
+        var resp = await DealService.CancelHireRequestAsync(Id);
+        if (resp?.Success == true) { Toast.ShowSuccess("Hire request cancelled."); Nav.NavigateTo("/lawyer/hire-requests"); }
+        else { Toast.ShowError(resp?.Message ?? "Failed to cancel."); }
         _actionLoading = false;
     }
 
@@ -291,33 +507,31 @@
         if (_deal?.Deal == null) return;
         _actionLoading = true;
         var resp = await DealService.CreateProposalAsync(_deal.Deal.Id, _proposalModel);
-        if (resp?.Success == true)
-        {
-            Toast.ShowSuccess("Proposal sent!");
-            _proposalModel = new();
-            await LoadAsync();
-        }
+        if (resp?.Success == true) { Toast.ShowSuccess("Proposal sent!"); _proposalModel = new(); await LoadAsync(); }
         else { Toast.ShowError(resp?.Message ?? "Failed to send proposal."); }
         _actionLoading = false;
     }
 
-    private void OpenInvoiceForm(int proposalId)
+    private void RecalcGst(ChangeEventArgs _)
     {
-        _showInvoiceFormForProposalId = proposalId;
-        _invoiceModel = new CreateInvoiceDto { DueDate = DateTime.Today.AddDays(30) };
+        _gstPreview = _invoiceModel.GstRate.HasValue && _invoiceModel.GstRate > 0
+            ? Math.Round(_invoiceModel.Amount * _invoiceModel.GstRate.Value / 100m, 2)
+            : 0;
     }
 
-    private async Task GenerateInvoiceAsync(int proposalId)
+    private async Task GenerateInvoiceAsync()
     {
+        if (_deal?.Deal == null) return;
         _actionLoading = true;
-        var resp = await DealService.GenerateInvoiceAsync(proposalId, _invoiceModel);
+        var resp = await DealService.GenerateInvoiceAsync(_deal.Deal.Id, _invoiceModel);
         if (resp?.Success == true)
         {
-            Toast.ShowSuccess("Invoice generated!");
-            _showInvoiceFormForProposalId = 0;
+            Toast.ShowSuccess("Invoice created!");
+            _invoiceModel = new CreateInvoiceDto { DueDate = DateTime.Today.AddDays(30) };
+            _gstPreview = 0;
             await LoadAsync();
         }
-        else { Toast.ShowError(resp?.Message ?? "Failed to generate invoice."); }
+        else { Toast.ShowError(resp?.Message ?? "Failed to create invoice."); }
         _actionLoading = false;
     }
 
@@ -325,13 +539,117 @@
     {
         _actionLoading = true;
         var resp = await DealService.MarkInvoicePaidAsync(invoiceId);
-        if (resp?.Success == true)
-        {
-            Toast.ShowSuccess("Invoice marked as paid. Case created!");
-            await LoadAsync();
-        }
+        if (resp?.Success == true) { Toast.ShowSuccess("Invoice marked as paid. Case created!"); await LoadAsync(); }
         else { Toast.ShowError(resp?.Message ?? "Failed."); }
         _actionLoading = false;
+    }
+
+    private void PrintInvoice(InvoiceDto inv)
+    {
+        if (string.IsNullOrEmpty(inv.ClientFullName))
+        {
+            inv.ClientFullName = _deal?.ClientFullName;
+            inv.LawyerFullName = _deal?.LawyerFullName;
+        }
+        _printInvoice = inv;
+    }
+
+    private async Task DownloadDocAsync(HireRequestDocumentDto doc)
+    {
+        var bytes = await DealService.DownloadHireRequestDocumentAsync(Id, doc.Id);
+        if (bytes != null)
+            await JS.InvokeVoidAsync("downloadFileFromBytes", doc.FileName, doc.ContentType, Convert.ToBase64String(bytes));
+        else
+            Toast.ShowError("Failed to download document.");
+    }
+
+    private async Task ViewDocInBrowserAsync(HireRequestDocumentDto doc)
+    {
+        var bytes = await DealService.DownloadCaseDocumentViaHireRequestAsync(Id, doc.Id);
+        if (bytes != null)
+            await JS.InvokeVoidAsync("viewFileInBrowser", doc.ContentType, Convert.ToBase64String(bytes));
+        else
+            Toast.ShowError("Failed to load document.");
+    }
+
+    private async Task PrintRequestInfoAsync()
+    {
+        if (_deal == null) return;
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"<div class='container'><h2 class='mb-3'>Request from {_deal.ClientFullName}</h2>");
+        sb.Append("<table class='table table-bordered'><tbody>");
+        sb.Append($"<tr><th style='width:35%'>Client</th><td>{_deal.ClientFullName}</td></tr>");
+        sb.Append($"<tr><th>Case Type</th><td>{_deal.CaseType}</td></tr>");
+        sb.Append($"<tr><th>Court</th><td>{_deal.Court}</td></tr>");
+        sb.Append($"<tr><th>Status</th><td>{FormatStatus(_deal.Status)}</td></tr>");
+        sb.Append($"<tr><th>Created</th><td>{_deal.CreatedAt:d MMM yyyy, h:mm tt}</td></tr>");
+        sb.Append($"<tr><th>Last Updated</th><td>{_deal.UpdatedAt:d MMM yyyy, h:mm tt}</td></tr>");
+        sb.Append("</tbody></table>");
+        if (!string.IsNullOrEmpty(_deal.Description))
+            sb.Append($"<h5>Description</h5><p style='white-space:pre-wrap'>{_deal.Description}</p>");
+        if (!string.IsNullOrEmpty(_deal.Message))
+            sb.Append($"<h5>Client Message</h5><p style='white-space:pre-wrap'>{_deal.Message}</p>");
+        if (_deal.LinkedCasePreview != null)
+        {
+            sb.Append("<h5>Linked Case</h5><table class='table table-bordered'><tbody>");
+            sb.Append($"<tr><th style='width:35%'>Title</th><td>{_deal.LinkedCasePreview.CaseTitle}</td></tr>");
+            sb.Append($"<tr><th>Case Type</th><td>{_deal.LinkedCasePreview.CaseType}</td></tr>");
+            sb.Append($"<tr><th>Court</th><td>{_deal.LinkedCasePreview.Court}</td></tr>");
+            sb.Append($"<tr><th>Status</th><td>{_deal.LinkedCasePreview.Status}</td></tr>");
+            sb.Append("</tbody></table>");
+        }
+        sb.Append("</div>");
+        await JS.InvokeVoidAsync("printHtml", sb.ToString(), $"Request from {_deal.ClientFullName}");
+    }
+
+    private async Task PrintDealTimelineAsync()
+    {
+        if (_deal == null) return;
+        var sb = new System.Text.StringBuilder();
+        sb.Append($"<div class='container'><h2 class='mb-1'>Request from {_deal.ClientFullName}</h2>");
+        sb.Append("<h5 class='text-muted mb-4'>Deal Timeline</h5>");
+
+        sb.Append("<div class='timeline-item'>");
+        sb.Append($"<div class='d-flex justify-content-between'><strong>Hire Request Sent</strong>");
+        sb.Append($"<span class='text-muted small'>{_deal.CreatedAt:d MMM yyyy}</span></div>");
+        sb.Append($"<p class='mb-0 small text-muted'>Case Type: {_deal.CaseType} &middot; Court: {_deal.Court}</p>");
+        sb.Append("</div>");
+
+        if (_deal.Deal != null)
+        {
+            foreach (var p in _deal.Deal.Proposals)
+            {
+                sb.Append("<div class='timeline-item'>");
+                sb.Append($"<div class='d-flex justify-content-between align-items-start'>");
+                sb.Append($"<strong>Proposal: {p.Title}</strong>");
+                sb.Append($"<span class='badge bg-secondary'>{p.Status}</span></div>");
+                sb.Append($"<p class='mb-0 small mt-1'>Amount: &#8377;{p.Amount:N2}{(p.IsNegotiable ? " (Negotiable)" : "")}</p>");
+                if (!string.IsNullOrEmpty(p.Description))
+                    sb.Append($"<p class='mb-0 small text-muted' style='white-space:pre-wrap'>{p.Description}</p>");
+                if (!string.IsNullOrEmpty(p.ClientNote))
+                    sb.Append($"<p class='mb-0 small text-info'>Client note: {p.ClientNote}</p>");
+                sb.Append("</div>");
+            }
+            foreach (var inv in _deal.Deal.Invoices)
+            {
+                sb.Append("<div class='timeline-item'>");
+                sb.Append($"<div class='d-flex justify-content-between align-items-start'>");
+                sb.Append($"<strong>Invoice: {inv.InvoiceNumber}</strong>");
+                sb.Append($"<span class='badge bg-secondary'>{inv.Status}</span></div>");
+                sb.Append($"<p class='mb-0 small mt-1'>Amount: &#8377;{inv.Amount:N2}");
+                if (inv.GstRate > 0) sb.Append($" + {inv.GstRate}% GST = &#8377;{inv.TotalAmount:N2}");
+                sb.Append("</p>");
+                if (!string.IsNullOrEmpty(inv.ChargeType))
+                    sb.Append($"<p class='mb-0 small text-muted'>Type: {inv.ChargeType}</p>");
+                if (!string.IsNullOrEmpty(inv.Description))
+                    sb.Append($"<p class='mb-0 small' style='white-space:pre-wrap'>{inv.Description}</p>");
+                if (inv.DueDate.HasValue)
+                    sb.Append($"<p class='mb-0 small text-muted'>Due: {inv.DueDate.Value:d MMM yyyy}</p>");
+                sb.Append("</div>");
+            }
+        }
+        sb.Append("</div>");
+        await JS.InvokeVoidAsync("printHtml", sb.ToString(), $"Deal Timeline \u2013 {_deal.ClientFullName}");
     }
 
     private static string GetStatusBadge(string status) => status switch
@@ -366,6 +684,7 @@
         "AcceptedByLawyer" => "Accepted",
         "DealInProgress" => "In Progress",
         "ConvertedToCase" => "Converted to Case",
+        "InvoiceGenerated" => "Invoice Sent",
         _ => status
     };
 }

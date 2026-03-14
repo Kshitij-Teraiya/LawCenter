@@ -71,6 +71,23 @@ public class AdminService : IAdminService
         return result?.Data;
     }
 
+    public async Task<List<AdminLawyerDto>> GetAllLawyersAsync()
+    {
+        var client = _httpFactory.CreateClient("secured");
+        var result = await client.GetFromJsonAsync<ApiResponse<List<AdminLawyerDto>>>("admin/lawyers");
+        return result?.Data ?? [];
+    }
+
+    public async Task<List<AdminClientDto>> GetAllClientsAsync()
+    {
+        var client = _httpFactory.CreateClient("secured");
+        var result = await client.GetFromJsonAsync<ApiResponse<List<AdminClientDto>>>("admin/clients");
+        return result?.Data ?? [];
+    }
+
+    public async Task<(bool Success, string? Error)> ToggleUserActiveAsync(int userId)
+        => await PutAsync($"admin/users/{userId}/toggle-active", new { });
+
     private async Task<(bool, string?)> PostAsync<T>(string url, T payload)
     {
         try

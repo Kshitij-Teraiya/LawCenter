@@ -1,0 +1,278 @@
+@page "/client/disputes"
+@attribute [Authorize(Roles = "Client")]
+@inject ILitigationDisputeService DisputeService
+@inject IDealService DealService
+@inject ToastService Toast
+
+<PageTitle>My Disputes – LawCity</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle me-2"></i>My Disputes</h4>
+        <button class="btn btn-primary btn-sm" @onclick="OpenRaiseModal"
+                disabled="@(_invoices.Count == 0)">
+            <i class="bi bi-plus-lg me-1"></i>Raise Dispute
+        </button>
+    </div>
+
+    @if (_invoices.Count == 0 && !_loading)
+    {
+        <div class="alert alert-info py-2 small mb-4">
+            <i class="bi bi-info-circle me-1"></i>
+            You have no invoices yet. Disputes can only be raised against existing invoices.
+        </div>
+    }
+
+    @* Raise Dispute Modal *@
+    @if (_showRaise)
+    {
+        <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.4)">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Raise a Dispute</h5>
+                        <button class="btn-close" @onclick="CloseRaiseModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (!string.IsNullOrWhiteSpace(_raiseError))
+                        {
+                            <div class="alert alert-danger py-2 small">@_raiseError</div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Invoice <span class="text-danger">*</span></label>
+                            <select class="form-select" @onchange="OnInvoiceSelected">
+                                <option value="0">— Select an invoice —</option>
+                                @foreach (var inv in _invoices)
+                                {
+                                    <option value="@inv.Id">@inv.DisplayLabel</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Dispute Type <span class="text-danger">*</span></label>
+                            <select class="form-select" @bind="_raiseModel.DisputeType">
+                                <option value="Unserviced">Unserviced — Work was not delivered</option>
+                                <option value="UnderLitigation">Under Litigation — Case is in legal dispute</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">
+                                Disputed Amount (₹) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" min="1" step="0.01"
+                                   @bind="_raiseModel.DisputedAmount" />
+                            @if (_selectedInvoiceTotalAmount > 0)
+                            {
+                                <div class="form-text">
+                                    Invoice total: <strong>₹@_selectedInvoiceTotalAmount.ToString("N2")</strong>.
+                                    Amount auto-filled; adjust if partially disputing.
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Reason <span class="text-danger">*</span></label>
+                            <textarea class="form-control" rows="3" placeholder="Describe the issue in detail..."
+                                      @bind="_raiseModel.Reason"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary btn-sm" @onclick="CloseRaiseModal">Cancel</button>
+                        <button class="btn btn-primary btn-sm" @onclick="RaiseDispute"
+                                disabled="@_raising">
+                            @if (_raising) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            Submit Dispute
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Status Filter *@
+    <div class="mb-3">
+        @foreach (var (s, label) in StatusTabs)
+        {
+            var sv = s;
+            <button class='btn btn-sm me-1 @(_statusFilter == sv ? "btn-primary" : "btn-outline-secondary")'
+                    @onclick='() => SetFilter(sv)'>@label</button>
+        }
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    }
+    else if (_disputes?.Items.Count == 0)
+    {
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>No disputes found.
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var d in _disputes!.Items)
+            {
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div class="flex-grow-1">
+                                    <div class="mb-1">
+                                        <span class='badge @DisputeTypeBadge(d.DisputeType) me-2'>@d.DisputeType</span>
+                                        <span class='badge @StatusBadge(d.Status)'>@StatusLabel(d.Status)</span>
+                                    </div>
+                                    <div class="fw-semibold">Invoice #@d.InvoiceId &mdash; ₹@d.DisputedAmount.ToString("N2")</div>
+                                    <div class="small text-muted">Lawyer: @d.LawyerName &nbsp;|&nbsp; @d.CreatedAt.ToString("dd MMM yyyy")</div>
+                                    <div class="small mt-1 text-secondary">@d.Reason</div>
+                                </div>
+                                <div class="text-end small">
+                                    @if (d.AdminApproved)
+                                    {
+                                        <div class="text-success"><i class="bi bi-check-circle me-1"></i>Admin approved</div>
+                                    }
+                                    @if (d.LawyerApproved)
+                                    {
+                                        <div class="text-success"><i class="bi bi-check-circle me-1"></i>Lawyer approved</div>
+                                    }
+                                    @if (d.Status == "Rejected")
+                                    {
+                                        <div class="text-danger"><i class="bi bi-x-circle me-1"></i>Rejected</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private PagedResult<LitigationDisputeModel>? _disputes;
+    private List<ClientInvoiceSummaryDto> _invoices = [];
+    private RaiseDisputeModel _raiseModel = new();
+    private decimal _selectedInvoiceTotalAmount;
+    private string _statusFilter = "";
+    private bool _loading;
+    private bool _showRaise;
+    private bool _raising;
+    private string? _raiseError;
+
+    private static readonly (string Status, string Label)[] StatusTabs =
+    [
+        ("",              "All"),
+        ("Pending",       "Pending"),
+        ("AdminApproved", "Admin Approved"),
+        ("BothApproved",  "Resolved"),
+        ("Rejected",      "Rejected")
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        var disputeTask = DisputeService.GetDisputesAsync(_statusFilter);
+        var invoiceTask = DealService.GetMyInvoicesAsync();
+        await Task.WhenAll(disputeTask, invoiceTask);
+        _disputes = disputeTask.Result?.Data ?? new();
+        _invoices = invoiceTask.Result?.Data ?? [];
+        _loading = false;
+    }
+
+    private async Task SetFilter(string s)
+    {
+        _statusFilter = s;
+        await LoadDisputesAsync();
+    }
+
+    private async Task LoadDisputesAsync()
+    {
+        _loading = true; StateHasChanged();
+        try
+        {
+            var resp = await DisputeService.GetDisputesAsync(_statusFilter);
+            _disputes = resp?.Data ?? new();
+        }
+        catch { Toast.ShowError("Failed to load disputes."); }
+        finally { _loading = false; }
+    }
+
+    private void OpenRaiseModal()
+    {
+        _raiseModel = new();
+        _raiseError = null;
+        _selectedInvoiceTotalAmount = 0;
+        _showRaise = true;
+    }
+
+    private void CloseRaiseModal()
+    {
+        _showRaise = false;
+        _raiseError = null;
+    }
+
+    private void OnInvoiceSelected(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id) && id > 0)
+        {
+            var inv = _invoices.FirstOrDefault(i => i.Id == id);
+            if (inv != null)
+            {
+                _raiseModel.InvoiceId = inv.Id;
+                _raiseModel.DisputedAmount = inv.TotalAmount;
+                _selectedInvoiceTotalAmount = inv.TotalAmount;
+                return;
+            }
+        }
+        _raiseModel.InvoiceId = 0;
+        _raiseModel.DisputedAmount = 0;
+        _selectedInvoiceTotalAmount = 0;
+    }
+
+    private async Task RaiseDispute()
+    {
+        _raiseError = null;
+        if (_raiseModel.InvoiceId <= 0)      { _raiseError = "Please select an invoice."; return; }
+        if (_raiseModel.DisputedAmount <= 0)  { _raiseError = "Disputed amount must be greater than zero."; return; }
+        if (string.IsNullOrWhiteSpace(_raiseModel.Reason)) { _raiseError = "Please describe the reason for the dispute."; return; }
+
+        _raising = true;
+        try
+        {
+            var resp = await DisputeService.RaiseDisputeAsync(_raiseModel);
+            if (resp?.Success == true)
+            {
+                Toast.ShowSuccess("Dispute submitted successfully.");
+                _showRaise = false;
+                _raiseModel = new();
+                await LoadDisputesAsync();
+            }
+            else _raiseError = resp?.Message ?? "Failed to submit dispute.";
+        }
+        catch { _raiseError = "An unexpected error occurred. Please try again."; }
+        finally { _raising = false; }
+    }
+
+    private static string DisputeTypeBadge(string t) =>
+        t == "UnderLitigation" ? "bg-danger-subtle text-danger" : "bg-warning-subtle text-warning";
+
+    private static string StatusBadge(string s) => s switch
+    {
+        "BothApproved"  => "bg-success-subtle text-success",
+        "Rejected"      => "bg-danger-subtle text-danger",
+        "AdminApproved" => "bg-info-subtle text-info",
+        _               => "bg-secondary-subtle text-secondary"
+    };
+
+    private static string StatusLabel(string s) => s switch
+    {
+        "AdminApproved" => "Admin Approved",
+        "BothApproved"  => "Resolved",
+        _               => s
+    };
+}

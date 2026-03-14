@@ -12,6 +12,8 @@ public class CaseDocumentDto
     public string ContentType { get; set; } = string.Empty;
     public bool IsPrivate { get; set; }
     public bool SharedWithAllLawyers { get; set; } = true;
+    /// <summary>Visible before hiring — for lawyers evaluating via a hire request.</summary>
+    public bool IsAvailableForDeal { get; set; }
     public List<int> SharedWithLawyerIds { get; set; } = [];
     public DateTime UploadedDate { get; set; }
     public string UploadedByName { get; set; } = string.Empty;
@@ -35,6 +37,13 @@ public class UploadDocumentDto
     public string DocumentType { get; set; } = string.Empty;
 
     public bool IsPrivate { get; set; } = false;
+
+    /// <summary>
+    /// If true, this document is pre-shared with lawyers evaluating via hire requests
+    /// linked to this case — before the lawyer is officially hired.
+    /// Only honoured for non-private, client-uploaded documents.
+    /// </summary>
+    public bool IsAvailableForDeal { get; set; } = false;
 
     public List<int> SharedWithLawyerIds { get; set; } = [];
 }

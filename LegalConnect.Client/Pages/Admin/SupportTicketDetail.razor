@@ -1,0 +1,236 @@
+@page "/admin/support/{Id:int}"
+@attribute [Authorize(Roles = "Admin,AdminStaff")]
+@using System.Security.Claims
+@inject ISupportService SupportService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ToastService Toast
+@inject NavigationManager Nav
+
+<PageTitle>Support Ticket &mdash; LawCity Admin</PageTitle>
+
+<div class="container py-4" style="max-width:960px;">
+    @if (_loading)
+    {
+        <div class="text-center py-5"><span class="spinner-border text-primary"></span></div>
+    }
+    else if (_ticket == null)
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-exclamation-triangle display-1 text-warning"></i>
+            <h5 class="mt-3">Ticket not found</h5>
+            <a href="/admin/support" class="btn btn-primary mt-2">Back to Tickets</a>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <a href="/admin/support" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+            <div class="flex-grow-1">
+                <h4 class="mb-0">@_ticket.Subject</h4>
+                <div class="text-muted small">
+                    <span class="@StatusBadge(_ticket.Status) me-2">@FormatStatus(_ticket.Status)</span>
+                    <span class="@PriorityBadge(_ticket.Priority) me-2">@_ticket.Priority</span>
+                    <span class="badge bg-light text-dark border">@_ticket.Category</span>
+                    <span class="ms-2">by <strong>@_ticket.UserFullName</strong> <span class="badge @((_ticket.UserRole == "Lawyer") ? "bg-info-subtle text-info" : "bg-success-subtle text-success")" style="font-size:.65rem">@_ticket.UserRole</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <!-- Messages Thread -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white d-flex align-items-center">
+                        <h6 class="mb-0 flex-grow-1"><i class="bi bi-chat-dots me-2"></i>Messages (@_messages.Count)</h6>
+                    </div>
+                    <div class="card-body" style="max-height:450px; overflow-y:auto;">
+                        @if (_messages.Count == 0)
+                        {
+                            <p class="text-muted text-center py-3">No messages yet. Send a reply below.</p>
+                        }
+                        else
+                        {
+                            @foreach (var msg in _messages)
+                            {
+                                var isOwn = msg.SenderUserId == _userId;
+                                <div class="d-flex mb-3 @(isOwn ? "justify-content-end" : "justify-content-start")">
+                                    <div class="@(isOwn ? "bg-primary text-white" : "bg-light border")" style="max-width:75%; border-radius:12px; padding:10px 14px;">
+                                        <div class="d-flex justify-content-between align-items-center mb-1" style="font-size:.72rem;">
+                                            <strong>@msg.SenderName</strong>
+                                            <span class="@(isOwn ? "text-white-50" : "text-muted") ms-2">@msg.SenderRole</span>
+                                        </div>
+                                        <div style="white-space:pre-wrap; font-size:.88rem;">@msg.Message</div>
+                                        <div class="@(isOwn ? "text-white-50" : "text-muted") mt-1" style="font-size:.68rem;">@msg.CreatedAt.ToString("d MMM yyyy, h:mm tt")</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                    @if (_ticket.Status != "Closed")
+                    {
+                        <div class="card-footer bg-white">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Type a reply..."
+                                       @bind="_newMessage" @bind:event="oninput"
+                                       @onkeydown="HandleKeyDown" disabled="@_sending" />
+                                <button class="btn btn-primary" @onclick="SendMessageAsync"
+                                        disabled="@(string.IsNullOrWhiteSpace(_newMessage) || _sending)">
+                                    @if (_sending) { <span class="spinner-border spinner-border-sm"></span> }
+                                    else { <i class="bi bi-send"></i> }
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="card-footer bg-light text-center text-muted small py-2">
+                            <i class="bi bi-lock me-1"></i>This ticket is closed. No new messages can be sent.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Status Change -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0"><i class="bi bi-gear me-2"></i>Manage Status</h6>
+                    </div>
+                    <div class="card-body">
+                        <select class="form-select mb-2" @bind="_selectedStatus">
+                            @foreach (var s in TicketStatuses.All)
+                            {
+                                <option value="@s">@(s == "InProgress" ? "In Progress" : s)</option>
+                            }
+                        </select>
+                        <button class="btn btn-sm btn-primary w-100" @onclick="UpdateStatusAsync"
+                                disabled="@(_selectedStatus == _ticket.Status || _updatingStatus)">
+                            @if (_updatingStatus) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            Update Status
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ticket Info -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Ticket Info</h6>
+                    </div>
+                    <div class="card-body small">
+                        <div class="mb-2"><strong>Created:</strong> @_ticket.CreatedAt.ToString("d MMM yyyy, h:mm tt")</div>
+                        <div class="mb-2"><strong>Updated:</strong> @_ticket.UpdatedAt.ToString("d MMM yyyy, h:mm tt")</div>
+                        @if (_ticket.ClosedAt.HasValue)
+                        {
+                            <div class="mb-2"><strong>Closed:</strong> @_ticket.ClosedAt.Value.ToString("d MMM yyyy, h:mm tt")</div>
+                            @if (!string.IsNullOrEmpty(_ticket.ClosedByUserName))
+                            {
+                                <div class="mb-2"><strong>Closed By:</strong> @_ticket.ClosedByUserName</div>
+                            }
+                        }
+                        <hr />
+                        <div class="mb-2"><strong>Description:</strong></div>
+                        <p class="text-muted mb-0" style="white-space:pre-wrap;">@_ticket.Description</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private SupportTicketDto? _ticket;
+    private List<SupportMessageDto> _messages = [];
+    private bool _loading = true;
+    private bool _sending;
+    private bool _updatingStatus;
+    private string _newMessage = string.Empty;
+    private string _selectedStatus = "Open";
+    private int _userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _userId = int.TryParse(authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var uid) ? uid : 0;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        var ticketResp = await SupportService.GetTicketByIdAsync(Id);
+        _ticket = ticketResp?.Data;
+        if (_ticket != null)
+        {
+            _selectedStatus = _ticket.Status;
+            var msgResp = await SupportService.GetMessagesAsync(Id);
+            _messages = msgResp?.Data ?? [];
+        }
+        _loading = false;
+    }
+
+    private async Task SendMessageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newMessage)) return;
+        _sending = true;
+        var resp = await SupportService.SendMessageAsync(Id, new SendSupportMessageDto { Message = _newMessage });
+        if (resp?.Success == true)
+        {
+            _newMessage = string.Empty;
+            var msgResp = await SupportService.GetMessagesAsync(Id);
+            _messages = msgResp?.Data ?? [];
+            var ticketResp = await SupportService.GetTicketByIdAsync(Id);
+            _ticket = ticketResp?.Data;
+            if (_ticket != null) _selectedStatus = _ticket.Status;
+        }
+        else Toast.ShowError(resp?.Message ?? "Failed to send message.");
+        _sending = false;
+    }
+
+    private async Task UpdateStatusAsync()
+    {
+        if (_ticket == null || _selectedStatus == _ticket.Status) return;
+        _updatingStatus = true;
+        var resp = await SupportService.UpdateTicketStatusAsync(Id, new UpdateTicketStatusDto { Status = _selectedStatus });
+        if (resp?.Success == true)
+        {
+            Toast.ShowSuccess("Status updated.");
+            var ticketResp = await SupportService.GetTicketByIdAsync(Id);
+            _ticket = ticketResp?.Data;
+            if (_ticket != null) _selectedStatus = _ticket.Status;
+        }
+        else Toast.ShowError(resp?.Message ?? "Failed to update status.");
+        _updatingStatus = false;
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+            await SendMessageAsync();
+    }
+
+    private static string PriorityBadge(string p) => p switch
+    {
+        "Low" => "badge bg-secondary",
+        "Medium" => "badge bg-info",
+        "High" => "badge bg-warning text-dark",
+        "Urgent" => "badge bg-danger",
+        _ => "badge bg-secondary"
+    };
+
+    private static string StatusBadge(string s) => s switch
+    {
+        "Open" => "badge bg-primary",
+        "InProgress" => "badge bg-warning text-dark",
+        "Resolved" => "badge bg-success",
+        "Closed" => "badge bg-secondary",
+        _ => "badge bg-secondary"
+    };
+
+    private static string FormatStatus(string s) => s switch
+    {
+        "InProgress" => "In Progress",
+        _ => s
+    };
+}

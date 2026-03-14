@@ -8,4 +8,5 @@ public class AuthResponseDto
     public string Role { get; set; } = string.Empty;
     public DateTime ExpiresAt { get; set; }
     public string? ProfilePictureUrl { get; set; }
+    public List<string>? AdminStaffRoles { get; set; }
 }

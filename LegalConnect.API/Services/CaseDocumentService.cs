@@ -12,6 +12,9 @@ public interface ICaseDocumentService
         int userId, string role, string userName, int caseId, IFormFile file, UploadDocumentDto dto);
     Task<(CaseDocument? Document, bool CanAccess)> GetDocumentForDownloadAsync(int userId, string role, int documentId);
     Task<(bool Success, string Message)> DeleteDocumentAsync(int userId, string role, int documentId);
+    Task<(bool Success, string Message, bool NewValue)> ToggleAvailableForDealAsync(int clientUserId, int documentId);
+    Task<(bool Success, string Message, bool NewValue)> TogglePrivateAsync(int userId, int documentId);
+    Task<(CaseDocument? Doc, bool CanAccess)> GetDealDocumentViaHireRequestAsync(int lawyerOrClientUserId, string role, int hireRequestId, int caseDocId);
 }
 
 public class CaseDocumentService : ICaseDocumentService
@@ -75,6 +78,7 @@ public class CaseDocumentService : ICaseDocumentService
                 ContentType = d.ContentType,
                 IsPrivate = d.IsPrivate,
                 SharedWithAllLawyers = d.SharedWithAllLawyers,
+                IsAvailableForDeal = d.IsAvailableForDeal,
                 SharedWithLawyerIds = d.LawyerShares.Select(s => s.LawyerProfileId).ToList(),
                 UploadedDate = d.UploadedDate,
                 UploadedByName = d.UploadedBy.FirstName + " " + d.UploadedBy.LastName,
@@ -91,6 +95,16 @@ public class CaseDocumentService : ICaseDocumentService
         if (!await CanAccessCaseAsync(userId, role, caseId))
             return (false, "Case not found or access denied.", null);
 
+        // Staff must have CanUploadDocument permission
+        if (role == "Staff")
+        {
+            var staffProfile = await _db.StaffProfiles.FirstOrDefaultAsync(s => s.UserId == userId);
+            var allowed = staffProfile != null && await _db.CaseStaffs
+                .AnyAsync(cs => cs.CaseId == caseId && cs.StaffProfileId == staffProfile.Id
+                             && cs.IsActive && cs.CanUploadDocument);
+            if (!allowed) return (false, "You do not have permission to upload documents to this case.", null);
+        }
+
         var (isValid, error) = _fileValidation.Validate(file);
         if (!isValid)
             return (false, error, null);
@@ -98,6 +112,9 @@ public class CaseDocumentService : ICaseDocumentService
         var (storedFileName, filePath) = await _fileUpload.SaveFileAsync(file, caseId);
 
         bool sharedWithAll = dto.SharedWithLawyerIds.Count == 0;
+
+        // IsAvailableForDeal only makes sense for non-private client-uploaded docs
+        bool isAvailableForDeal = !dto.IsPrivate && role == "Client" && dto.IsAvailableForDeal;
 
         var document = new CaseDocument
         {
@@ -111,7 +128,8 @@ public class CaseDocumentService : ICaseDocumentService
             FileSize = file.Length,
             ContentType = file.ContentType,
             IsPrivate = dto.IsPrivate,
-            SharedWithAllLawyers = dto.IsPrivate ? true : sharedWithAll
+            SharedWithAllLawyers = dto.IsPrivate ? true : sharedWithAll,
+            IsAvailableForDeal = isAvailableForDeal
         };
 
         _db.CaseDocuments.Add(document);
@@ -156,6 +174,7 @@ public class CaseDocumentService : ICaseDocumentService
             ContentType = document.ContentType,
             IsPrivate = document.IsPrivate,
             SharedWithAllLawyers = document.SharedWithAllLawyers,
+            IsAvailableForDeal = document.IsAvailableForDeal,
             SharedWithLawyerIds = dto.SharedWithLawyerIds,
             UploadedDate = document.UploadedDate,
             UploadedByName = userName
@@ -240,6 +259,78 @@ public class CaseDocumentService : ICaseDocumentService
         return (true, "Document deleted.");
     }
 
+    public async Task<(bool Success, string Message, bool NewValue)> ToggleAvailableForDealAsync(
+        int clientUserId, int documentId)
+    {
+        var doc = await _db.CaseDocuments.FirstOrDefaultAsync(d => d.Id == documentId);
+        if (doc == null) return (false, "Document not found.", false);
+
+        // Only the client who uploaded it can toggle this flag
+        if (doc.UploadedByRole != "Client" || doc.UploadedByUserId != clientUserId)
+            return (false, "Only the client who uploaded this document can change this setting.", false);
+
+        // Cannot mark a private document as available for deal
+        if (doc.IsPrivate && !doc.IsAvailableForDeal)
+            return (false, "Private documents cannot be shared for hire requests.", false);
+
+        doc.IsAvailableForDeal = !doc.IsAvailableForDeal;
+        await _db.SaveChangesAsync();
+        return (true, doc.IsAvailableForDeal
+            ? "Document will now be visible to lawyers evaluating this case via hire requests."
+            : "Document removed from hire request visibility.", doc.IsAvailableForDeal);
+    }
+
+    public async Task<(bool Success, string Message, bool NewValue)> TogglePrivateAsync(int userId, int documentId)
+    {
+        var doc = await _db.CaseDocuments.FirstOrDefaultAsync(d => d.Id == documentId);
+        if (doc == null) return (false, "Document not found.", false);
+
+        // Only the uploader can change their own document visibility
+        if (doc.UploadedByUserId != userId)
+            return (false, "Only the uploader can change document visibility.", false);
+
+        doc.IsPrivate = !doc.IsPrivate;
+
+        // If marking private, also remove from deal share to keep state consistent
+        if (doc.IsPrivate) doc.IsAvailableForDeal = false;
+
+        await _db.SaveChangesAsync();
+        return (true,
+            doc.IsPrivate ? "Document is now private." : "Document is now public.",
+            doc.IsPrivate);
+    }
+
+    public async Task<(CaseDocument? Doc, bool CanAccess)> GetDealDocumentViaHireRequestAsync(
+        int userId, string role, int hireRequestId, int caseDocId)
+    {
+        // Find the hire request — must be linked to a case
+        var hr = await _db.HireRequests
+            .FirstOrDefaultAsync(h => h.Id == hireRequestId && h.LinkedCaseId != null);
+        if (hr == null) return (null, false);
+
+        // Verify the requestor is the assigned lawyer OR the client owner
+        if (role == "Lawyer")
+        {
+            var lawyerProfile = await _db.LawyerProfiles.FirstOrDefaultAsync(l => l.UserId == userId);
+            if (lawyerProfile == null || hr.LawyerProfileId != lawyerProfile.Id) return (null, false);
+        }
+        else if (role == "Client")
+        {
+            var clientProfile = await _db.ClientProfiles.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (clientProfile == null || hr.ClientProfileId != clientProfile.Id) return (null, false);
+        }
+        else return (null, false);
+
+        // Fetch the case document; it must belong to the linked case and be flagged
+        var doc = await _db.CaseDocuments.FirstOrDefaultAsync(d =>
+            d.Id == caseDocId &&
+            d.CaseId == hr.LinkedCaseId &&
+            d.IsAvailableForDeal &&
+            !d.IsDeleted);
+
+        return doc == null ? (null, false) : (doc, true);
+    }
+
     private async Task<bool> CanAccessCaseAsync(int userId, string role, int caseId)
     {
         if (role == "Lawyer")
@@ -249,6 +340,13 @@ public class CaseDocumentService : ICaseDocumentService
                 c.Id == caseId &&
                 (c.LawyerProfileId == lawyerProfile.Id ||
                  c.CaseLawyers.Any(cl => cl.LawyerProfileId == lawyerProfile.Id && cl.IsActive)));
+        }
+        if (role == "Staff")
+        {
+            var staffProfile = await _db.StaffProfiles.FirstOrDefaultAsync(s => s.UserId == userId);
+            return staffProfile != null && await _db.Cases.AnyAsync(c =>
+                c.Id == caseId &&
+                c.CaseStaffs.Any(cs => cs.StaffProfileId == staffProfile.Id && cs.IsActive));
         }
         if (role == "Client")
         {

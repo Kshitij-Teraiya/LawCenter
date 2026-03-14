@@ -1,0 +1,225 @@
+@page "/staff/my-tasks"
+@attribute [Authorize(Roles = "Staff")]
+@inject IStaffService StaffService
+@inject ToastService Toast
+
+<PageTitle>My Tasks</PageTitle>
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0"><i class="bi bi-list-check me-2 text-primary"></i>My Tasks</h4>
+            <p class="text-muted small mb-0">Update your assigned tasks and add progress notes</p>
+        </div>
+    </div>
+
+    @* ── Filters ─────────────────────────────────────────────────────── *@
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body py-2 px-3">
+            <div class="row g-2">
+                <div class="col-auto">
+                    <select class="form-select form-select-sm" @bind="_filterStatus">
+                        <option value="">All Status</option>
+                        @foreach (var s in StaffTaskStatusType.All)
+                        {
+                            <option value="@s">@s</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <select class="form-select form-select-sm" @bind="_filterPriority">
+                        <option value="">All Priority</option>
+                        @foreach (var p in TaskPriorityType.All)
+                        {
+                            <option value="@p">@p</option>
+                        }
+                    </select>
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control form-control-sm"
+                           @bind="_filterSearch" placeholder="Search..." />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    else
+    {
+        var filtered = FilteredTasks.ToList();
+        @if (filtered.Count == 0)
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-clipboard-check text-muted" style="font-size:2.5rem;"></i>
+                    <p class="text-muted mt-2">No tasks found.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-3">
+                @foreach (var task in filtered)
+                {
+                    <div class="card border-0 shadow-sm @(task.IsOverdue ? "border-danger border" : "")">
+                        <div class="card-body">
+                            <div class="row align-items-start">
+                                <div class="col">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="fw-semibold">@task.Title</span>
+                                        <span class="badge @GetPriorityBadge(task.Priority)">@task.Priority</span>
+                                        <span class="badge @GetStatusBadge(task.Status)">@task.Status</span>
+                                        @if (task.IsOverdue)
+                                        {
+                                            <span class="badge bg-danger">Overdue</span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(task.Description))
+                                    {
+                                        <p class="text-muted small mb-1">@task.Description</p>
+                                    }
+                                    <div class="d-flex gap-3 text-muted small">
+                                        @if (!string.IsNullOrEmpty(task.CaseTitle))
+                                        {
+                                            <span><i class="bi bi-briefcase me-1"></i>@task.CaseTitle</span>
+                                        }
+                                        @if (task.DueDate.HasValue)
+                                        {
+                                            <span class="@(task.IsOverdue ? "text-danger fw-bold" : "")">
+                                                <i class="bi bi-calendar me-1"></i>Due: @task.DueDate.Value.ToString("MMM d, yyyy")
+                                            </span>
+                                        }
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(task.StaffNote))
+                                    {
+                                        <div class="mt-2 p-2 bg-light rounded small">
+                                            <i class="bi bi-chat-left-text me-1 text-muted"></i>
+                                            <em>@task.StaffNote</em>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-auto">
+                                    @if (_expandedId == task.Id)
+                                    {
+                                        <div style="min-width:260px;">
+                                            <label class="form-label small fw-medium">Update Status</label>
+                                            <select class="form-select form-select-sm mb-2"
+                                                    @bind="_updateModel.Status">
+                                                @foreach (var s in StaffTaskStatusType.All)
+                                                {
+                                                    <option value="@s">@s</option>
+                                                }
+                                            </select>
+                                            <label class="form-label small fw-medium">Progress Note</label>
+                                            <textarea class="form-control form-control-sm mb-2" rows="2"
+                                                      @bind="_updateModel.StaffNote"
+                                                      placeholder="Add a note..."></textarea>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-primary"
+                                                        @onclick='() => SaveStatus(task.Id)'
+                                                        disabled="@(_saving == task.Id)">
+                                                    @if (_saving == task.Id)
+                                                    {
+                                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                                    }
+                                                    Save
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary"
+                                                        @onclick="() => _expandedId = 0">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else if (task.Status != StaffTaskStatusType.Completed &&
+                                             task.Status != StaffTaskStatusType.Cancelled)
+                                    {
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                @onclick='() => ExpandTask(task)'>
+                                            <i class="bi bi-pencil me-1"></i>Update
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<StaffTaskModel> _tasks = [];
+    private bool _loading = true;
+    private int  _expandedId = 0;
+    private int  _saving     = 0;
+
+    private string _filterStatus   = "";
+    private string _filterPriority = "";
+    private string _filterSearch   = "";
+
+    private UpdateTaskStatusModel _updateModel = new();
+
+    private IEnumerable<StaffTaskModel> FilteredTasks => _tasks.Where(t =>
+        (string.IsNullOrEmpty(_filterStatus)   || t.Status   == _filterStatus) &&
+        (string.IsNullOrEmpty(_filterPriority) || t.Priority == _filterPriority) &&
+        (string.IsNullOrEmpty(_filterSearch)   || t.Title.Contains(_filterSearch, StringComparison.OrdinalIgnoreCase)));
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await StaffService.GetMyTasksAsync();
+        if (result?.Success == true) _tasks = result.Data ?? [];
+        _loading = false;
+    }
+
+    private void ExpandTask(StaffTaskModel task)
+    {
+        _expandedId = task.Id;
+        _updateModel = new UpdateTaskStatusModel
+        {
+            Status    = task.Status,
+            StaffNote = task.StaffNote
+        };
+    }
+
+    private async Task SaveStatus(int taskId)
+    {
+        _saving = taskId;
+        var result = await StaffService.UpdateMyTaskStatusAsync(taskId, _updateModel);
+        if (result?.Success == true)
+        {
+            var idx = _tasks.FindIndex(t => t.Id == taskId);
+            if (idx >= 0) _tasks[idx] = result.Data!;
+            _expandedId = 0;
+            Toast.ShowSuccess("Task updated.");
+        }
+        else
+        {
+            Toast.ShowError(result?.Message ?? "Update failed.");
+        }
+        _saving = 0;
+    }
+
+    private static string GetPriorityBadge(string p) => p switch
+    {
+        "Urgent" => "bg-danger",
+        "High"   => "bg-warning text-dark",
+        "Low"    => "bg-info-subtle text-info",
+        _        => "bg-secondary-subtle text-secondary"
+    };
+
+    private static string GetStatusBadge(string s) => s switch
+    {
+        "Completed"  => "bg-success",
+        "InProgress" => "bg-primary",
+        "Cancelled"  => "bg-secondary",
+        _            => "bg-warning text-dark"
+    };
+}

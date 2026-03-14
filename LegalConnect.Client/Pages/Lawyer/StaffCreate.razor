@@ -1,0 +1,101 @@
+@page "/lawyer/staff/create"
+@attribute [Authorize(Roles = "Lawyer")]
+@inject IStaffService StaffService
+@inject NavigationManager Nav
+@inject ToastService Toast
+
+<PageTitle>Add Staff Member</PageTitle>
+
+<div class="container py-4" style="max-width:600px;">
+
+    <div class="mb-4">
+        <a href="/lawyer/staff" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left me-1"></i>Back to Staff
+        </a>
+        <h4 class="fw-bold mb-0"><i class="bi bi-person-plus me-2 text-primary"></i>Add Staff Member</h4>
+        <p class="text-muted small">Create a login account for a new staff member in your firm.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">First Name <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="_model.FirstName" class="form-control" placeholder="e.g. Jane" />
+                        <ValidationMessage For="() => _model.FirstName" class="text-danger small" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Last Name <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="_model.LastName" class="form-control" placeholder="e.g. Smith" />
+                        <ValidationMessage For="() => _model.LastName" class="text-danger small" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Email Address <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="_model.Email" type="email" class="form-control" placeholder="staff@example.com" />
+                        <ValidationMessage For="() => _model.Email" class="text-danger small" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Password <span class="text-danger">*</span></label>
+                        <InputText @bind-Value="_model.Password" type="password" class="form-control" placeholder="Min. 8 characters" />
+                        <ValidationMessage For="() => _model.Password" class="text-danger small" />
+                        <div class="form-text">The staff member will use this password to log in.</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-medium">Staff Role <span class="text-danger">*</span></label>
+                        <InputSelect @bind-Value="_model.StaffRole" class="form-select">
+                            @foreach (var role in StaffRoleType.All)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => _model.StaffRole" class="text-danger small" />
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <div class="alert alert-danger mt-3 mb-0 py-2 small">
+                        <i class="bi bi-exclamation-triangle me-1"></i>@_error
+                    </div>
+                }
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary" disabled="@_saving">
+                        @if (_saving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-person-check me-1"></i>Create Staff Member
+                    </button>
+                    <a href="/lawyer/staff" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateStaffModel _model = new();
+    private bool _saving = false;
+    private string? _error;
+
+    private async Task HandleSubmit()
+    {
+        _saving = true;
+        _error = null;
+        var result = await StaffService.CreateStaffAsync(_model);
+        if (result?.Success == true)
+        {
+            Toast.ShowSuccess("Staff member created successfully!");
+            Nav.NavigateTo("/lawyer/staff");
+        }
+        else
+        {
+            _error = result?.Message ?? "Failed to create staff member.";
+        }
+        _saving = false;
+    }
+}

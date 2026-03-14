@@ -3,7 +3,7 @@
 @inject ILawyerService LawyerService
 @inject ToastService Toast
 
-<PageTitle>Manage Profile – LegalConnect</PageTitle>
+<PageTitle>Manage Profile – LawCity</PageTitle>
 
 <div class="container-fluid" style="max-width:860px;">
     <h4 class="fw-bold mb-4">Manage Profile</h4>
@@ -57,7 +57,7 @@
                             <InputText @bind-Value="_basicInfo.Court" class="form-control" />
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">Consultation Fee (৳)</label>
+                            <label class="form-label fw-medium">Consultation Fee (Rs.)</label>
                             <InputNumber @bind-Value="_basicInfo.ConsultationFee" class="form-control" />
                         </div>
                         <div class="col-12">
@@ -223,9 +223,9 @@
                 <EditForm Model="@_feeDto" OnValidSubmit="SetFee">
                     <DataAnnotationsValidator />
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Fee Amount (৳)</label>
+                        <label class="form-label fw-medium">Fee Amount (Rs.)</label>
                         <div class="input-group">
-                            <span class="input-group-text">৳</span>
+                            <span class="input-group-text">Rs.</span>
                             <InputNumber @bind-Value="_feeDto.ConsultationFee" class="form-control" min="0" />
                         </div>
                         <ValidationMessage For="@(() => _feeDto.ConsultationFee)" class="text-danger small" />

@@ -23,6 +23,13 @@ public class CaseDocument
     /// </summary>
     public bool SharedWithAllLawyers { get; set; } = true;
 
+    /// <summary>
+    /// When true, automatically shared with any lawyer who receives a hire request
+    /// linked to this case — visible before they are hired.
+    /// Client-controlled; only for non-private client-uploaded docs.
+    /// </summary>
+    public bool IsAvailableForDeal { get; set; } = false;
+
     public bool IsDeleted { get; set; } = false;
     public DateTime UploadedDate { get; set; } = DateTime.UtcNow;
 

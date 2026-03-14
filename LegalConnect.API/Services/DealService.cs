@@ -10,10 +10,12 @@ public interface IDealService
     // HireRequest
     Task<(bool Success, string Message, HireRequestDto? Data)> CreateHireRequestAsync(int clientUserId, CreateHireRequestDto dto);
     Task<List<HireRequestDto>> GetMyHireRequestsAsync(int clientUserId);
+    Task<List<ClientInvoiceSummaryDto>> GetMyInvoicesAsync(int clientUserId);
     Task<List<HireRequestDto>> GetIncomingHireRequestsAsync(int lawyerUserId);
     Task<HireRequestDetailDto?> GetHireRequestByIdAsync(int userId, string role, int hireRequestId);
     Task<(bool Success, string Message)> RejectHireRequestAsync(int lawyerUserId, int hireRequestId);
     Task<(bool Success, string Message)> CancelHireRequestAsync(int clientUserId, int hireRequestId);
+    Task<(bool Success, string Message)> CancelHireRequestByPartyAsync(int userId, string role, int hireRequestId);
 
     // Deal
     Task<(bool Success, string Message, DealDto? Data)> AcceptHireRequestAsync(int lawyerUserId, int hireRequestId);
@@ -29,19 +31,26 @@ public interface IDealService
     Task<(bool Success, string Message)> RejectProposalAsync(int clientUserId, int proposalId, string? note);
 
     // Invoices (on Deal)
-    Task<(bool Success, string Message, InvoiceDto? Data)> GenerateInvoiceAsync(int lawyerUserId, int proposalId, CreateInvoiceDto dto);
+    Task<(bool Success, string Message, InvoiceDto? Data)> GenerateInvoiceAsync(int lawyerUserId, int dealId, CreateInvoiceDto dto);
     Task<(bool Success, string Message)> AcceptInvoiceAsync(int clientUserId, int invoiceId);
     Task<(bool Success, string Message)> MarkInvoicePaidAsync(int lawyerUserId, int invoiceId);
     Task<(bool Success, string Message)> RejectInvoiceAsync(int clientUserId, int invoiceId);
+
+    // Invoice Settings
+    Task<LawyerInvoiceSettingsDto?> GetInvoiceSettingsAsync(int lawyerUserId);
+    Task<(bool Success, string Message, LawyerInvoiceSettingsDto? Data)> UpsertInvoiceSettingsAsync(int lawyerUserId, UpsertLawyerInvoiceSettingsDto dto);
+    Task<List<LawyerPaidInvoiceDto>> GetLawyerPaidInvoicesAsync(int lawyerUserId);
 }
 
 public class DealService : IDealService
 {
     private readonly AppDbContext _db;
+    private readonly IContractService _contractService;
 
-    public DealService(AppDbContext db)
+    public DealService(AppDbContext db, IContractService contractService)
     {
-        _db = db;
+        _db              = db;
+        _contractService = contractService;
     }
 
     // ── HireRequest ──────────────────────────────────────────────────
@@ -55,13 +64,23 @@ public class DealService : IDealService
             .FirstOrDefaultAsync(l => l.Id == dto.LawyerProfileId && l.IsVerified);
         if (lawyerProfile == null) return (false, "Lawyer not found or not verified.", null);
 
-        // Check for existing active hire request (same client + same lawyer, not rejected/cancelled/converted)
         var existing = await _db.HireRequests.IgnoreQueryFilters()
             .FirstOrDefaultAsync(h => h.LawyerProfileId == dto.LawyerProfileId
                 && h.ClientProfileId == clientProfile.Id && !h.IsDeleted
                 && h.Status != HireRequestStatus.Rejected
                 && h.Status != HireRequestStatus.ConvertedToCase);
         if (existing != null) return (false, "You already have an active hire request with this lawyer.", null);
+
+        // Validate the linked case if provided
+        if (dto.LinkedCaseId.HasValue)
+        {
+            var linkedCase = await _db.Cases.FirstOrDefaultAsync(c =>
+                c.Id == dto.LinkedCaseId.Value && c.ClientProfileId == clientProfile.Id);
+            if (linkedCase == null)
+                return (false, "Linked case not found or does not belong to you.", null);
+            if (linkedCase.Status == CaseStatus.Closed)
+                return (false, "Cannot link a hire request to a closed case.", null);
+        }
 
         var hireRequest = new HireRequest
         {
@@ -72,6 +91,7 @@ public class DealService : IDealService
             CaseType = dto.CaseType,
             Court = dto.Court,
             Message = dto.Message,
+            LinkedCaseId = dto.LinkedCaseId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -93,6 +113,7 @@ public class DealService : IDealService
             .Include(h => h.LawyerProfile).ThenInclude(l => l.Category)
             .Include(h => h.Messages)
             .Include(h => h.Deal)
+            .Include(h => h.LinkedCase)
             .OrderByDescending(h => h.UpdatedAt)
             .Select(h => new HireRequestDto
             {
@@ -113,9 +134,31 @@ public class DealService : IDealService
                 UnreadCount = h.Messages.Count(m => !m.IsRead && m.SenderUserId != clientProfile.UserId),
                 HasDeal = h.Deal != null,
                 DealId = h.Deal == null ? (int?)null : h.Deal.Id,
+                LinkedCaseId = h.LinkedCaseId,
+                LinkedCaseTitle = h.LinkedCase != null ? h.LinkedCase.CaseTitle : null,
                 CreatedAt = h.CreatedAt,
                 UpdatedAt = h.UpdatedAt
             }).ToListAsync();
+    }
+
+    public async Task<List<ClientInvoiceSummaryDto>> GetMyInvoicesAsync(int clientUserId)
+    {
+        var clientProfile = await _db.ClientProfiles.FirstOrDefaultAsync(c => c.UserId == clientUserId);
+        if (clientProfile == null) return [];
+
+        return await _db.Invoices
+            .Where(i => i.Deal.ClientProfileId == clientProfile.Id)
+            .Include(i => i.Deal).ThenInclude(d => d.LawyerProfile).ThenInclude(l => l.User)
+            .OrderByDescending(i => i.CreatedAt)
+            .Select(i => new ClientInvoiceSummaryDto
+            {
+                Id = i.Id,
+                InvoiceNumber = i.InvoiceNumber,
+                LawyerName = i.Deal.LawyerProfile.User.FirstName + " " + i.Deal.LawyerProfile.User.LastName,
+                TotalAmount = i.TotalAmount,
+                Status = i.Status.ToString()
+            })
+            .ToListAsync();
     }
 
     public async Task<List<HireRequestDto>> GetIncomingHireRequestsAsync(int lawyerUserId)
@@ -130,6 +173,7 @@ public class DealService : IDealService
             .Include(h => h.LawyerProfile).ThenInclude(l => l.Category)
             .Include(h => h.Messages)
             .Include(h => h.Deal)
+            .Include(h => h.LinkedCase)
             .OrderByDescending(h => h.UpdatedAt)
             .Select(h => new HireRequestDto
             {
@@ -150,6 +194,8 @@ public class DealService : IDealService
                 UnreadCount = h.Messages.Count(m => !m.IsRead && m.SenderUserId != lawyerProfile.UserId),
                 HasDeal = h.Deal != null,
                 DealId = h.Deal == null ? (int?)null : h.Deal.Id,
+                LinkedCaseId = h.LinkedCaseId,
+                LinkedCaseTitle = h.LinkedCase != null ? h.LinkedCase.CaseTitle : null,
                 CreatedAt = h.CreatedAt,
                 UpdatedAt = h.UpdatedAt
             }).ToListAsync();
@@ -163,13 +209,13 @@ public class DealService : IDealService
             .Include(h => h.LawyerProfile).ThenInclude(l => l.User)
             .Include(h => h.LawyerProfile).ThenInclude(l => l.Category)
             .Include(h => h.Messages)
-            .Include(h => h.Deal).ThenInclude(d => d!.Proposals).ThenInclude(p => p.Invoice)
+            .Include(h => h.Documents)
+            .Include(h => h.LinkedCase)
+            .Include(h => h.Deal).ThenInclude(d => d!.Proposals).ThenInclude(p => p.Invoices)
             .Include(h => h.Deal).ThenInclude(d => d!.Invoices)
             .FirstOrDefaultAsync();
 
         if (hr == null) return null;
-
-        // Verify access
         if (!await HasAccessAsync(userId, role, hr)) return null;
 
         var result = new HireRequestDetailDto
@@ -191,12 +237,63 @@ public class DealService : IDealService
             UnreadCount = hr.Messages.Count(m => !m.IsRead && m.SenderUserId != userId),
             HasDeal = hr.Deal != null,
             DealId = hr.Deal?.Id,
+            LinkedCaseId = hr.LinkedCaseId,
+            LinkedCaseTitle = hr.LinkedCase?.CaseTitle,
             CreatedAt = hr.CreatedAt,
-            UpdatedAt = hr.UpdatedAt
+            UpdatedAt = hr.UpdatedAt,
+            Documents = hr.Documents.OrderByDescending(d => d.UploadedAt).Select(d => new HireRequestDocumentDto
+            {
+                Id            = d.Id,
+                HireRequestId = d.HireRequestId,
+                FileName      = d.FileName,
+                FileSize      = d.FileSize,
+                ContentType   = d.ContentType,
+                UploadedAt    = d.UploadedAt,
+                SourceType    = "HireRequest"
+            }).ToList(),
+            LinkedCasePreview = hr.LinkedCase == null ? null : new LinkedCasePreviewDto
+            {
+                Id          = hr.LinkedCase.Id,
+                CaseTitle   = hr.LinkedCase.CaseTitle,
+                CaseType    = hr.LinkedCase.CaseType,
+                Court       = hr.LinkedCase.Court,
+                Description = hr.LinkedCase.Description,
+                Status      = hr.LinkedCase.Status.ToString(),
+                CreatedAt   = hr.LinkedCase.CreatedDate
+            }
         };
+
+        // Auto-attach deal-flagged case documents from the linked case
+        if (hr.LinkedCaseId.HasValue)
+        {
+            var caseDocs = await _db.CaseDocuments
+                .Where(d => d.CaseId == hr.LinkedCaseId.Value
+                         && d.IsAvailableForDeal
+                         && !d.IsDeleted
+                         && d.UploadedByRole == "Client"
+                         && !d.IsPrivate)
+                .OrderByDescending(d => d.UploadedDate)
+                .Select(d => new HireRequestDocumentDto
+                {
+                    Id            = d.Id,          // CaseDocument.Id used for download routing
+                    HireRequestId = hr.Id,
+                    FileName      = d.FileName,
+                    FileSize      = d.FileSize,
+                    ContentType   = d.ContentType,
+                    UploadedAt    = d.UploadedDate,
+                    SourceType    = "Case"
+                })
+                .ToListAsync();
+            result.Documents.AddRange(caseDocs);
+        }
 
         if (hr.Deal != null)
         {
+            var acceptedProposal = hr.Deal.Proposals.FirstOrDefault(p => p.Status == ProposalStatus.Accepted);
+            var acceptedAmount = acceptedProposal?.Amount ?? 0m;
+            var activeInvoices = hr.Deal.Invoices.Where(i => i.Status != InvoiceStatus.Rejected).ToList();
+            var totalInvoiced = activeInvoices.Sum(i => i.Amount);
+
             result.Deal = new DealDto
             {
                 Id = hr.Deal.Id,
@@ -204,6 +301,9 @@ public class DealService : IDealService
                 Status = hr.Deal.Status.ToString(),
                 CreatedAt = hr.Deal.CreatedAt,
                 UpdatedAt = hr.Deal.UpdatedAt,
+                AcceptedProposalAmount = acceptedAmount,
+                TotalInvoicedAmount = totalInvoiced,
+                RemainingAmount = acceptedAmount - totalInvoiced,
                 Proposals = hr.Deal.Proposals.OrderByDescending(p => p.CreatedAt).Select(p => new ProposalDto
                 {
                     Id = p.Id,
@@ -216,33 +316,9 @@ public class DealService : IDealService
                     ClientNote = p.ClientNote,
                     CreatedAt = p.CreatedAt,
                     UpdatedAt = p.UpdatedAt,
-                    Invoice = p.Invoice != null ? new InvoiceDto
-                    {
-                        Id = p.Invoice.Id,
-                        ProposalId = p.Invoice.ProposalId,
-                        DealId = p.Invoice.DealId,
-                        InvoiceNumber = p.Invoice.InvoiceNumber,
-                        Amount = p.Invoice.Amount,
-                        Description = p.Invoice.Description,
-                        DueDate = p.Invoice.DueDate,
-                        Status = p.Invoice.Status.ToString(),
-                        CreatedAt = p.Invoice.CreatedAt,
-                        UpdatedAt = p.Invoice.UpdatedAt
-                    } : null
+                    Invoices = p.Invoices.OrderByDescending(i => i.CreatedAt).Select(MapInvoiceDto).ToList()
                 }).ToList(),
-                Invoices = hr.Deal.Invoices.OrderByDescending(i => i.CreatedAt).Select(i => new InvoiceDto
-                {
-                    Id = i.Id,
-                    ProposalId = i.ProposalId,
-                    DealId = i.DealId,
-                    InvoiceNumber = i.InvoiceNumber,
-                    Amount = i.Amount,
-                    Description = i.Description,
-                    DueDate = i.DueDate,
-                    Status = i.Status.ToString(),
-                    CreatedAt = i.CreatedAt,
-                    UpdatedAt = i.UpdatedAt
-                }).ToList()
+                Invoices = hr.Deal.Invoices.OrderByDescending(i => i.CreatedAt).Select(MapInvoiceDto).ToList()
             };
         }
 
@@ -277,6 +353,34 @@ public class DealService : IDealService
         hr.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return (true, "Hire request cancelled.");
+    }
+
+    public async Task<(bool Success, string Message)> CancelHireRequestByPartyAsync(int userId, string role, int hireRequestId)
+    {
+        HireRequest? hr;
+
+        if (role == "Client")
+        {
+            var clientProfile = await _db.ClientProfiles.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (clientProfile == null) return (false, "Client profile not found.");
+            hr = await _db.HireRequests.FirstOrDefaultAsync(h => h.Id == hireRequestId && h.ClientProfileId == clientProfile.Id);
+        }
+        else // Lawyer
+        {
+            var lawyerProfile = await _db.LawyerProfiles.FirstOrDefaultAsync(l => l.UserId == userId);
+            if (lawyerProfile == null) return (false, "Lawyer profile not found.");
+            hr = await _db.HireRequests.FirstOrDefaultAsync(h => h.Id == hireRequestId && h.LawyerProfileId == lawyerProfile.Id);
+        }
+
+        if (hr == null) return (false, "Hire request not found or access denied.");
+        if (hr.Status == HireRequestStatus.ConvertedToCase)
+            return (false, "Cannot cancel a request that has already been converted to a case.");
+
+        hr.IsDeleted = true;
+        hr.Status    = HireRequestStatus.Rejected;   // mark as rejected so it disappears cleanly
+        hr.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+        return (true, "Hire request cancelled successfully.");
     }
 
     // ── Deal (Accept HireRequest → Create Deal) ─────────────────────
@@ -418,7 +522,6 @@ public class DealService : IDealService
             deal.UpdatedAt = DateTime.UtcNow;
         }
 
-        // Update HireRequest status to DealInProgress
         if (deal.HireRequest.Status == HireRequestStatus.AcceptedByLawyer)
         {
             deal.HireRequest.Status = HireRequestStatus.DealInProgress;
@@ -426,6 +529,9 @@ public class DealService : IDealService
         }
 
         await _db.SaveChangesAsync();
+
+        // Generate draft contract PDF (non-fatal)
+        try { await _contractService.GenerateAndSaveProposalDraftAsync(proposal.Id); } catch { }
 
         return (true, "Proposal sent.", new ProposalDto
         {
@@ -455,7 +561,6 @@ public class DealService : IDealService
         proposal.ClientNote = note;
         proposal.UpdatedAt = DateTime.UtcNow;
 
-        // Reject other pending proposals for the same deal
         var otherPending = await _db.Proposals
             .Where(p => p.DealId == proposal.DealId && p.Id != proposalId && p.Status == ProposalStatus.Pending)
             .ToListAsync();
@@ -468,6 +573,10 @@ public class DealService : IDealService
         proposal.Deal.Status = DealStatus.ProposalAccepted;
         proposal.Deal.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+
+        // Generate final signed contract PDF (non-fatal)
+        try { await _contractService.GenerateAndSaveFinalProposalAsync(proposalId); } catch { }
+
         return (true, "Proposal accepted.");
     }
 
@@ -490,28 +599,59 @@ public class DealService : IDealService
 
     // ── Invoices (on Deal) ───────────────────────────────────────────
 
-    public async Task<(bool Success, string Message, InvoiceDto? Data)> GenerateInvoiceAsync(int lawyerUserId, int proposalId, CreateInvoiceDto dto)
+    /// <summary>
+    /// Create a partial/milestone invoice. Multiple invoices allowed per deal;
+    /// sum of non-rejected invoices must not exceed the accepted proposal amount.
+    /// </summary>
+    public async Task<(bool Success, string Message, InvoiceDto? Data)> GenerateInvoiceAsync(
+        int lawyerUserId, int dealId, CreateInvoiceDto dto)
     {
-        var lawyerProfile = await _db.LawyerProfiles.FirstOrDefaultAsync(l => l.UserId == lawyerUserId);
+        var lawyerProfile = await _db.LawyerProfiles
+            .Include(l => l.User)
+            .Include(l => l.InvoiceSettings)
+            .FirstOrDefaultAsync(l => l.UserId == lawyerUserId);
         if (lawyerProfile == null) return (false, "Lawyer profile not found.", null);
 
-        var proposal = await _db.Proposals.Include(p => p.Deal).Include(p => p.Invoice).FirstOrDefaultAsync(p => p.Id == proposalId);
-        if (proposal == null) return (false, "Proposal not found.", null);
-        if (proposal.Deal.LawyerProfileId != lawyerProfile.Id) return (false, "Access denied.", null);
-        if (proposal.Status != ProposalStatus.Accepted) return (false, "Only accepted proposals can generate invoices.", null);
-        if (proposal.Invoice != null) return (false, "Invoice already generated for this proposal.", null);
+        var deal = await _db.Deals
+            .Include(d => d.HireRequest).ThenInclude(h => h.ClientProfile).ThenInclude(c => c.User)
+            .Include(d => d.Proposals)
+            .Include(d => d.Invoices)
+            .FirstOrDefaultAsync(d => d.Id == dealId && d.LawyerProfileId == lawyerProfile.Id);
 
-        // Generate invoice number
+        if (deal == null) return (false, "Deal not found.", null);
+
+        var acceptedProposal = deal.Proposals.FirstOrDefault(p => p.Status == ProposalStatus.Accepted);
+        if (acceptedProposal == null)
+            return (false, "No accepted proposal found. Client must accept a proposal before invoicing.", null);
+
+        var existingTotal = deal.Invoices
+            .Where(i => i.Status != InvoiceStatus.Rejected)
+            .Sum(i => i.Amount);
+
+        if (existingTotal + dto.Amount > acceptedProposal.Amount)
+        {
+            var remaining = acceptedProposal.Amount - existingTotal;
+            return (false, $"Invoice amount exceeds the remaining balance. Remaining: \u20b9{remaining:N2} (Proposal total: \u20b9{acceptedProposal.Amount:N2}).", null);
+        }
+
+        var gstRate = dto.GstRate ?? 0m;
+        var gstAmount = Math.Round(dto.Amount * gstRate / 100m, 2);
+        var totalAmount = dto.Amount + gstAmount;
+
         var year = DateTime.UtcNow.Year;
         var count = await _db.Invoices.CountAsync(i => i.CreatedAt.Year == year);
         var invoiceNumber = $"INV-{year}-{(count + 1):D4}";
 
         var invoice = new Invoice
         {
-            ProposalId = proposalId,
-            DealId = proposal.DealId,
+            ProposalId = acceptedProposal.Id,
+            DealId = dealId,
             InvoiceNumber = invoiceNumber,
-            Amount = proposal.Amount,
+            ChargeType = dto.ChargeType,
+            Amount = dto.Amount,
+            GstRate = gstRate > 0 ? gstRate : null,
+            GstAmount = gstAmount,
+            TotalAmount = totalAmount,
             Description = dto.Description,
             DueDate = dto.DueDate,
             Status = InvoiceStatus.Pending,
@@ -520,22 +660,48 @@ public class DealService : IDealService
         };
         _db.Invoices.Add(invoice);
 
-        proposal.Deal.Status = DealStatus.InvoiceGenerated;
-        proposal.Deal.UpdatedAt = DateTime.UtcNow;
+        if (deal.Status == DealStatus.ProposalAccepted)
+        {
+            deal.Status = DealStatus.InvoiceGenerated;
+            deal.UpdatedAt = DateTime.UtcNow;
+        }
+
         await _db.SaveChangesAsync();
 
-        return (true, "Invoice generated.", new InvoiceDto
+        var s = lawyerProfile.InvoiceSettings;
+        var client = deal.HireRequest.ClientProfile;
+
+        return (true, "Invoice created.", new InvoiceDto
         {
             Id = invoice.Id,
             ProposalId = invoice.ProposalId,
             DealId = invoice.DealId,
             InvoiceNumber = invoice.InvoiceNumber,
+            ChargeType = invoice.ChargeType,
             Amount = invoice.Amount,
+            GstRate = invoice.GstRate,
+            GstAmount = invoice.GstAmount,
+            TotalAmount = invoice.TotalAmount,
             Description = invoice.Description,
             DueDate = invoice.DueDate,
             Status = invoice.Status.ToString(),
             CreatedAt = invoice.CreatedAt,
-            UpdatedAt = invoice.UpdatedAt
+            UpdatedAt = invoice.UpdatedAt,
+            LawyerFirmName = s?.FirmName,
+            LawyerFullName = lawyerProfile.User.FirstName + " " + lawyerProfile.User.LastName,
+            ClientFullName = client.User.FirstName + " " + client.User.LastName,
+            LawyerGSTNumber = s?.GSTNumber,
+            LawyerAddress = s != null
+                ? string.Join(", ", new[] { s.FirmAddress, s.City, s.State, s.Country, s.PostalCode }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)))
+                : null,
+            LawyerPhone = s?.Phone,
+            LawyerEmail = s?.Email,
+            LawyerFirmLogoPath = s?.FirmLogoPath,
+            LawyerBankDetails = s?.BankDetails,
+            LawyerNotesForInvoice = s?.NotesForInvoice,
+            LawyerTermsAndConditions = s?.TermsAndConditions,
+            LawyerAuthorizedSignImagePath = s?.AuthorizedSignImagePath
         });
     }
 
@@ -579,6 +745,29 @@ public class DealService : IDealService
         return (true, "Invoice marked as paid.");
     }
 
+    public async Task<List<LawyerPaidInvoiceDto>> GetLawyerPaidInvoicesAsync(int lawyerUserId)
+    {
+        var lawyerProfile = await _db.LawyerProfiles.FirstOrDefaultAsync(l => l.UserId == lawyerUserId);
+        if (lawyerProfile == null) return [];
+
+        return await _db.Invoices
+            .Include(i => i.Deal).ThenInclude(d => d.ClientProfile).ThenInclude(cp => cp.User)
+            .Where(i => i.Deal.LawyerProfileId == lawyerProfile.Id && i.Status == InvoiceStatus.Paid)
+            .OrderByDescending(i => i.UpdatedAt)
+            .Select(i => new LawyerPaidInvoiceDto
+            {
+                Id            = i.Id,
+                InvoiceNumber = i.InvoiceNumber,
+                ClientName    = i.Deal.ClientProfile.User.FirstName + " " + i.Deal.ClientProfile.User.LastName,
+                ChargeType    = i.ChargeType ?? "Other",
+                Amount        = i.Amount,
+                GstAmount     = i.GstAmount,
+                TotalAmount   = i.TotalAmount,
+                PaidAt        = i.UpdatedAt
+            })
+            .ToListAsync();
+    }
+
     public async Task<(bool Success, string Message)> RejectInvoiceAsync(int clientUserId, int invoiceId)
     {
         var clientProfile = await _db.ClientProfiles.FirstOrDefaultAsync(c => c.UserId == clientUserId);
@@ -593,6 +782,58 @@ public class DealService : IDealService
         invoice.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return (true, "Invoice rejected.");
+    }
+
+    // ── Invoice Settings ────────────────────────────────────────────
+
+    public async Task<LawyerInvoiceSettingsDto?> GetInvoiceSettingsAsync(int lawyerUserId)
+    {
+        var lawyerProfile = await _db.LawyerProfiles
+            .Include(l => l.InvoiceSettings)
+            .FirstOrDefaultAsync(l => l.UserId == lawyerUserId);
+        if (lawyerProfile == null) return null;
+        if (lawyerProfile.InvoiceSettings == null)
+            return new LawyerInvoiceSettingsDto { LawyerProfileId = lawyerProfile.Id };
+
+        return MapSettingsDto(lawyerProfile.InvoiceSettings);
+    }
+
+    public async Task<(bool Success, string Message, LawyerInvoiceSettingsDto? Data)> UpsertInvoiceSettingsAsync(
+        int lawyerUserId, UpsertLawyerInvoiceSettingsDto dto)
+    {
+        var lawyerProfile = await _db.LawyerProfiles
+            .Include(l => l.InvoiceSettings)
+            .FirstOrDefaultAsync(l => l.UserId == lawyerUserId);
+        if (lawyerProfile == null) return (false, "Lawyer profile not found.", null);
+
+        var settings = lawyerProfile.InvoiceSettings;
+        if (settings == null)
+        {
+            settings = new LawyerInvoiceSettings
+            {
+                LawyerProfileId = lawyerProfile.Id,
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.LawyerInvoiceSettings.Add(settings);
+        }
+
+        settings.FirmName = dto.FirmName;
+        settings.FirmAddress = dto.FirmAddress;
+        settings.City = dto.City;
+        settings.State = dto.State;
+        settings.Country = dto.Country;
+        settings.PostalCode = dto.PostalCode;
+        settings.GSTNumber = dto.GSTNumber;
+        settings.Phone = dto.Phone;
+        settings.Email = dto.Email;
+        settings.Website = dto.Website;
+        settings.BankDetails = dto.BankDetails;
+        settings.NotesForInvoice = dto.NotesForInvoice;
+        settings.TermsAndConditions = dto.TermsAndConditions;
+        settings.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return (true, "Invoice settings saved.", MapSettingsDto(settings));
     }
 
     // ── Private Helpers ──────────────────────────────────────────────
@@ -612,45 +853,108 @@ public class DealService : IDealService
         return role == "Admin";
     }
 
-    /// <summary>
-    /// When an invoice is accepted or paid, auto-create a Case from the HireRequest info,
-    /// add the lawyer to the case, and create the LawyerClient relationship.
-    /// </summary>
+    private static InvoiceDto MapInvoiceDto(Invoice i) => new()
+    {
+        Id = i.Id,
+        ProposalId = i.ProposalId,
+        DealId = i.DealId,
+        InvoiceNumber = i.InvoiceNumber,
+        ChargeType = i.ChargeType,
+        Amount = i.Amount,
+        GstRate = i.GstRate,
+        GstAmount = i.GstAmount,
+        TotalAmount = i.TotalAmount,
+        Description = i.Description,
+        DueDate = i.DueDate,
+        Status = i.Status.ToString(),
+        CreatedAt = i.CreatedAt,
+        UpdatedAt = i.UpdatedAt
+    };
+
+    private static LawyerInvoiceSettingsDto MapSettingsDto(LawyerInvoiceSettings s) => new()
+    {
+        Id = s.Id,
+        LawyerProfileId = s.LawyerProfileId,
+        FirmName = s.FirmName,
+        FirmLogoPath = s.FirmLogoPath,
+        FirmAddress = s.FirmAddress,
+        City = s.City,
+        State = s.State,
+        Country = s.Country,
+        PostalCode = s.PostalCode,
+        GSTNumber = s.GSTNumber,
+        Phone = s.Phone,
+        Email = s.Email,
+        Website = s.Website,
+        AuthorizedSignImagePath = s.AuthorizedSignImagePath,
+        BankDetails = s.BankDetails,
+        NotesForInvoice = s.NotesForInvoice,
+        TermsAndConditions = s.TermsAndConditions
+    };
+
     private async Task ConvertDealToCaseAsync(int dealId)
     {
         var deal = await _db.Deals.Include(d => d.HireRequest).FirstOrDefaultAsync(d => d.Id == dealId);
         if (deal == null || deal.HireRequest.Status == HireRequestStatus.ConvertedToCase) return;
 
         var hr = deal.HireRequest;
+        bool linkedToExisting = false;
 
-        // Auto-create Case from HireRequest details
-        var newCase = new Case
+        // ── Try to link to an existing case ──────────────────────────────
+        if (hr.LinkedCaseId.HasValue)
         {
-            ClientProfileId = hr.ClientProfileId,
-            LawyerProfileId = hr.LawyerProfileId,
-            CaseTitle = $"{hr.CaseType} - Deal #{deal.Id}",
-            CaseType = hr.CaseType,
-            Court = hr.Court,
-            Description = hr.Description,
-            Status = CaseStatus.Open,
-            DealId = deal.Id,
-            CreatedDate = DateTime.UtcNow,
-            ModifiedDate = DateTime.UtcNow
-        };
-        _db.Cases.Add(newCase);
-        await _db.SaveChangesAsync();
+            var existingCase = await _db.Cases.FirstOrDefaultAsync(c => c.Id == hr.LinkedCaseId.Value);
+            if (existingCase != null)
+            {
+                linkedToExisting = true;
 
-        // Add lawyer as CaseLawyer
-        _db.CaseLawyers.Add(new CaseLawyer
+                // Add lawyer only if not already active on the case
+                var alreadyOnCase = await _db.CaseLawyers.AnyAsync(cl =>
+                    cl.CaseId == existingCase.Id && cl.LawyerProfileId == hr.LawyerProfileId && cl.IsActive);
+                if (!alreadyOnCase)
+                {
+                    _db.CaseLawyers.Add(new CaseLawyer
+                    {
+                        CaseId = existingCase.Id,
+                        LawyerProfileId = hr.LawyerProfileId,
+                        AddedByRole = "System",
+                        AddedAt = DateTime.UtcNow,
+                        IsActive = true
+                    });
+                }
+            }
+        }
+
+        // ── Fallback: create a new case ───────────────────────────────────
+        if (!linkedToExisting)
         {
-            CaseId = newCase.Id,
-            LawyerProfileId = hr.LawyerProfileId,
-            AddedByRole = "System",
-            AddedAt = DateTime.UtcNow,
-            IsActive = true
-        });
+            var newCase = new Case
+            {
+                ClientProfileId = hr.ClientProfileId,
+                LawyerProfileId = hr.LawyerProfileId,
+                CaseTitle = $"{hr.CaseType} - Deal #{deal.Id}",
+                CaseType = hr.CaseType,
+                Court = hr.Court,
+                Description = hr.Description,
+                Status = CaseStatus.Open,
+                DealId = deal.Id,
+                CreatedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.UtcNow
+            };
+            _db.Cases.Add(newCase);
+            await _db.SaveChangesAsync();
 
-        // Create LawyerClient relationship if not exists
+            _db.CaseLawyers.Add(new CaseLawyer
+            {
+                CaseId = newCase.Id,
+                LawyerProfileId = hr.LawyerProfileId,
+                AddedByRole = "System",
+                AddedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+        }
+
+        // Ensure LawyerClient relationship exists
         var existingLc = await _db.LawyerClients.IgnoreQueryFilters()
             .FirstOrDefaultAsync(lc => lc.LawyerProfileId == hr.LawyerProfileId && lc.ClientProfileId == hr.ClientProfileId);
         if (existingLc == null)
@@ -672,7 +976,6 @@ public class DealService : IDealService
             existingLc.ModifiedAt = DateTime.UtcNow;
         }
 
-        // Update statuses
         hr.Status = HireRequestStatus.ConvertedToCase;
         hr.UpdatedAt = DateTime.UtcNow;
         deal.Status = DealStatus.Completed;
@@ -698,6 +1001,8 @@ public class DealService : IDealService
         Message = hr.Message,
         MessageCount = msgCount,
         UnreadCount = unreadCount,
+        LinkedCaseId = hr.LinkedCaseId,
+        LinkedCaseTitle = hr.LinkedCase?.CaseTitle,
         CreatedAt = hr.CreatedAt,
         UpdatedAt = hr.UpdatedAt
     };

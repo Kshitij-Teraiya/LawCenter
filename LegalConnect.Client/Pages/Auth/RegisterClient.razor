@@ -6,7 +6,7 @@
 @inject IJSRuntime JS
 @inject IConfiguration Config
 
-<PageTitle>Register as Client &mdash; LegalConnect</PageTitle>
+<PageTitle>Register as Client &mdash; LawCity</PageTitle>
 
 <div class="min-vh-100 d-flex align-items-center justify-content-center bg-light py-5">
     <div class="card shadow-sm border-0" style="width:100%;max-width:500px;">
@@ -14,7 +14,7 @@
 
             <div class="text-center mb-4">
                 <a href="/" class="lc-brand justify-content-center">
-                    <img src="image/logo.jpeg" alt="LegalConnect" class="lc-brand-logo-lg" />
+                    <img src="image/logo.jpeg" alt="LawCity" class="lc-brand-logo-lg" />
                 </a>
                 <p class="text-muted mt-2 mb-0">Create your client account</p>
             </div>
@@ -71,7 +71,7 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-medium">City</label>
-                        <InputText @bind-Value="_model.City" class="form-control" placeholder="Dhaka" />
+                        <InputText @bind-Value="_model.City" class="form-control" placeholder="Enter city name" />
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-medium">Password</label>
@@ -136,7 +136,7 @@
 
         if (success)
         {
-            Toast.ShowSuccess("Account created! Welcome to LegalConnect.");
+            Toast.ShowSuccess("Account created! Welcome to LawCity.");
             Navigation.NavigateTo("/client/dashboard");
         }
         else
@@ -155,7 +155,7 @@
 
         if (success)
         {
-            Toast.ShowSuccess("Account created! Welcome to LegalConnect.");
+            Toast.ShowSuccess("Account created! Welcome to LawCity.");
             Navigation.NavigateTo("/client/dashboard");
         }
         else

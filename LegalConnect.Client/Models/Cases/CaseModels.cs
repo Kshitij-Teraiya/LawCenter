@@ -119,6 +119,10 @@ public class CaseDto : CaseSummaryDto
     public string? Outcome { get; set; }
     public string? LawyerProfilePicture { get; set; }
     public string? ClientProfilePicture { get; set; }
+    /// <summary>Deal that auto-created this case (null for manually-created cases).</summary>
+    public int? DealId { get; set; }
+    /// <summary>HireRequest.Id for the linked deal — used for navigation to /lawyer/deals/{id} or /client/deals/{id}.</summary>
+    public int? DealHireRequestId { get; set; }
     public List<CaseLawyerDto> AssignedLawyers { get; set; } = [];
     public List<CaseActivityDto> RecentActivities { get; set; } = [];
     public List<CaseDocumentDto> Documents { get; set; } = [];
@@ -211,16 +215,28 @@ public class CaseFilterDto
 
 // ── CaseActivity ─────────────────────────────────────────────────────────────
 
+public class LinkedDocumentDto
+{
+    public int DocumentId { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string DocumentType { get; set; } = string.Empty;
+    public long FileSize { get; set; }
+}
+
 public class CaseActivityDto
 {
     public int Id { get; set; }
     public int CaseId { get; set; }
     public ActivityType ActivityType { get; set; }
     public string ActivityTypeName { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string Category { get; set; } = "Other";
     public DateTime ActivityDate { get; set; }
+    public DateTime? EventDate { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
     public string CreatedByRole { get; set; } = string.Empty;
+    public List<LinkedDocumentDto> LinkedDocuments { get; set; } = [];
     public string ActivityIcon => ActivityType switch
     {
         ActivityType.Hearing          => "bi bi-calendar-event text-primary",
@@ -237,8 +253,12 @@ public class CaseActivityDto
 public class AddCaseActivityDto
 {
     [Required] public ActivityType ActivityType { get; set; }
+    [MaxLength(200)] public string Title { get; set; } = string.Empty;
     [Required, MaxLength(1000)] public string Description { get; set; } = string.Empty;
     public DateTime? ActivityDate { get; set; }
+    public DateTime? EventDate { get; set; }
+    [MaxLength(100)] public string Category { get; set; } = "Other";
+    public List<int> LinkedDocumentIds { get; set; } = [];
 }
 
 // ── CaseDocument ─────────────────────────────────────────────────────────────
@@ -257,6 +277,7 @@ public class CaseDocumentDto
     public bool IsPrivate { get; set; }
     public bool SharedWithAllLawyers { get; set; } = true;
     public List<int> SharedWithLawyerIds { get; set; } = [];
+    public bool IsAvailableForDeal { get; set; }
     public DateTime UploadedDate { get; set; }
     public string UploadedByName { get; set; } = string.Empty;
     public string UploadedByRole { get; set; } = string.Empty;

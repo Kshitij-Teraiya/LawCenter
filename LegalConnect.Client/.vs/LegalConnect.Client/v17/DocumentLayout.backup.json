@@ -3,20 +3,116 @@
   "WorkspaceRootPath": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:wwwroot\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\shared\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:shared\\mainlayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\shared\\appfooter.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:shared\\appfooter.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\home.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\home.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\client\\casedetails.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\client\\casedetails.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\services\\adminservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:services\\adminservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\client\\casecreate.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\client\\casecreate.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\auth\\registerlawyer.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\auth\\registerlawyer.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\auth\\registerclient.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\auth\\registerclient.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\auth\\login.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\auth\\login.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\auth\\forgotpassword.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\auth\\forgotpassword.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\appointmentbooking.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\appointmentbooking.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\admin\\revenuestats.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\admin\\revenuestats.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\admin\\managecategories.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\admin\\managecategories.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\admin\\commissionsettings.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\admin\\commissionsettings.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\admin\\approvelawyers.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\admin\\approvelawyers.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\admin\\adminholidaymanager.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\admin\\adminholidaymanager.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\pages\\admin\\admindashboard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:pages\\admin\\admindashboard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\app.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:app.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\shared\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:shared\\navmenu.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\wwwroot\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:wwwroot\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\wwwroot\\appsettings.production.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:wwwroot\\appsettings.production.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\components\\lawyercard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:components\\lawyercard.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\legalconnect.client.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:legalconnect.client.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\shared\\minimallayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:shared\\minimallayout.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\_imports.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:_imports.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\wwwroot\\service-worker.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:wwwroot\\service-worker.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\services\\adminservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|solutionrelative:services\\adminservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{F4D07993-5099-4645-A122-734FC78C0FB0}|LegalConnect.Client.csproj|c:\\project\\lawyer_claude\\legalconnect.client\\helpers\\authorizationmessagehandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -42,36 +138,335 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "MainLayout.razor",
-              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\MainLayout.razor",
-              "RelativeDocumentMoniker": "Shared\\MainLayout.razor",
-              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\MainLayout.razor",
-              "RelativeToolTip": "Shared\\MainLayout.razor",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 10,
+              "Title": "AppointmentBooking.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\AppointmentBooking.razor",
+              "RelativeDocumentMoniker": "Pages\\AppointmentBooking.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\AppointmentBooking.razor",
+              "RelativeToolTip": "Pages\\AppointmentBooking.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-03-01T08:05:09.447Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-08T16:07:51.65Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 7,
+              "Title": "RegisterClient.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Auth\\RegisterClient.razor",
+              "RelativeDocumentMoniker": "Pages\\Auth\\RegisterClient.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Auth\\RegisterClient.razor",
+              "RelativeToolTip": "Pages\\Auth\\RegisterClient.razor",
+              "ViewState": "AgIAAJMAAAAAAAAAAAAiwJ0AAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-07T15:51:32.701Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "CaseDetails.razor",
               "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Client\\CaseDetails.razor",
               "RelativeDocumentMoniker": "Pages\\Client\\CaseDetails.razor",
               "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Client\\CaseDetails.razor",
               "RelativeToolTip": "Pages\\Client\\CaseDetails.razor",
-              "ViewState": "AgIAAIMAAAAAAAAAAAAAAIUBAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-02-28T15:16:17.331Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 3,
+              "Title": "Home.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Home.razor",
+              "RelativeDocumentMoniker": "Pages\\Home.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Home.razor",
+              "RelativeToolTip": "Pages\\Home.razor",
+              "ViewState": "AgIAAGUAAAAAAAAAAAAuwHAAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-03T15:33:28.072Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AppFooter.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\AppFooter.razor",
+              "RelativeDocumentMoniker": "Shared\\AppFooter.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\AppFooter.razor",
+              "RelativeToolTip": "Shared\\AppFooter.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-03T15:33:11.639Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "index.html",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\index.html",
+              "RelativeDocumentMoniker": "wwwroot\\index.html",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\index.html",
+              "RelativeToolTip": "wwwroot\\index.html",
+              "ViewState": "AgIAABUAAAAAAAAAAAAuwB4AAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2026-03-03T15:28:21.196Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ForgotPassword.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Auth\\ForgotPassword.razor",
+              "RelativeDocumentMoniker": "Pages\\Auth\\ForgotPassword.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Auth\\ForgotPassword.razor",
+              "RelativeToolTip": "Pages\\Auth\\ForgotPassword.razor",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAiwAwAAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-08T16:08:00.229Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Login.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Auth\\Login.razor",
+              "RelativeDocumentMoniker": "Pages\\Auth\\Login.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Auth\\Login.razor",
+              "RelativeToolTip": "Pages\\Auth\\Login.razor",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAiwBEAAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-08T16:08:18.252Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CaseCreate.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Client\\CaseCreate.razor",
+              "RelativeDocumentMoniker": "Pages\\Client\\CaseCreate.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Client\\CaseCreate.razor",
+              "RelativeToolTip": "Pages\\Client\\CaseCreate.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-08T16:09:23.433Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MainLayout.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\MainLayout.razor",
+              "RelativeDocumentMoniker": "Shared\\MainLayout.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\MainLayout.razor",
+              "RelativeToolTip": "Shared\\MainLayout.razor",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAuwA4AAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-01T08:05:09.447Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "RevenueStats.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\RevenueStats.razor",
+              "RelativeDocumentMoniker": "Pages\\Admin\\RevenueStats.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\RevenueStats.razor",
+              "RelativeToolTip": "Pages\\Admin\\RevenueStats.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-08T16:07:41.802Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "ManageCategories.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\ManageCategories.razor",
+              "RelativeDocumentMoniker": "Pages\\Admin\\ManageCategories.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\ManageCategories.razor",
+              "RelativeToolTip": "Pages\\Admin\\ManageCategories.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-08T16:07:34.316Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "CommissionSettings.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\CommissionSettings.razor",
+              "RelativeDocumentMoniker": "Pages\\Admin\\CommissionSettings.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\CommissionSettings.razor",
+              "RelativeToolTip": "Pages\\Admin\\CommissionSettings.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-07T16:00:28.707Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "ApproveLawyers.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\ApproveLawyers.razor",
+              "RelativeDocumentMoniker": "Pages\\Admin\\ApproveLawyers.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\ApproveLawyers.razor",
+              "RelativeToolTip": "Pages\\Admin\\ApproveLawyers.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-08T16:07:16.986Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "RegisterLawyer.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Auth\\RegisterLawyer.razor",
+              "RelativeDocumentMoniker": "Pages\\Auth\\RegisterLawyer.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Auth\\RegisterLawyer.razor",
+              "RelativeToolTip": "Pages\\Auth\\RegisterLawyer.razor",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAiwA8AAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-07T15:52:04.188Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "AdminHolidayManager.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\AdminHolidayManager.razor",
+              "RelativeDocumentMoniker": "Pages\\Admin\\AdminHolidayManager.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\AdminHolidayManager.razor",
+              "RelativeToolTip": "Pages\\Admin\\AdminHolidayManager.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-08T16:07:06.349Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "NavMenu.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\NavMenu.razor",
+              "RelativeDocumentMoniker": "Shared\\NavMenu.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\NavMenu.razor",
+              "RelativeToolTip": "Shared\\NavMenu.razor",
+              "ViewState": "AgIAAGwAAAAAAAAAAADwv34AAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-07T15:55:37.723Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "appsettings.Production.json",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\appsettings.Production.json",
+              "RelativeDocumentMoniker": "wwwroot\\appsettings.Production.json",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\appsettings.Production.json",
+              "RelativeToolTip": "wwwroot\\appsettings.Production.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-03-02T20:26:11.061Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\appsettings.json",
+              "RelativeDocumentMoniker": "wwwroot\\appsettings.json",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\appsettings.json",
+              "RelativeToolTip": "wwwroot\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-03-02T20:29:32.304Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "LawyerCard.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Components\\LawyerCard.razor",
+              "RelativeDocumentMoniker": "Components\\LawyerCard.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Components\\LawyerCard.razor",
+              "RelativeToolTip": "Components\\LawyerCard.razor",
+              "ViewState": "AgIAACEAAAAAAAAAAAAiwCsAAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-07T15:56:59.971Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "AdminDashboard.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\AdminDashboard.razor",
+              "RelativeDocumentMoniker": "Pages\\Admin\\AdminDashboard.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Pages\\Admin\\AdminDashboard.razor",
+              "RelativeToolTip": "Pages\\Admin\\AdminDashboard.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-07T15:59:54.692Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "App.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\App.razor",
+              "RelativeDocumentMoniker": "App.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\App.razor",
+              "RelativeToolTip": "App.razor",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAuwBcAAABEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-03T15:32:51.166Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABsAAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-24T15:55:31.455Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "_Imports.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\_Imports.razor",
+              "RelativeDocumentMoniker": "_Imports.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\_Imports.razor",
+              "RelativeToolTip": "_Imports.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-03T15:33:04.026Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "LegalConnect.Client",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\LegalConnect.Client.csproj",
+              "RelativeDocumentMoniker": "LegalConnect.Client.csproj",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\LegalConnect.Client.csproj",
+              "RelativeToolTip": "LegalConnect.Client.csproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-03-06T16:23:28.731Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "MinimalLayout.razor",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\MinimalLayout.razor",
+              "RelativeDocumentMoniker": "Shared\\MinimalLayout.razor",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Shared\\MinimalLayout.razor",
+              "RelativeToolTip": "Shared\\MinimalLayout.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-03-03T15:33:13.389Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "service-worker.js",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\service-worker.js",
+              "RelativeDocumentMoniker": "wwwroot\\service-worker.js",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\service-worker.js",
+              "RelativeToolTip": "wwwroot\\service-worker.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2026-03-03T15:28:33.696Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
               "Title": "AuthorizationMessageHandler.cs",
               "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Helpers\\AuthorizationMessageHandler.cs",
               "RelativeDocumentMoniker": "Helpers\\AuthorizationMessageHandler.cs",
@@ -83,7 +478,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 29,
               "Title": "ApiResponse.cs",
               "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Helpers\\ApiResponse.cs",
               "RelativeDocumentMoniker": "Helpers\\ApiResponse.cs",
@@ -95,7 +490,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 27,
               "Title": "AdminService.cs",
               "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Services\\AdminService.cs",
               "RelativeDocumentMoniker": "Services\\AdminService.cs",
@@ -107,7 +502,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 30,
               "Title": "LawyerService.cs",
               "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Services\\LawyerService.cs",
               "RelativeDocumentMoniker": "Services\\LawyerService.cs",
@@ -119,7 +514,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 31,
               "Title": "ToastService.cs",
               "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Services\\ToastService.cs",
               "RelativeDocumentMoniker": "Services\\ToastService.cs",
@@ -128,18 +523,6 @@
               "ViewState": "AgIAABcAAAAAAAAAAAAwwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-24T15:56:18.794Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T15:55:31.455Z"
             }
           ]
         }

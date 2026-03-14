@@ -1,0 +1,76 @@
+@page "/admin/tnc-settings"
+@attribute [Authorize(Roles = "Admin")]
+@inject ISystemSettingsClientService SettingsService
+@inject ToastService Toast
+
+<PageTitle>T&amp;C Settings – Admin</PageTitle>
+
+<div class="container-fluid py-4" style="max-width:900px;">
+    <h4 class="fw-bold mb-4"><i class="bi bi-file-text me-2"></i>Lawyer Registration T&amp;C</h4>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    This text is displayed to lawyers during registration and they must accept it.
+                    A PDF copy is automatically generated and stored when they register.
+                </p>
+                <textarea class="form-control font-monospace"
+                          rows="20"
+                          @bind="_tncText"
+                          style="font-size:0.85rem;resize:vertical;"></textarea>
+
+                <div class="d-flex justify-content-end mt-3">
+                    <button class="btn btn-primary" @onclick="SaveAsync" disabled="@_saving">
+                        @if (_saving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="bi bi-floppy me-1"></i>Save T&amp;C
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string _tncText = string.Empty;
+    private bool _loading = true;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var resp = await SettingsService.GetByKeyAsync("LawyerRegistrationTnC");
+            _tncText = resp?.Data?.Value ?? string.Empty;
+        }
+        catch
+        {
+            // Setting may not exist yet — start with empty textarea (no error shown)
+            _tncText = string.Empty;
+        }
+        finally { _loading = false; }
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        try
+        {
+            var resp = await SettingsService.UpdateAsync("LawyerRegistrationTnC", _tncText);
+            if (resp?.Success == true)
+                Toast.ShowSuccess("T&C updated successfully.");
+            else
+                Toast.ShowError(resp?.Message ?? "Failed to save T&C.");
+        }
+        catch { Toast.ShowError("Failed to save T&C."); }
+        finally { _saving = false; }
+    }
+}

@@ -1,7 +1,7 @@
 ﻿self.assetsManifest = {
   "assets": [
     {
-      "hash": "sha256-VS5GH\/\/d\/Ag4t2CHigyvF02GNRKv5PDph7O9TMdeHxk=",
+      "hash": "sha256-CU1nXuDnMxrl9B5x1EAL0iBB296keKvVe7oOQtNI3pY=",
       "url": "css\/app.css"
     },
     {
@@ -9,8 +9,12 @@
       "url": "image\/logo.jpeg"
     },
     {
-      "hash": "sha256-8xHBUZTQMl36DaEeIF7vS35Btj+gdBY8tw3J99uFbdI=",
+      "hash": "sha256-om7HAaa8+RtNY0TJBtnJBDhiaU7HxxqOEXvkb1Lh+iM=",
       "url": "index.html"
+    },
+    {
+      "hash": "sha256-vWgDZVgyEjo0NsKVPIRt5jjBLf3Qde8xvj8hRbif9tw=",
+      "url": "js\/app.js"
     },
     {
       "hash": "sha256-YIQjRgCqpNuyS0CcYpaGelj0fQCqUdw0dRygQpjo5Lw=",
@@ -21,8 +25,16 @@
       "url": "appsettings.json"
     },
     {
+      "hash": "sha256-PWj\/9v7YRWlrkryStPF4CA2t4OtybwPcaQW6+yMOoDM=",
+      "url": "appsettings.Production.json"
+    },
+    {
       "hash": "sha256-gvHfnndfEu1tRf0rFb5988rWq7ITIotOaE8+AMbKYbc=",
       "url": "_framework\/blazor.webassembly.js"
+    },
+    {
+      "hash": "sha256-Z\/qvX5qpXYKKdifh\/wcpM6E6bPppAjHS+Y+yCJM+IXc=",
+      "url": "Components\/InvoicePrintView.razor.js"
     },
     {
       "hash": "sha256-OaMAAd5n7ORfyur5e3QIyEVKJ76MKIvwbg7\/icnnYcU=",
@@ -873,15 +885,15 @@
       "url": "_framework\/icudt_no_CJK.dat"
     },
     {
-      "hash": "sha256-3RPfa20xEB5\/kgnXXnBZYwJWN4qpP2BC7OSY0wtyVdc=",
+      "hash": "sha256-oCOeUz3fDI9cmNh5jRQS4Rnn+QIaJyE84SzUXnP2b0E=",
       "url": "_framework\/LegalConnect.Client.wasm"
     },
     {
-      "hash": "sha256-CMTORjtzCrYRgDvtT+HU46bkqxZVJKs0vD4Zw47ELeg=",
+      "hash": "sha256-5awI6J2AYzNxuewMGC51ti71gPZr27fb7YqAqN9caJY=",
       "url": "_framework\/LegalConnect.Client.pdb"
     },
     {
-      "hash": "sha256-ckiBZ3xzoZrbjD4pxaYCcG\/oytOFwh3EnnLKYV\/JKNw=",
+      "hash": "sha256-YhQ6DKvx5DptD5DhKPl7fPa56JQaghFJBhirEVrIoAY=",
       "url": "_framework\/blazor.boot.json"
     },
     {
@@ -889,5 +901,5 @@
       "url": "_content\/Microsoft.AspNetCore.Components.WebAssembly.Authentication\/AuthenticationService.js"
     }
   ],
-  "version": "Yq\/d8bBB"
+  "version": "OFMwYe1l"
 };

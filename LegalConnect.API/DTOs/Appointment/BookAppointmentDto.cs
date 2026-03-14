@@ -23,3 +23,12 @@ public class CancelAppointmentDto
     [MaxLength(300)]
     public string Reason { get; set; } = string.Empty;
 }
+
+public class RescheduleAppointmentDto
+{
+    [Required]
+    public DateTime NewDate { get; set; }
+
+    [Required]
+    public TimeSpan NewStartTime { get; set; }
+}

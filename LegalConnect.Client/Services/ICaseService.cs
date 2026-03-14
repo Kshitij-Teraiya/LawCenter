@@ -21,6 +21,9 @@ public interface ICaseService
     Task<ApiResponse<List<CaseLawyerDto>>?> GetCaseLawyersAsync(int caseId);
     Task<ApiResponse?> AddLawyerToCaseAsync(int caseId, int lawyerProfileId);
     Task<ApiResponse?> RemoveLawyerFromCaseAsync(int caseId, int lawyerProfileId);
+    Task<ApiResponse?> LinkDocumentToActivityAsync(int caseId, int activityId, int documentId);
+    Task<ApiResponse<bool>?> ToggleAvailableForDealAsync(int documentId);
+    Task<ApiResponse<bool>?> TogglePrivateAsync(int documentId);
 }
 
 public class CaseService : ICaseService
@@ -102,5 +105,23 @@ public class CaseService : ICaseService
     {
         var resp = await _http.DeleteAsync($"cases/{caseId}/lawyers/{lawyerProfileId}");
         return await resp.Content.ReadFromJsonAsync<ApiResponse>();
+    }
+
+    public async Task<ApiResponse?> LinkDocumentToActivityAsync(int caseId, int activityId, int documentId)
+    {
+        var resp = await _http.PostAsync($"cases/{caseId}/activities/{activityId}/link-document/{documentId}", null);
+        return await resp.Content.ReadFromJsonAsync<ApiResponse>();
+    }
+
+    public async Task<ApiResponse<bool>?> ToggleAvailableForDealAsync(int documentId)
+    {
+        var resp = await _http.PutAsync($"case-documents/{documentId}/toggle-deal-share", null);
+        return await resp.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+    }
+
+    public async Task<ApiResponse<bool>?> TogglePrivateAsync(int documentId)
+    {
+        var resp = await _http.PutAsync($"case-documents/{documentId}/toggle-private", null);
+        return await resp.Content.ReadFromJsonAsync<ApiResponse<bool>>();
     }
 }

@@ -22,5 +22,5 @@ public class Proposal
 
     // Navigation
     public Deal Deal { get; set; } = null!;
-    public Invoice? Invoice { get; set; }
+    public List<Invoice> Invoices { get; set; } = [];
 }

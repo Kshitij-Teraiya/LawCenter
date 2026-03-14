@@ -50,6 +50,20 @@ public class CaseService : ICaseService
                 .Where(c => c.LawyerProfileId == lawyerProfile.Id ||
                             c.CaseLawyers.Any(cl => cl.LawyerProfileId == lawyerProfile.Id && cl.IsActive));
         }
+        else if (role == "Staff")
+        {
+            var staffProfile = await _db.StaffProfiles.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (staffProfile == null)
+                return new PagedResult<CaseSummaryDto> { PageNumber = filter.PageNumber, PageSize = filter.PageSize };
+
+            query = _db.Cases
+                .Include(c => c.LawyerProfile).ThenInclude(l => l!.User)
+                .Include(c => c.ClientProfile).ThenInclude(cp => cp.User)
+                .Include(c => c.Documents)
+                .Include(c => c.Activities)
+                .Include(c => c.CaseLawyers)
+                .Where(c => c.CaseStaffs.Any(cs => cs.StaffProfileId == staffProfile.Id && cs.IsActive));
+        }
         else // Client
         {
             var clientProfile = await _db.ClientProfiles.FirstOrDefaultAsync(c => c.UserId == userId);
@@ -129,6 +143,7 @@ public class CaseService : ICaseService
                 .ThenInclude(d => d.UploadedBy)
             .Include(c => c.Documents.Where(d => !d.IsDeleted))
                 .ThenInclude(d => d.LawyerShares)
+            .Include(c => c.Deal)   // needed to expose DealHireRequestId for deal navigation
             .AsQueryable();
 
         Case? caseEntity;
@@ -142,6 +157,14 @@ public class CaseService : ICaseService
                 c.Id == caseId &&
                 (c.LawyerProfileId == lawyerProfile.Id ||
                  c.CaseLawyers.Any(cl => cl.LawyerProfileId == lawyerProfile.Id && cl.IsActive)));
+        }
+        else if (role == "Staff")
+        {
+            var staffProfile = await _db.StaffProfiles.FirstOrDefaultAsync(s => s.UserId == userId);
+            if (staffProfile == null) return null;
+            caseEntity = await query.FirstOrDefaultAsync(c =>
+                c.Id == caseId &&
+                c.CaseStaffs.Any(cs => cs.StaffProfileId == staffProfile.Id && cs.IsActive));
         }
         else if (role == "Client")
         {
@@ -331,6 +354,12 @@ public class CaseService : ICaseService
             var lp = await _db.LawyerProfiles.FirstOrDefaultAsync(l => l.UserId == userId);
             hasAccess = lp != null && await _db.Cases.AnyAsync(c =>
                 c.Id == caseId && (c.LawyerProfileId == lp.Id || c.CaseLawyers.Any(cl => cl.LawyerProfileId == lp.Id)));
+        }
+        else if (role == "Staff")
+        {
+            var sp = await _db.StaffProfiles.FirstOrDefaultAsync(s => s.UserId == userId);
+            hasAccess = sp != null && await _db.Cases.AnyAsync(c =>
+                c.Id == caseId && c.CaseStaffs.Any(cs => cs.StaffProfileId == sp.Id && cs.IsActive));
         }
         else if (role == "Client")
         {
@@ -599,6 +628,8 @@ public class CaseService : ICaseService
             DocumentCount = c.Documents?.Count(d => !d.IsDeleted) ?? 0,
             ActivityCount = c.Activities?.Count ?? 0,
             LawyerCount = c.CaseLawyers?.Count(cl => cl.IsActive) ?? 0,
+            DealId = c.DealId,
+            DealHireRequestId = c.Deal?.HireRequestId,
             AssignedLawyers = c.CaseLawyers?.Where(cl => cl.IsActive).Select(cl => new CaseLawyerDto
             {
                 LawyerProfileId = cl.LawyerProfileId,

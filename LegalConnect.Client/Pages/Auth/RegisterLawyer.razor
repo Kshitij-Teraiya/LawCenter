@@ -2,10 +2,11 @@
 @layout MinimalLayout
 @inject IAuthService AuthService
 @inject ILawyerService LawyerService
+@inject ISystemSettingsClientService SettingsService
 @inject NavigationManager Navigation
 @inject ToastService Toast
 
-<PageTitle>Register as Lawyer – LegalConnect</PageTitle>
+<PageTitle>Register as Lawyer – LawCity</PageTitle>
 
 <div class="min-vh-100 d-flex align-items-center justify-content-center bg-light py-5">
     <div class="card shadow-sm border-0" style="width:100%;max-width:600px;">
@@ -13,7 +14,7 @@
 
             <div class="text-center mb-4">
                 <a href="/" class="lc-brand justify-content-center">
-                    <img src="image/logo.jpeg" alt="LegalConnect" class="lc-brand-logo-lg" />
+                    <img src="image/logo.jpeg" alt="LawCity" class="lc-brand-logo-lg" />
                 </a>
                 <p class="text-muted mt-2 mb-0">Register your lawyer profile</p>
             </div>
@@ -82,13 +83,13 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-medium">City</label>
-                            <InputText @bind-Value="_model.City" class="form-control" placeholder="Dhaka" />
+                            <InputText @bind-Value="_model.City" class="form-control" placeholder="City" />
                             <ValidationMessage For="@(() => _model.City)" class="text-danger small" />
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Court</label>
                             <InputText @bind-Value="_model.Court" class="form-control"
-                                       placeholder="e.g. Dhaka High Court" />
+                                       placeholder="e.g. Delhi High Court" />
                             <ValidationMessage For="@(() => _model.Court)" class="text-danger small" />
                         </div>
                         <div class="col-md-6">
@@ -97,7 +98,7 @@
                             <ValidationMessage For="@(() => _model.YearsOfExperience)" class="text-danger small" />
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-medium">Consultation Fee (৳)</label>
+                            <label class="form-label fw-medium">Appointment Fee (Rs.)</label>
                             <InputNumber @bind-Value="_model.ConsultationFee" class="form-control"
                                          placeholder="0.00" />
                             <ValidationMessage For="@(() => _model.ConsultationFee)" class="text-danger small" />
@@ -116,12 +117,27 @@
                         </div>
                     </div>
 
+                    @if (!string.IsNullOrWhiteSpace(_tncText))
+                    {
+                        <div class="mt-4">
+                            <label class="form-label fw-medium">Terms &amp; Conditions</label>
+                            <div class="border rounded p-3 bg-light overflow-auto" style="max-height:200px;white-space:pre-wrap;font-size:0.85rem;">@_tncText</div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="chk-tnc"
+                                       @bind="_model.AcceptedTnC" />
+                                <label class="form-check-label" for="chk-tnc">
+                                    I have read and agree to the Terms &amp; Conditions
+                                </label>
+                            </div>
+                        </div>
+                    }
+
                     <button type="submit" class="btn btn-primary w-100 py-2 mt-4" disabled="@_loading">
                         @if (_loading)
                         {
                             <span class="spinner-border spinner-border-sm me-2"></span>
                         }
-                        Submit Application
+                        Register Now
                     </button>
                 </EditForm>
             }
@@ -139,9 +155,22 @@
     private bool _loading;
     private bool _submitted;
     private string? _error;
+    private string? _tncText;
 
     protected override async Task OnInitializedAsync()
-        => _categories = await LawyerService.GetCategoriesAsync();
+    {
+        _categories = await LawyerService.GetCategoriesAsync();
+        try
+        {
+            var resp = await SettingsService.GetByKeyAsync("LawyerRegistrationTnC");
+            _tncText = resp?.Data?.Value;
+        }
+        catch { }
+
+        // No T&C configured — auto-accept so registration isn't blocked
+        if (string.IsNullOrWhiteSpace(_tncText))
+            _model.AcceptedTnC = true;
+    }
 
     private async Task HandleRegister()
     {

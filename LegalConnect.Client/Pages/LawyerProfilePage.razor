@@ -6,7 +6,7 @@
 @inject IAuthService AuthService
 @inject ToastService Toast
 
-<PageTitle>@(_lawyer?.FullName ?? "Lawyer Profile") &mdash; LegalConnect</PageTitle>
+<PageTitle>@(_lawyer?.FullName ?? "Lawyer Profile") &mdash; LawCity</PageTitle>
 
 @if (_loading)
 {
@@ -358,8 +358,13 @@ else
             var resp = await DealService.GetMyHireRequestsAsync();
             if (resp is { Success: true, Data: not null })
             {
+                // Only treat ACTIVE requests as blocking a new hire.
+                // ConvertedToCase = previous case is done → allow new case with same lawyer.
+                // Rejected = allow retry.
                 _existingRequest = resp.Data
-                    .FirstOrDefault(r => r.LawyerProfileId == Id && r.Status != "Rejected");
+                    .FirstOrDefault(r => r.LawyerProfileId == Id
+                        && r.Status != "Rejected"
+                        && r.Status != "ConvertedToCase");
             }
         }
         catch

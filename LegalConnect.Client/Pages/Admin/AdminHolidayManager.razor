@@ -1,0 +1,181 @@
+@page "/admin/holidays"
+@attribute [Authorize(Roles = "Admin")]
+@inject ILawyerAvailabilityService AvailabilityService
+@inject ToastService Toast
+
+<PageTitle>Holiday Management &ndash; LawCity</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Public Holiday Management</h4>
+            <p class="text-muted mb-0 small">Manage platform-wide holidays that lawyers can opt into</p>
+        </div>
+        <button class="btn btn-primary btn-sm" @onclick="() => _showForm = !_showForm">
+            <i class="bi bi-plus me-1"></i>Add Holiday
+        </button>
+    </div>
+
+    @if (_showForm)
+    {
+        <div class="card border-0 shadow-sm p-4 mb-4" style="max-width:500px;">
+            <h6 class="fw-semibold mb-3">@(_editingId.HasValue ? "Edit Holiday" : "New Holiday")</h6>
+            <div class="mb-2">
+                <label class="form-label small">Holiday Name</label>
+                <input class="form-control form-control-sm" @bind="_form.HolidayName" placeholder="e.g. New Year" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label small">Date</label>
+                <input type="date" class="form-control form-control-sm"
+                       value="@_form.HolidayDate.ToString("yyyy-MM-dd")"
+                       @onchange="e => SetFormDate(e.Value?.ToString())" />
+            </div>
+            <div class="mb-2">
+                <label class="form-label small">Description (optional)</label>
+                <input class="form-control form-control-sm" @bind="_form.Description" />
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="appliesYearly" @bind="_form.AppliesYearly" />
+                <label class="form-check-label small" for="appliesYearly">Applies yearly (same date each year)</label>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm" @onclick="SaveHoliday" disabled="@_saving">
+                    @if (_saving) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                    @(_editingId.HasValue ? "Update" : "Create")
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" @onclick="CancelForm">Cancel</button>
+            </div>
+        </div>
+    }
+
+    @if (_loading)
+    {
+        <LoadingSpinner />
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                @if (!_holidays.Any())
+                {
+                    <p class="text-muted p-4 mb-0">No public holidays created yet.</p>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Holiday</th>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Recurring</th>
+                                <th>Lawyers Observing</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var h in _holidays)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@h.HolidayName</td>
+                                    <td>@h.HolidayDate.ToString("dd MMM yyyy")</td>
+                                    <td class="text-muted">@(h.Description ?? "—")</td>
+                                    <td>@(h.AppliesYearly ? "Yearly" : "One-time")</td>
+                                    <td>
+                                        <span class="badge bg-secondary">@h.LawyersObservingCount</span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => EditHoliday(h)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteHoliday(h.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _loading = true;
+    private bool _saving;
+    private bool _showForm;
+    private int? _editingId;
+
+    private List<Models.TimeSlots.MasterHolidayModel> _holidays = [];
+    private Models.TimeSlots.CreateMasterHolidayModel _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHolidays();
+        _loading = false;
+    }
+
+    private async Task LoadHolidays() => _holidays = await AvailabilityService.GetMasterHolidaysAsync();
+
+    private void SetFormDate(string? value)
+    {
+        if (DateTime.TryParse(value, out var d)) _form.HolidayDate = d;
+    }
+
+    private async Task SaveHoliday()
+    {
+        if (string.IsNullOrWhiteSpace(_form.HolidayName)) return;
+        _saving = true;
+
+        bool ok;
+        if (_editingId.HasValue)
+        {
+            ok = await AvailabilityService.UpdateMasterHolidayAsync(_editingId.Value, new()
+            {
+                HolidayName = _form.HolidayName,
+                HolidayDate = _form.HolidayDate,
+                Description = _form.Description,
+                AppliesYearly = _form.AppliesYearly
+            });
+        }
+        else
+        {
+            ok = await AvailabilityService.CreateMasterHolidayAsync(_form);
+        }
+
+        if (ok)
+        {
+            await LoadHolidays();
+            CancelForm();
+            if (_editingId.HasValue) Toast.ShowSuccess("Holiday updated.");
+            else Toast.ShowSuccess("Holiday created.");
+        }
+        else
+        {
+            Toast.ShowError("Failed to save holiday.");
+        }
+        _saving = false;
+    }
+
+    private void EditHoliday(Models.TimeSlots.MasterHolidayModel h)
+    {
+        _editingId = h.Id;
+        _form = new() { HolidayName = h.HolidayName, HolidayDate = h.HolidayDate, Description = h.Description, AppliesYearly = h.AppliesYearly };
+        _showForm = true;
+    }
+
+    private async Task DeleteHoliday(int id)
+    {
+        var ok = await AvailabilityService.DeleteMasterHolidayAsync(id);
+        if (ok) { await LoadHolidays(); Toast.ShowSuccess("Holiday deleted."); }
+    }
+
+    private void CancelForm()
+    {
+        _showForm = false;
+        _editingId = null;
+        _form = new();
+    }
+}

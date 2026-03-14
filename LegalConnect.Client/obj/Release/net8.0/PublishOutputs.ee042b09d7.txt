@@ -1,0 +1,1 @@
+C:\Project\Lawyer_Claude\LegalConnect.Client\bin\Release\net8.0\browser-wasm\publish\web.config

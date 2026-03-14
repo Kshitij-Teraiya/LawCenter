@@ -22,6 +22,75 @@ namespace LegalConnect.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("LegalConnect.API.Entities.AdminStaffProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Department")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("AdminStaffProfiles");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.AdminStaffRoleAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AdminStaffProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("AssignedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedByUserId");
+
+                    b.HasIndex("AdminStaffProfileId", "Role")
+                        .IsUnique();
+
+                    b.ToTable("AdminStaffRoleAssignments");
+                });
+
             modelBuilder.Entity("LegalConnect.API.Entities.ApplicationUser", b =>
                 {
                     b.Property<int>("Id")
@@ -269,6 +338,11 @@ namespace LegalConnect.API.Migrations
                     b.Property<int>("CaseId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("CreatedByName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -287,6 +361,14 @@ namespace LegalConnect.API.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<DateTime?>("EventDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CaseId");
@@ -294,6 +376,21 @@ namespace LegalConnect.API.Migrations
                     b.HasIndex("CreatedByUserId");
 
                     b.ToTable("CaseActivities");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.CaseActivityDocument", b =>
+                {
+                    b.Property<int>("CaseActivityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CaseDocumentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CaseActivityId", "CaseDocumentId");
+
+                    b.HasIndex("CaseDocumentId");
+
+                    b.ToTable("CaseActivityDocuments");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.CaseDocument", b =>
@@ -329,6 +426,9 @@ namespace LegalConnect.API.Migrations
 
                     b.Property<long>("FileSize")
                         .HasColumnType("bigint");
+
+                    b.Property<bool>("IsAvailableForDeal")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -460,6 +560,45 @@ namespace LegalConnect.API.Migrations
                     b.HasIndex("LawyerProfileId");
 
                     b.ToTable("CaseResults");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.CaseStaff", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("AddedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("CanAddActivity")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanUploadDocument")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("CaseId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("StaffProfileId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffProfileId");
+
+                    b.HasIndex("CaseId", "StaffProfileId")
+                        .IsUnique();
+
+                    b.ToTable("CaseStaffs");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.Category", b =>
@@ -728,6 +867,52 @@ namespace LegalConnect.API.Migrations
                     b.ToTable("Deals");
                 });
 
+            modelBuilder.Entity("LegalConnect.API.Entities.DuesEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("EntryType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("InvoiceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("LitigationDisputeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RefundInvoiceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LawyerProfileId");
+
+                    b.ToTable("DuesEntries");
+                });
+
             modelBuilder.Entity("LegalConnect.API.Entities.Experience", b =>
                 {
                     b.Property<int>("Id")
@@ -804,6 +989,9 @@ namespace LegalConnect.API.Migrations
                     b.Property<int>("LawyerProfileId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("LinkedCaseId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Message")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -821,7 +1009,45 @@ namespace LegalConnect.API.Migrations
 
                     b.HasIndex("LawyerProfileId");
 
+                    b.HasIndex("LinkedCaseId");
+
                     b.ToTable("HireRequests");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.HireRequestDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("HireRequestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HireRequestId");
+
+                    b.ToTable("HireRequestDocuments");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.HireRequestMessage", b =>
@@ -874,6 +1100,10 @@ namespace LegalConnect.API.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("ChargeType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -887,17 +1117,26 @@ namespace LegalConnect.API.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal>("GstAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("GstRate")
+                        .HasColumnType("decimal(5,2)");
+
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("ProposalId")
+                    b.Property<int?>("ProposalId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -909,10 +1148,52 @@ namespace LegalConnect.API.Migrations
                     b.HasIndex("InvoiceNumber")
                         .IsUnique();
 
-                    b.HasIndex("ProposalId")
-                        .IsUnique();
+                    b.HasIndex("ProposalId");
 
                     b.ToTable("Invoices");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerBlackoutBlock", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RecurringPattern")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LawyerProfileId", "DayOfWeek");
+
+                    b.ToTable("LawyerBlackoutBlocks");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.LawyerClient", b =>
@@ -961,6 +1242,158 @@ namespace LegalConnect.API.Migrations
                         .IsUnique();
 
                     b.ToTable("LawyerClients");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerHolidayPreference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MasterHolidayId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MasterHolidayId");
+
+                    b.HasIndex("LawyerProfileId", "MasterHolidayId")
+                        .IsUnique();
+
+                    b.ToTable("LawyerHolidayPreferences");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerInvoiceSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AuthorizedSignImagePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("BankDetails")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("FirmAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FirmLogoPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("FirmName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("GSTNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NotesForInvoice")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TermsAndConditions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LawyerProfileId")
+                        .IsUnique();
+
+                    b.ToTable("LawyerInvoiceSettings");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerPersonalHoliday", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("HolidayDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RecurringPattern")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LawyerProfileId");
+
+                    b.ToTable("LawyerPersonalHolidays");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.LawyerProfile", b =>
@@ -1022,6 +1455,219 @@ namespace LegalConnect.API.Migrations
                         .IsUnique();
 
                     b.ToTable("LawyerProfiles");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerTimeSlotConfiguration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BufferTimeMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SessionDurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LawyerProfileId")
+                        .IsUnique();
+
+                    b.ToTable("LawyerTimeSlotConfigurations");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerWorkingHours", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsWorking")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LawyerProfileId", "DayOfWeek");
+
+                    b.ToTable("LawyerWorkingHours");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LegalContract", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ContractType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ProposalId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LawyerProfileId");
+
+                    b.HasIndex("ProposalId");
+
+                    b.ToTable("LegalContracts");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LitigationDispute", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AdminApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("AdminApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("AdminUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ClientUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DisputeType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("DisputedAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("InvoiceId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("LawyerApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LawyerApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.ToTable("LitigationDisputes");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.MasterHoliday", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AppliesYearly")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("HolidayDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("HolidayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MasterHolidays");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.Proposal", b =>
@@ -1107,6 +1753,61 @@ namespace LegalConnect.API.Migrations
                     b.ToTable("Publications");
                 });
 
+            modelBuilder.Entity("LegalConnect.API.Entities.RefundInvoice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("ContractId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DuesEntryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GeneratedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("RefundInvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractId");
+
+                    b.HasIndex("DuesEntryId");
+
+                    b.HasIndex("LawyerProfileId");
+
+                    b.HasIndex("RefundInvoiceNumber")
+                        .IsUnique();
+
+                    b.ToTable("RefundInvoices");
+                });
+
             modelBuilder.Entity("LegalConnect.API.Entities.Review", b =>
                 {
                     b.Property<int>("Id")
@@ -1145,6 +1846,256 @@ namespace LegalConnect.API.Migrations
                     b.HasIndex("LawyerProfileId");
 
                     b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.StaffProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StaffRole")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LawyerProfileId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("StaffProfiles");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.StaffTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedToStaffProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CaseId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("LawyerProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("StaffNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedToStaffProfileId");
+
+                    b.HasIndex("CaseId");
+
+                    b.HasIndex("LawyerProfileId");
+
+                    b.ToTable("StaffTasks");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.SupportMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SenderRole")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("SenderUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupportTicketId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("SupportTicketId");
+
+                    b.ToTable("SupportMessages");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.SupportTicket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ClosedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserRole")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClosedByUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SupportTickets");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.SystemSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("SystemSettings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Terms and Conditions shown to lawyers during registration",
+                            Key = "LawyerRegistrationTnC",
+                            UpdatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            UpdatedByUserId = 1,
+                            Value = "TERMS AND CONDITIONS FOR LAWYER REGISTRATION\n\n1. By registering on LegalConnect, you agree to abide by all platform policies and applicable laws.\n2. You confirm that all information provided is accurate and complete.\n3. You agree to maintain confidentiality of client information.\n4. The platform reserves the right to suspend or terminate accounts for policy violations.\n5. Disputes are subject to the platform's arbitration process.\n6. These terms may be updated periodically; continued use constitutes acceptance."
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -1280,6 +2231,44 @@ namespace LegalConnect.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("LegalConnect.API.Entities.AdminStaffProfile", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LegalConnect.API.Entities.ApplicationUser", "User")
+                        .WithOne("AdminStaffProfile")
+                        .HasForeignKey("LegalConnect.API.Entities.AdminStaffProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.AdminStaffRoleAssignment", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.AdminStaffProfile", "AdminStaffProfile")
+                        .WithMany("RoleAssignments")
+                        .HasForeignKey("AdminStaffProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LegalConnect.API.Entities.ApplicationUser", "AssignedBy")
+                        .WithMany()
+                        .HasForeignKey("AssignedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AdminStaffProfile");
+
+                    b.Navigation("AssignedBy");
+                });
+
             modelBuilder.Entity("LegalConnect.API.Entities.Appointment", b =>
                 {
                     b.HasOne("LegalConnect.API.Entities.ClientProfile", "ClientProfile")
@@ -1357,6 +2346,25 @@ namespace LegalConnect.API.Migrations
                     b.Navigation("CreatedBy");
                 });
 
+            modelBuilder.Entity("LegalConnect.API.Entities.CaseActivityDocument", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.CaseActivity", "CaseActivity")
+                        .WithMany("LinkedDocuments")
+                        .HasForeignKey("CaseActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LegalConnect.API.Entities.CaseDocument", "CaseDocument")
+                        .WithMany()
+                        .HasForeignKey("CaseDocumentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CaseActivity");
+
+                    b.Navigation("CaseDocument");
+                });
+
             modelBuilder.Entity("LegalConnect.API.Entities.CaseDocument", b =>
                 {
                     b.HasOne("LegalConnect.API.Entities.Case", "Case")
@@ -1423,6 +2431,25 @@ namespace LegalConnect.API.Migrations
                         .IsRequired();
 
                     b.Navigation("LawyerProfile");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.CaseStaff", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.Case", "Case")
+                        .WithMany("CaseStaffs")
+                        .HasForeignKey("CaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LegalConnect.API.Entities.StaffProfile", "StaffProfile")
+                        .WithMany("CaseStaffs")
+                        .HasForeignKey("StaffProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Case");
+
+                    b.Navigation("StaffProfile");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.Certification", b =>
@@ -1493,6 +2520,17 @@ namespace LegalConnect.API.Migrations
                     b.Navigation("LawyerProfile");
                 });
 
+            modelBuilder.Entity("LegalConnect.API.Entities.DuesEntry", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithMany()
+                        .HasForeignKey("LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("LawyerProfile");
+                });
+
             modelBuilder.Entity("LegalConnect.API.Entities.Experience", b =>
                 {
                     b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
@@ -1518,9 +2556,26 @@ namespace LegalConnect.API.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("LegalConnect.API.Entities.Case", "LinkedCase")
+                        .WithMany()
+                        .HasForeignKey("LinkedCaseId");
+
                     b.Navigation("ClientProfile");
 
                     b.Navigation("LawyerProfile");
+
+                    b.Navigation("LinkedCase");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.HireRequestDocument", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.HireRequest", "HireRequest")
+                        .WithMany("Documents")
+                        .HasForeignKey("HireRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HireRequest");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.HireRequestMessage", b =>
@@ -1551,14 +2606,24 @@ namespace LegalConnect.API.Migrations
                         .IsRequired();
 
                     b.HasOne("LegalConnect.API.Entities.Proposal", "Proposal")
-                        .WithOne("Invoice")
-                        .HasForeignKey("LegalConnect.API.Entities.Invoice", "ProposalId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .WithMany("Invoices")
+                        .HasForeignKey("ProposalId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Deal");
 
                     b.Navigation("Proposal");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerBlackoutBlock", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithMany("BlackoutBlocks")
+                        .HasForeignKey("LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LawyerProfile");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.LawyerClient", b =>
@@ -1587,6 +2652,47 @@ namespace LegalConnect.API.Migrations
                     b.Navigation("LawyerProfile");
                 });
 
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerHolidayPreference", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithMany("HolidayPreferences")
+                        .HasForeignKey("LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LegalConnect.API.Entities.MasterHoliday", "MasterHoliday")
+                        .WithMany("LawyerPreferences")
+                        .HasForeignKey("MasterHolidayId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LawyerProfile");
+
+                    b.Navigation("MasterHoliday");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerInvoiceSettings", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithOne("InvoiceSettings")
+                        .HasForeignKey("LegalConnect.API.Entities.LawyerInvoiceSettings", "LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LawyerProfile");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerPersonalHoliday", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithMany("PersonalHolidays")
+                        .HasForeignKey("LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LawyerProfile");
+                });
+
             modelBuilder.Entity("LegalConnect.API.Entities.LawyerProfile", b =>
                 {
                     b.HasOne("LegalConnect.API.Entities.Category", "Category")
@@ -1604,6 +2710,56 @@ namespace LegalConnect.API.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerTimeSlotConfiguration", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithOne("TimeSlotConfiguration")
+                        .HasForeignKey("LegalConnect.API.Entities.LawyerTimeSlotConfiguration", "LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LawyerProfile");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LawyerWorkingHours", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithMany("WorkingHours")
+                        .HasForeignKey("LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LawyerProfile");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LegalContract", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithMany()
+                        .HasForeignKey("LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("LegalConnect.API.Entities.Proposal", "Proposal")
+                        .WithMany()
+                        .HasForeignKey("ProposalId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("LawyerProfile");
+
+                    b.Navigation("Proposal");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.LitigationDispute", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.Invoice", "Invoice")
+                        .WithMany()
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.Proposal", b =>
@@ -1624,6 +2780,31 @@ namespace LegalConnect.API.Migrations
                         .HasForeignKey("LawyerProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("LawyerProfile");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.RefundInvoice", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LegalContract", "Contract")
+                        .WithMany()
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("LegalConnect.API.Entities.DuesEntry", "DuesEntry")
+                        .WithMany()
+                        .HasForeignKey("DuesEntryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithMany()
+                        .HasForeignKey("LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Contract");
+
+                    b.Navigation("DuesEntry");
 
                     b.Navigation("LawyerProfile");
                 });
@@ -1653,6 +2834,87 @@ namespace LegalConnect.API.Migrations
                     b.Navigation("ClientProfile");
 
                     b.Navigation("LawyerProfile");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.StaffProfile", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithMany("StaffMembers")
+                        .HasForeignKey("LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LegalConnect.API.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("LawyerProfile");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.StaffTask", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.StaffProfile", "AssignedTo")
+                        .WithMany("AssignedTasks")
+                        .HasForeignKey("AssignedToStaffProfileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("LegalConnect.API.Entities.Case", "Case")
+                        .WithMany()
+                        .HasForeignKey("CaseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("LegalConnect.API.Entities.LawyerProfile", "LawyerProfile")
+                        .WithMany()
+                        .HasForeignKey("LawyerProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssignedTo");
+
+                    b.Navigation("Case");
+
+                    b.Navigation("LawyerProfile");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.SupportMessage", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.ApplicationUser", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LegalConnect.API.Entities.SupportTicket", "SupportTicket")
+                        .WithMany("Messages")
+                        .HasForeignKey("SupportTicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Sender");
+
+                    b.Navigation("SupportTicket");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.SupportTicket", b =>
+                {
+                    b.HasOne("LegalConnect.API.Entities.ApplicationUser", "ClosedByUser")
+                        .WithMany()
+                        .HasForeignKey("ClosedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("LegalConnect.API.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ClosedByUser");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -1706,8 +2968,15 @@ namespace LegalConnect.API.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LegalConnect.API.Entities.AdminStaffProfile", b =>
+                {
+                    b.Navigation("RoleAssignments");
+                });
+
             modelBuilder.Entity("LegalConnect.API.Entities.ApplicationUser", b =>
                 {
+                    b.Navigation("AdminStaffProfile");
+
                     b.Navigation("ClientProfile");
 
                     b.Navigation("LawyerProfile");
@@ -1724,7 +2993,14 @@ namespace LegalConnect.API.Migrations
 
                     b.Navigation("CaseLawyers");
 
+                    b.Navigation("CaseStaffs");
+
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.CaseActivity", b =>
+                {
+                    b.Navigation("LinkedDocuments");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.CaseDocument", b =>
@@ -1763,6 +3039,8 @@ namespace LegalConnect.API.Migrations
                 {
                     b.Navigation("Deal");
 
+                    b.Navigation("Documents");
+
                     b.Navigation("Messages");
                 });
 
@@ -1774,6 +3052,8 @@ namespace LegalConnect.API.Migrations
             modelBuilder.Entity("LegalConnect.API.Entities.LawyerProfile", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("BlackoutBlocks");
 
                     b.Navigation("CaseLawyers");
 
@@ -1787,18 +3067,47 @@ namespace LegalConnect.API.Migrations
 
                     b.Navigation("HireRequests");
 
+                    b.Navigation("HolidayPreferences");
+
                     b.Navigation("IncomingRequests");
 
+                    b.Navigation("InvoiceSettings");
+
                     b.Navigation("LawyerClients");
+
+                    b.Navigation("PersonalHolidays");
 
                     b.Navigation("Publications");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("StaffMembers");
+
+                    b.Navigation("TimeSlotConfiguration");
+
+                    b.Navigation("WorkingHours");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.MasterHoliday", b =>
+                {
+                    b.Navigation("LawyerPreferences");
                 });
 
             modelBuilder.Entity("LegalConnect.API.Entities.Proposal", b =>
                 {
-                    b.Navigation("Invoice");
+                    b.Navigation("Invoices");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.StaffProfile", b =>
+                {
+                    b.Navigation("AssignedTasks");
+
+                    b.Navigation("CaseStaffs");
+                });
+
+            modelBuilder.Entity("LegalConnect.API.Entities.SupportTicket", b =>
+                {
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

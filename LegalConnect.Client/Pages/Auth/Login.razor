@@ -6,7 +6,7 @@
 @inject IJSRuntime JS
 @inject IConfiguration Config
 
-<PageTitle>Login &mdash; LegalConnect</PageTitle>
+<PageTitle>Login &mdash; LawCity</PageTitle>
 
 <div class="min-vh-100 d-flex align-items-center justify-content-center bg-light py-5">
     <div class="card shadow-sm border-0" style="width:100%;max-width:440px;">
@@ -15,7 +15,7 @@
             <!-- Logo -->
             <div class="text-center mb-4">
                 <a href="/" class="lc-brand justify-content-center">
-                    <img src="image/logo.jpeg" alt="LegalConnect" class="lc-brand-logo-lg" />
+                    <img src="image/logo.jpeg" alt="LawCity" class="lc-brand-logo-lg" />
                 </a>
                 <p class="text-muted mt-2 mb-0">Welcome back &mdash; sign in to continue</p>
             </div>
@@ -146,7 +146,10 @@
             if (!string.IsNullOrWhiteSpace(ReturnUrl))
                 Navigation.NavigateTo(Uri.UnescapeDataString(ReturnUrl));
             else
-                Navigation.NavigateTo("/client/dashboard");
+            {
+                var role = await AuthService.GetCurrentUserRoleAsync();
+                RedirectByRole(role);
+            }
         }
         else
         {
@@ -187,6 +190,7 @@
     {
         "Admin"  => "/admin/dashboard",
         "Lawyer" => "/lawyer/dashboard",
+        "Staff"  => "/staff/dashboard",
         _        => "/client/dashboard"
     });
 

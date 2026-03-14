@@ -1,9 +1,9 @@
 @page "/admin/approve-lawyers"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Roles = "Admin,AdminStaff")]
 @inject IAdminService AdminService
 @inject ToastService Toast
 
-<PageTitle>Approve Lawyers – LegalConnect</PageTitle>
+<PageTitle>Approve Lawyers – LawCity</PageTitle>
 
 <div class="container-fluid">
     <h4 class="fw-bold mb-4">

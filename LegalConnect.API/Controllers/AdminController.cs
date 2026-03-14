@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using LegalConnect.API.DTOs.Admin;
 using LegalConnect.API.DTOs.Lawyer;
+using LegalConnect.API.Entities;
 using LegalConnect.API.Helpers;
 using LegalConnect.API.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ namespace LegalConnect.API.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,AdminStaff")]
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
@@ -21,6 +22,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("lawyers/pending")]
+    [RequireAdminStaffRole(AdminStaffRole.LawyerApprovalManager)]
     public async Task<IActionResult> GetPendingLawyers()
     {
         var lawyers = await _adminService.GetPendingLawyersAsync();
@@ -28,6 +30,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPut("lawyers/{lawyerId:int}/approve")]
+    [RequireAdminStaffRole(AdminStaffRole.LawyerApprovalManager)]
     public async Task<IActionResult> ApproveLawyer(int lawyerId)
     {
         var (success, message) = await _adminService.ApproveLawyerAsync(lawyerId);
@@ -36,6 +39,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPut("lawyers/{lawyerId:int}/reject")]
+    [RequireAdminStaffRole(AdminStaffRole.LawyerApprovalManager)]
     public async Task<IActionResult> RejectLawyer(int lawyerId, [FromBody] RejectLawyerDto dto)
     {
         if (!ModelState.IsValid)
@@ -47,6 +51,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("commission")]
+    [RequireAdminStaffRole(AdminStaffRole.FinanceStaff)]
     public async Task<IActionResult> GetCommission()
     {
         var setting = await _adminService.GetCommissionSettingAsync();
@@ -54,6 +59,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPut("commission")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> SetCommission([FromBody] SetCommissionDto dto)
     {
         if (!ModelState.IsValid)
@@ -66,6 +72,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("categories")]
+    [RequireAdminStaffRole(AdminStaffRole.LawyerApprovalManager)]
     public async Task<IActionResult> GetCategories()
     {
         var categories = await _adminService.GetAllCategoriesAsync();
@@ -73,6 +80,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPost("categories")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateCategory([FromBody] CreateCategoryDto dto)
     {
         if (!ModelState.IsValid)
@@ -84,6 +92,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpPut("categories/{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateCategory(int id, [FromBody] UpdateCategoryDto dto)
     {
         if (!ModelState.IsValid)
@@ -96,6 +105,7 @@ public class AdminController : ControllerBase
     }
 
     [HttpDelete("categories/{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteCategory(int id)
     {
         var (success, message) = await _adminService.DeleteCategoryAsync(id);
@@ -104,9 +114,35 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("revenue")]
+    [RequireAdminStaffRole(AdminStaffRole.FinanceStaff)]
     public async Task<IActionResult> GetRevenue()
     {
         var stats = await _adminService.GetRevenueStatsAsync();
         return Ok(ApiResponse<RevenueStatsDto>.Ok(stats));
+    }
+
+    [HttpGet("lawyers")]
+    [RequireAdminStaffRole(AdminStaffRole.LawyerApprovalManager, AdminStaffRole.UserManagementStaff)]
+    public async Task<IActionResult> GetAllLawyers()
+    {
+        var lawyers = await _adminService.GetAllLawyersAsync();
+        return Ok(ApiResponse<List<AdminLawyerDto>>.Ok(lawyers));
+    }
+
+    [HttpGet("clients")]
+    [RequireAdminStaffRole(AdminStaffRole.UserManagementStaff)]
+    public async Task<IActionResult> GetAllClients()
+    {
+        var clients = await _adminService.GetAllClientsAsync();
+        return Ok(ApiResponse<List<AdminClientDto>>.Ok(clients));
+    }
+
+    [HttpPut("users/{userId:int}/toggle-active")]
+    [RequireAdminStaffRole(AdminStaffRole.UserManagementStaff)]
+    public async Task<IActionResult> ToggleUserActive(int userId)
+    {
+        var (success, message) = await _adminService.ToggleUserActiveAsync(userId);
+        if (!success) return BadRequest(ApiResponse.Fail(message));
+        return Ok(ApiResponse.Ok(message));
     }
 }

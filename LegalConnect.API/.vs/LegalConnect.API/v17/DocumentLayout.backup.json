@@ -3,20 +3,24 @@
   "WorkspaceRootPath": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|c:\\project\\lawyer_claude\\legalconnect.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|c:\\project\\lawyer_claude\\legalconnect.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|c:\\project\\lawyer_claude\\legalconnect.api\\appsettings.production.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|solutionrelative:appsettings.production.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|c:\\project\\lawyer_claude\\legalconnect.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|solutionrelative:appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|c:\\project\\lawyer_claude\\legalconnect.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|c:\\project\\lawyer_claude\\legalconnect.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|solutionrelative:appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|c:\\project\\lawyer_claude\\legalconnect.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|solutionrelative:properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{BC9E93FC-1422-4621-8547-02AFF9F43051}|LegalConnect.API.csproj|c:\\project\\lawyer_claude\\legalconnect.api\\services\\caseservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -30,37 +34,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "launchSettings.json",
-              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\Properties\\launchSettings.json",
-              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
-              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\Properties\\launchSettings.json",
-              "RelativeToolTip": "Properties\\launchSettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-03-01T13:39:58.233Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\appsettings.json",
-              "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\appsettings.json",
-              "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAbAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-03-01T07:42:55.707Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
               "Title": "appsettings.Development.json",
               "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\appsettings.Development.json",
               "RelativeDocumentMoniker": "appsettings.Development.json",
@@ -68,24 +46,60 @@
               "RelativeToolTip": "appsettings.Development.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-03-01T07:42:49.371Z"
+              "WhenOpened": "2026-03-07T17:12:06.174Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-03-06T19:46:46.577Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "appsettings.Production.json",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\appsettings.Production.json",
+              "RelativeDocumentMoniker": "appsettings.Production.json",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\appsettings.Production.json",
+              "RelativeToolTip": "appsettings.Production.json",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAACgAAABIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-03-02T19:52:29.439Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Properties\\launchSettings.json",
+              "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-03-01T13:39:58.233Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAIcAAAAAAAAAAAAAAKUAAAAYAAAAAAAAAA==",
+              "ViewState": "AgIAALYAAAAAAAAAAAAqwMoAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-01T07:01:14.048Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "CaseService.cs",
               "DocumentMoniker": "C:\\Project\\Lawyer_Claude\\LegalConnect.API\\Services\\CaseService.cs",
               "RelativeDocumentMoniker": "Services\\CaseService.cs",

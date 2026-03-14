@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LegalConnect.Client")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4afab821ec1845ef159b287d99e6dd9492032b7b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+09f15f92818133e7612d0f68e0b316c5a8a8dc56")]
 [assembly: System.Reflection.AssemblyProductAttribute("LegalConnect.Client")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LegalConnect.Client")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

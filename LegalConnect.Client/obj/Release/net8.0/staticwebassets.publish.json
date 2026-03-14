@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "uVjPhyUR/s5KA0RJRyPu90p4EbQpPyIrHxRDoICEP7o=",
+  "Hash": "8+epmWAK916k5k8m8VH7MJ1/7aFBLtfX6dj9W+7brfA=",
   "Source": "LegalConnect.Client",
   "BasePath": "/",
   "Mode": "Root",
@@ -167,6 +167,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\bin\\Release\\net8.0\\wwwroot\\_framework\\icudt_no_CJK.dat"
+    },
+    {
+      "Identity": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\Components\\InvoicePrintView.razor.js",
+      "SourceId": "LegalConnect.Client",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\",
+      "BasePath": "/",
+      "RelativePath": "Components/InvoicePrintView.razor.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "Components\\InvoicePrintView.razor.js"
     },
     {
       "Identity": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\obj\\Release\\net8.0\\blazor.publish.boot.json",
@@ -4254,6 +4273,25 @@
       "OriginalItemSpec": "wwwroot\\appsettings.json"
     },
     {
+      "Identity": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\appsettings.Production.json",
+      "SourceId": "LegalConnect.Client",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\",
+      "BasePath": "/",
+      "RelativePath": "appsettings.Production.json",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "WasmResource",
+      "AssetTraitValue": "settings",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\appsettings.Production.json"
+    },
+    {
       "Identity": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\css\\app.css",
       "SourceId": "LegalConnect.Client",
       "SourceType": "Discovered",
@@ -4309,6 +4347,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\index.html"
+    },
+    {
+      "Identity": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\js\\app.js",
+      "SourceId": "LegalConnect.Client",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\",
+      "BasePath": "/",
+      "RelativePath": "js/app.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\app.js"
     },
     {
       "Identity": "C:\\Project\\Lawyer_Claude\\LegalConnect.Client\\wwwroot\\js\\google-auth.js",

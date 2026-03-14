@@ -1,11 +1,15 @@
 @page "/client/deals/{Id:int}"
 @attribute [Authorize(Roles = "Client")]
+@using System.Security.Claims
+@using LegalConnect.Client.Models.Deals
 @inject IDealService DealService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject ToastService Toast
 @inject NavigationManager Nav
+@inject IJSRuntime JS
+@using Microsoft.AspNetCore.Components.Forms
 
-<PageTitle>Deal Details &mdash; LegalConnect</PageTitle>
+<PageTitle>Deal Details &mdash; LawCity</PageTitle>
 
 <div class="container py-4" style="max-width: 960px;">
     @if (_loading)
@@ -32,10 +36,10 @@
                     <span class="ms-2 @GetStatusBadge(_deal.Status)">@FormatStatus(_deal.Status)</span>
                 </div>
             </div>
-            @if (_deal.Status == "Inquiry" || _deal.Status == "AcceptedByLawyer")
+            @if (_deal.Status == "Inquiry" || _deal.Status == "AcceptedByLawyer" || _deal.Status == "DealInProgress")
             {
                 <button class="btn btn-sm btn-outline-danger" @onclick="CancelAsync" disabled="@_actionLoading">
-                    <i class="bi bi-x-circle me-1"></i>Cancel
+                    <i class="bi bi-x-circle me-1"></i>Cancel Request
                 </button>
             }
         </div>
@@ -49,81 +53,46 @@
 
             <!-- Right column: Deal section -->
             <div class="col-lg-5">
-                <!-- Deal / Proposals section -->
                 @if (_deal.Deal != null)
                 {
+                    <!-- Proposals list -->
                     <div class="card shadow-sm mb-3">
                         <div class="card-header bg-white">
                             <h6 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Proposals (@_deal.Deal.Proposals.Count)</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-0">
                             @if (_deal.Deal.Proposals.Count == 0)
                             {
-                                <p class="text-muted small mb-0">No proposals yet. Wait for the lawyer to send one.</p>
+                                <p class="text-muted small px-3 py-3 mb-0">No proposals yet. Wait for the lawyer to send one.</p>
                             }
                             else
                             {
                                 @foreach (var proposal in _deal.Deal.Proposals)
                                 {
-                                    <div class="border rounded p-3 mb-2">
+                                    <div class="border-bottom px-3 py-2">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
-                                                <strong>@proposal.Title</strong>
-                                                <span class="@GetProposalBadge(proposal.Status) ms-2">@proposal.Status</span>
+                                                <strong class="small">@proposal.Title</strong>
+                                                <span class="@GetProposalBadge(proposal.Status) ms-1" style="font-size:.65rem">@proposal.Status</span>
                                             </div>
-                                            <span class="fw-bold text-primary">@proposal.Amount.ToString("C")</span>
+                                            <span class="fw-bold text-primary small">&#8377;@proposal.Amount.ToString("N2")</span>
                                         </div>
-                                        <p class="text-muted small mb-1 mt-1">@proposal.Description</p>
+                                        <p class="text-muted mb-0 mt-1" style="font-size:.75rem">@proposal.Description</p>
                                         @if (proposal.IsNegotiable)
                                         {
-                                            <span class="badge bg-info bg-opacity-10 text-info small"><i class="bi bi-arrows-angle-expand me-1"></i>Negotiable</span>
+                                            <span class="badge bg-info bg-opacity-10 text-info mt-1" style="font-size:.65rem">Negotiable</span>
                                         }
-
                                         @if (proposal.Status == "Pending")
                                         {
                                             <div class="mt-2 d-flex gap-2">
-                                                <button class="btn btn-sm btn-success" @onclick="() => AcceptProposalAsync(proposal)" disabled="@_actionLoading">
+                                                <button class="btn btn-sm btn-success py-0 px-2" style="font-size:.75rem"
+                                                        @onclick='() => AcceptProposalAsync(proposal)' disabled="@_actionLoading">
                                                     <i class="bi bi-check-lg me-1"></i>Accept
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => RejectProposalAsync(proposal)" disabled="@_actionLoading">
+                                                <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:.75rem"
+                                                        @onclick='() => RejectProposalAsync(proposal)' disabled="@_actionLoading">
                                                     <i class="bi bi-x-lg me-1"></i>Reject
                                                 </button>
-                                            </div>
-                                        }
-
-                                        @if (proposal.Invoice != null)
-                                        {
-                                            <div class="mt-2 p-2 bg-light rounded border">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <small class="text-muted">Invoice</small>
-                                                        <div class="fw-semibold small">@proposal.Invoice.InvoiceNumber</div>
-                                                    </div>
-                                                    <span class="@GetInvoiceBadge(proposal.Invoice.Status)">@proposal.Invoice.Status</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center mt-1">
-                                                    <span class="fw-bold">@proposal.Invoice.Amount.ToString("C")</span>
-                                                    @if (proposal.Invoice.DueDate.HasValue)
-                                                    {
-                                                        <small class="text-muted">Due: @proposal.Invoice.DueDate.Value.ToString("d MMM yyyy")</small>
-                                                    }
-                                                </div>
-                                                @if (!string.IsNullOrEmpty(proposal.Invoice.Description))
-                                                {
-                                                    <p class="small text-muted mb-0 mt-1">@proposal.Invoice.Description</p>
-                                                }
-
-                                                @if (proposal.Invoice.Status == "Pending")
-                                                {
-                                                    <div class="mt-2 d-flex gap-2">
-                                                        <button class="btn btn-sm btn-success" @onclick="() => AcceptInvoiceAsync(proposal.Invoice)" disabled="@_actionLoading">
-                                                            <i class="bi bi-check-lg me-1"></i>Accept
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => RejectInvoiceAsync(proposal.Invoice)" disabled="@_actionLoading">
-                                                            <i class="bi bi-x-lg"></i>
-                                                        </button>
-                                                    </div>
-                                                }
                                             </div>
                                         }
                                     </div>
@@ -131,6 +100,102 @@
                             }
                         </div>
                     </div>
+
+                    <!-- Invoice Budget Tracker -->
+                    @if (_deal.Deal.AcceptedProposalAmount > 0)
+                    {
+                        var pct = (double)(_deal.Deal.TotalInvoicedAmount / _deal.Deal.AcceptedProposalAmount) * 100;
+                        <div class="card shadow-sm mb-3 border-primary border-opacity-50">
+                            <div class="card-header bg-primary bg-opacity-10">
+                                <h6 class="mb-0 text-primary"><i class="bi bi-wallet2 me-2"></i>Invoice Summary</h6>
+                            </div>
+                            <div class="card-body pb-2">
+                                <div class="row g-2 text-center mb-2">
+                                    <div class="col-4">
+                                        <div class="small text-muted">Proposal</div>
+                                        <div class="fw-bold">&#8377;@_deal.Deal.AcceptedProposalAmount.ToString("N0")</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Invoiced</div>
+                                        <div class="fw-bold text-warning">&#8377;@_deal.Deal.TotalInvoicedAmount.ToString("N0")</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="small text-muted">Remaining</div>
+                                        <div class="fw-bold text-success">&#8377;@_deal.Deal.RemainingAmount.ToString("N0")</div>
+                                    </div>
+                                </div>
+                                <div class="progress" style="height:6px">
+                                    <div class="progress-bar bg-primary" style="width:@Math.Min(pct, 100)%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- All Invoices -->
+                    @if (_deal.Deal.Invoices.Count > 0)
+                    {
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-header bg-white">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-receipt me-2"></i>Invoices
+                                    <span class="badge bg-secondary ms-1">@_deal.Deal.Invoices.Count</span>
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                @foreach (var inv in _deal.Deal.Invoices)
+                                {
+                                    <div class="border-bottom p-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <div>
+                                                <div class="fw-semibold small">@inv.InvoiceNumber</div>
+                                                @if (!string.IsNullOrEmpty(inv.ChargeType))
+                                                {
+                                                    <span class="badge bg-light text-secondary border" style="font-size:.65rem">@inv.ChargeType</span>
+                                                }
+                                            </div>
+                                            <span class="@GetInvoiceBadge(inv.Status)" style="font-size:.7rem">@inv.Status</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="fw-bold small">&#8377;@inv.Amount.ToString("N2")</span>
+                                                @if (inv.GstRate > 0)
+                                                {
+                                                    <span class="text-muted ms-1" style="font-size:.7rem">+@inv.GstRate% GST = &#8377;@inv.TotalAmount.ToString("N2")</span>
+                                                }
+                                            </div>
+                                            @if (inv.DueDate.HasValue)
+                                            {
+                                                <small class="text-muted" style="font-size:.68rem">Due: @inv.DueDate.Value.ToString("d MMM yyyy")</small>
+                                            }
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(inv.Description))
+                                        {
+                                            <p class="text-muted mb-1 mt-1" style="font-size:.72rem; white-space:pre-wrap">@inv.Description</p>
+                                        }
+                                        @if (inv.Status == "Pending")
+                                        {
+                                            <div class="mt-2 d-flex gap-2">
+                                                <button class="btn btn-sm btn-success py-0 px-2" style="font-size:.75rem"
+                                                        @onclick='() => AcceptInvoiceAsync(inv)' disabled="@_actionLoading">
+                                                    <i class="bi bi-check-lg me-1"></i>Accept &amp; Pay
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:.75rem"
+                                                        @onclick='() => RejectInvoiceAsync(inv)' disabled="@_actionLoading">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                        }
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:.72rem"
+                                                    @onclick='() => ViewInvoice(inv)'>
+                                                <i class="bi bi-eye me-1"></i>View Invoice
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
                 }
                 else if (_deal.Status == "Inquiry")
                 {
@@ -141,6 +206,63 @@
                         </div>
                     </div>
                 }
+
+                <!-- Hire Request Documents -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-white d-flex align-items-center">
+                        <h6 class="mb-0 flex-grow-1">
+                            <i class="bi bi-paperclip me-2"></i>Attached Documents
+                            <span class="badge bg-secondary ms-1">@_deal.Documents.Count</span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        @* Upload *@
+                        @if (_deal.Status != "Rejected" && _deal.Status != "ConvertedToCase")
+                        {
+                            <InputFile OnChange="OnDocumentSelectedAsync" class="form-control form-control-sm mb-2"
+                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.xls,.xlsx" />
+                            @if (_docUploading)
+                            {
+                                <div class="text-muted small"><span class="spinner-border spinner-border-sm me-1"></span>Uploading...</div>
+                            }
+                        }
+                        @* List *@
+                        @if (_deal.Documents.Count == 0)
+                        {
+                            <p class="text-muted small mb-0">No documents attached. Upload files for the lawyer to review before accepting.</p>
+                        }
+                        else
+                        {
+                            @foreach (var doc in _deal.Documents)
+                            {
+                                <div class="d-flex align-items-center gap-2 py-1 border-bottom">
+                                    <i class="bi bi-file-earmark text-primary"></i>
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <div class="small text-truncate">@doc.FileName</div>
+                                        <div class="text-muted" style="font-size:.68rem">
+                                            @doc.FileSizeFormatted &middot; @doc.UploadedAt.ToString("dd MMM yyyy")
+                                            @if (doc.SourceType == "Case")
+                                            {
+                                                <span class="badge bg-info bg-opacity-75 ms-1" style="font-size:.62rem">From Case</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-outline-primary btn-sm py-0 px-1" title="Download"
+                                            @onclick='() => DownloadDocAsync(doc)'>
+                                        <i class="bi bi-download" style="font-size:.75rem"></i>
+                                    </button>
+                                    @if (_deal.Status != "ConvertedToCase" && doc.SourceType != "Case")
+                                    {
+                                        <button class="btn btn-outline-danger btn-sm py-0 px-1" title="Delete"
+                                                @onclick='() => DeleteDocAsync(doc)' disabled="@_docUploading">
+                                            <i class="bi bi-trash" style="font-size:.75rem"></i>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
 
                 <!-- Request Info -->
                 <div class="card shadow-sm">
@@ -169,13 +291,21 @@
     }
 </div>
 
+<!-- Print / View Invoice Modal -->
+@if (_viewInvoice != null)
+{
+    <InvoicePrintView Invoice="_viewInvoice" OnClose="() => _viewInvoice = null" />
+}
+
 @code {
     [Parameter] public int Id { get; set; }
 
     private HireRequestDetailDto? _deal;
     private bool _loading = true;
     private bool _actionLoading;
+    private bool _docUploading;
     private int _userId;
+    private InvoiceDto? _viewInvoice;
 
     protected override async Task OnInitializedAsync()
     {
@@ -197,11 +327,7 @@
     {
         _actionLoading = true;
         var resp = await DealService.CancelHireRequestAsync(Id);
-        if (resp?.Success == true)
-        {
-            Toast.ShowSuccess("Hire request cancelled.");
-            Nav.NavigateTo("/client/my-deals");
-        }
+        if (resp?.Success == true) { Toast.ShowSuccess("Hire request cancelled."); Nav.NavigateTo("/client/my-deals"); }
         else { Toast.ShowError(resp?.Message ?? "Failed to cancel."); }
         _actionLoading = false;
     }
@@ -210,11 +336,7 @@
     {
         _actionLoading = true;
         var resp = await DealService.AcceptProposalAsync(proposal.Id, null);
-        if (resp?.Success == true)
-        {
-            Toast.ShowSuccess("Proposal accepted!");
-            await LoadAsync();
-        }
+        if (resp?.Success == true) { Toast.ShowSuccess("Proposal accepted!"); await LoadAsync(); }
         else { Toast.ShowError(resp?.Message ?? "Failed to accept."); }
         _actionLoading = false;
     }
@@ -223,11 +345,7 @@
     {
         _actionLoading = true;
         var resp = await DealService.RejectProposalAsync(proposal.Id, null);
-        if (resp?.Success == true)
-        {
-            Toast.ShowSuccess("Proposal rejected.");
-            await LoadAsync();
-        }
+        if (resp?.Success == true) { Toast.ShowSuccess("Proposal rejected."); await LoadAsync(); }
         else { Toast.ShowError(resp?.Message ?? "Failed to reject."); }
         _actionLoading = false;
     }
@@ -236,11 +354,7 @@
     {
         _actionLoading = true;
         var resp = await DealService.AcceptInvoiceAsync(invoice.Id);
-        if (resp?.Success == true)
-        {
-            Toast.ShowSuccess("Invoice accepted. Case created!");
-            await LoadAsync();
-        }
+        if (resp?.Success == true) { Toast.ShowSuccess("Invoice accepted. Case created!"); await LoadAsync(); }
         else { Toast.ShowError(resp?.Message ?? "Failed to accept."); }
         _actionLoading = false;
     }
@@ -249,13 +363,52 @@
     {
         _actionLoading = true;
         var resp = await DealService.RejectInvoiceAsync(invoice.Id);
-        if (resp?.Success == true)
-        {
-            Toast.ShowSuccess("Invoice rejected.");
-            await LoadAsync();
-        }
+        if (resp?.Success == true) { Toast.ShowSuccess("Invoice rejected."); await LoadAsync(); }
         else { Toast.ShowError(resp?.Message ?? "Failed."); }
         _actionLoading = false;
+    }
+
+    private void ViewInvoice(InvoiceDto inv)
+    {
+        if (string.IsNullOrEmpty(inv.ClientFullName))
+        {
+            inv.ClientFullName = _deal?.ClientFullName;
+            inv.LawyerFullName = _deal?.LawyerFullName;
+        }
+        _viewInvoice = inv;
+    }
+
+    private async Task OnDocumentSelectedAsync(InputFileChangeEventArgs e)
+    {
+        _docUploading = true;
+        try
+        {
+            var resp = await DealService.UploadHireRequestDocumentAsync(Id, e.File);
+            if (resp?.Success == true) { Toast.ShowSuccess("Document uploaded."); await LoadAsync(); }
+            else { Toast.ShowError(resp?.Message ?? "Upload failed."); }
+        }
+        catch { Toast.ShowError("Upload failed."); }
+        finally { _docUploading = false; }
+    }
+
+    private async Task DownloadDocAsync(HireRequestDocumentDto doc)
+    {
+        var bytes = doc.SourceType == "Case"
+            ? await DealService.DownloadCaseDocumentViaHireRequestAsync(Id, doc.Id)
+            : await DealService.DownloadHireRequestDocumentAsync(Id, doc.Id);
+        if (bytes != null)
+            await JS.InvokeVoidAsync("downloadFileFromBytes", doc.FileName, doc.ContentType, Convert.ToBase64String(bytes));
+        else
+            Toast.ShowError("Failed to download document.");
+    }
+
+    private async Task DeleteDocAsync(HireRequestDocumentDto doc)
+    {
+        _docUploading = true;
+        var resp = await DealService.DeleteHireRequestDocumentAsync(Id, doc.Id);
+        if (resp?.Success == true) { Toast.ShowSuccess("Document deleted."); await LoadAsync(); }
+        else { Toast.ShowError(resp?.Message ?? "Delete failed."); }
+        _docUploading = false;
     }
 
     private static string GetStatusBadge(string status) => status switch
@@ -290,6 +443,7 @@
         "AcceptedByLawyer" => "Accepted",
         "DealInProgress" => "In Progress",
         "ConvertedToCase" => "Converted to Case",
+        "InvoiceGenerated" => "Invoice Sent",
         _ => status
     };
 }

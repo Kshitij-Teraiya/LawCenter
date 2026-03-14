@@ -30,6 +30,16 @@ public class LawyerProfile
     public List<CaseLawyer> CaseLawyers { get; set; } = [];
     public List<ClientLawyerRequest> IncomingRequests { get; set; } = [];
     public List<HireRequest> HireRequests { get; set; } = [];
+    // Staff
+    public List<StaffProfile> StaffMembers { get; set; } = [];
+    // Invoice Settings
+    public LawyerInvoiceSettings? InvoiceSettings { get; set; }
+    // Appointment Slot Management
+    public LawyerTimeSlotConfiguration? TimeSlotConfiguration { get; set; }
+    public List<LawyerWorkingHours> WorkingHours { get; set; } = [];
+    public List<LawyerHolidayPreference> HolidayPreferences { get; set; } = [];
+    public List<LawyerPersonalHoliday> PersonalHolidays { get; set; } = [];
+    public List<LawyerBlackoutBlock> BlackoutBlocks { get; set; } = [];
 
     public decimal AverageRating => Reviews.Count > 0
         ? Math.Round((decimal)Reviews.Average(r => r.Rating), 1)

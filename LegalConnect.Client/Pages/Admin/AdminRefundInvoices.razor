@@ -1,0 +1,168 @@
+@page "/admin/refund-invoices"
+@attribute [Authorize(Roles = "Admin,AdminStaff")]
+@inject IRefundInvoiceClientService RefundService
+@inject ILawyerService LawyerService
+@inject ISystemSettingsClientService SettingsService
+@inject ToastService Toast
+
+<PageTitle>Refund Invoices – Admin</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="bi bi-receipt me-2"></i>Refund Invoices</h4>
+        <button class="btn btn-primary btn-sm" @onclick='() => _showCreate = true'>
+            <i class="bi bi-plus-lg me-1"></i>Issue Refund
+        </button>
+    </div>
+
+    @* Create Refund Modal *@
+    @if (_showCreate)
+    {
+        <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.4)">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Issue Refund Invoice</h5>
+                        <button class="btn-close" @onclick='() => _showCreate = false'></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (!string.IsNullOrWhiteSpace(_createError))
+                        {
+                            <div class="alert alert-danger py-2 small">@_createError</div>
+                        }
+                        <div class="mb-3">
+                            <label class="form-label">Lawyer</label>
+                            <select class="form-select" @bind="_createModel.LawyerProfileId">
+                                <option value="0">— Select Lawyer —</option>
+                                @foreach (var l in _lawyers)
+                                {
+                                    <option value="@l.Id">@l.FullName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amount (₹)</label>
+                            <input type="number" class="form-control" min="1" step="0.01"
+                                   @bind="_createModel.Amount" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reason</label>
+                            <textarea class="form-control" rows="3" @bind="_createModel.Reason"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary btn-sm" @onclick='() => _showCreate = false'>Cancel</button>
+                        <button class="btn btn-primary btn-sm" @onclick="CreateRefund" disabled="@_creating">
+                            @if (_creating) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                            Issue Refund
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (_loading)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+    }
+    else if (_refunds?.Items.Count == 0)
+    {
+        <div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-2"></i>No refund invoices yet.</div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Invoice No.</th>
+                            <th>Lawyer</th>
+                            <th>Amount</th>
+                            <th>Reason</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in _refunds!.Items)
+                        {
+                            <tr>
+                                <td class="fw-semibold small">@r.RefundInvoiceNumber</td>
+                                <td class="small">@r.LawyerName</td>
+                                <td>₹@r.Amount.ToString("N2")</td>
+                                <td class="small text-muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@r.Reason</td>
+                                <td class="small">@r.GeneratedAt.ToString("dd MMM yyyy")</td>
+                                <td><span class='badge @(r.Status == "Processed" ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning")'>@r.Status</span></td>
+                                <td>
+                                    @if (r.ContractId.HasValue)
+                                    {
+                                        <a href="@RefundService.GetDownloadUrlAsync(r.Id).Result" target="_blank"
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private PagedResult<RefundInvoiceModel>? _refunds;
+    private List<LawyerSummaryDto> _lawyers = [];
+    private bool _loading;
+    private bool _showCreate;
+    private bool _creating;
+    private string? _createError;
+    private CreateRefundInvoiceModel _createModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        try
+        {
+            var resp = await LawyerService.GetLawyersAsync(new LawyerFilterDto { PageSize = 500 });
+            _lawyers = resp?.Items ?? [];
+        }
+        catch { }
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true; StateHasChanged();
+        try { var r = await RefundService.GetAllAsync(); _refunds = r?.Data ?? new(); }
+        catch { Toast.ShowError("Failed to load refund invoices."); }
+        finally { _loading = false; }
+    }
+
+    private async Task CreateRefund()
+    {
+        _createError = null;
+        if (_createModel.LawyerProfileId == 0) { _createError = "Please select a lawyer."; return; }
+        if (_createModel.Amount <= 0)          { _createError = "Amount must be positive."; return; }
+        if (string.IsNullOrWhiteSpace(_createModel.Reason)) { _createError = "Reason is required."; return; }
+
+        _creating = true;
+        try
+        {
+            var resp = await RefundService.CreateAsync(_createModel);
+            if (resp?.Success == true)
+            {
+                Toast.ShowSuccess("Refund invoice issued.");
+                _showCreate = false;
+                _createModel = new();
+                await LoadAsync();
+            }
+            else _createError = resp?.Message ?? "Failed to issue refund.";
+        }
+        catch { _createError = "An error occurred."; }
+        finally { _creating = false; }
+    }
+}

@@ -16,46 +16,22 @@ public interface IAppointmentService
     Task<(bool Success, string Message)> ConfirmAppointmentAsync(int lawyerUserId, int appointmentId);
     Task<(bool Success, string Message)> CompleteAppointmentAsync(int lawyerUserId, int appointmentId);
     Task<AppointmentDto?> GetAppointmentByIdAsync(int userId, string userRole, int appointmentId);
+    Task<(bool Success, string Message)> RescheduleAppointmentAsync(int userId, string userRole, int appointmentId, RescheduleAppointmentDto dto);
 }
 
 public class AppointmentService : IAppointmentService
 {
     private readonly AppDbContext _db;
+    private readonly IAppointmentSlotService _slotService;
 
-    public AppointmentService(AppDbContext db)
+    public AppointmentService(AppDbContext db, IAppointmentSlotService slotService)
     {
         _db = db;
+        _slotService = slotService;
     }
 
-    private static readonly TimeSpan SlotDuration = TimeSpan.FromHours(1);
-    private static readonly TimeSpan WorkdayStart = TimeSpan.FromHours(9);
-    private static readonly TimeSpan WorkdayEnd = TimeSpan.FromHours(18);
-
-    public async Task<List<TimeSlotDto>> GetAvailableSlotsAsync(int lawyerProfileId, DateTime date)
-    {
-        var bookedSlots = await _db.Appointments
-            .Where(a => a.LawyerProfileId == lawyerProfileId
-                && a.AppointmentDate.Date == date.Date
-                && (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed))
-            .Select(a => a.StartTime)
-            .ToListAsync();
-
-        var slots = new List<TimeSlotDto>();
-        var current = WorkdayStart;
-
-        while (current + SlotDuration <= WorkdayEnd)
-        {
-            slots.Add(new TimeSlotDto
-            {
-                StartTime = current,
-                EndTime = current + SlotDuration,
-                IsAvailable = !bookedSlots.Contains(current)
-            });
-            current += SlotDuration;
-        }
-
-        return slots;
-    }
+    public Task<List<TimeSlotDto>> GetAvailableSlotsAsync(int lawyerProfileId, DateTime date)
+        => _slotService.GetAvailableSlotsAsync(lawyerProfileId, date);
 
     public async Task<(bool Success, string Message, AppointmentDto? Data)> BookAppointmentAsync(int clientUserId, BookAppointmentDto dto)
     {
@@ -90,13 +66,15 @@ public class AppointmentService : IAppointmentService
         var commissionPct = commission?.DefaultCommissionPercentage ?? 10;
         var platformCommission = Math.Round(lawyerProfile.ConsultationFee * commissionPct / 100, 2);
 
+        var sessionDuration = TimeSpan.FromMinutes(await _slotService.GetSessionDurationAsync(dto.LawyerId));
+
         var appointment = new Appointment
         {
             LawyerProfileId = dto.LawyerId,
             ClientProfileId = clientProfile.Id,
             AppointmentDate = dto.AppointmentDate.Date,
             StartTime = dto.StartTime,
-            EndTime = dto.StartTime + SlotDuration,
+            EndTime = dto.StartTime + sessionDuration,
             Status = AppointmentStatus.Pending,
             ConsultationFee = lawyerProfile.ConsultationFee,
             PlatformCommission = platformCommission,
@@ -263,6 +241,50 @@ public class AppointmentService : IAppointmentService
         }
 
         return appointment == null ? null : MapToDto(appointment);
+    }
+
+    public async Task<(bool Success, string Message)> RescheduleAppointmentAsync(int userId, string userRole, int appointmentId, RescheduleAppointmentDto dto)
+    {
+        Appointment? appointment = null;
+
+        if (userRole == "Client")
+        {
+            var clientProfile = await _db.ClientProfiles.FirstOrDefaultAsync(c => c.UserId == userId);
+            if (clientProfile == null) return (false, "Profile not found.");
+            appointment = await _db.Appointments.FirstOrDefaultAsync(a => a.Id == appointmentId && a.ClientProfileId == clientProfile.Id);
+        }
+        else if (userRole == "Lawyer")
+        {
+            var lawyerProfile = await _db.LawyerProfiles.FirstOrDefaultAsync(l => l.UserId == userId);
+            if (lawyerProfile == null) return (false, "Profile not found.");
+            appointment = await _db.Appointments.FirstOrDefaultAsync(a => a.Id == appointmentId && a.LawyerProfileId == lawyerProfile.Id);
+        }
+
+        if (appointment == null) return (false, "Appointment not found.");
+
+        if (appointment.Status != AppointmentStatus.Pending && appointment.Status != AppointmentStatus.Confirmed)
+            return (false, "Only pending or confirmed appointments can be rescheduled.");
+
+        if (dto.NewDate.Date < DateTime.UtcNow.Date)
+            return (false, "Cannot reschedule to a past date.");
+
+        // Check new slot availability (excluding this appointment)
+        var slotTaken = await _db.Appointments.AnyAsync(a =>
+            a.Id != appointmentId
+            && a.LawyerProfileId == appointment.LawyerProfileId
+            && a.AppointmentDate.Date == dto.NewDate.Date
+            && a.StartTime == dto.NewStartTime
+            && (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed));
+
+        if (slotTaken) return (false, "The selected time slot is not available.");
+
+        var sessionDuration = TimeSpan.FromMinutes(await _slotService.GetSessionDurationAsync(appointment.LawyerProfileId));
+        appointment.AppointmentDate = dto.NewDate.Date;
+        appointment.StartTime = dto.NewStartTime;
+        appointment.EndTime = dto.NewStartTime + sessionDuration;
+
+        await _db.SaveChangesAsync();
+        return (true, "Appointment rescheduled.");
     }
 
     private static AppointmentDto MapToDto(Appointment a) => new()

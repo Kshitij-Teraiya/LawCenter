@@ -1,6 +1,7 @@
 @using LegalConnect.Client.Models.Cases
 @using Microsoft.AspNetCore.Components.Forms
 @inject IHttpClientFactory HttpClientFactory
+@inject ICaseService CaseService
 @inject ToastService Toast
 
 <!-- Modal overlay -->
@@ -80,6 +81,37 @@
                     }
                 </div>
 
+                <!-- Available for Hire Request (client only, not private) -->
+                @if (!IsLawyer && !_isPrivate)
+                {
+                    <div class="form-check mt-2 mb-1">
+                        <input class="form-check-input" type="checkbox" id="availableForDeal"
+                               @bind="_isAvailableForDeal" />
+                        <label class="form-check-label" for="availableForDeal">
+                            <span>
+                                Share with lawyers evaluating this case
+                                <span class="text-muted small">(visible on Hire Requests before hiring)</span>
+                            </span>
+                        </label>
+                    </div>
+                    @if (_isAvailableForDeal)
+                    {
+                        <div class="text-primary small mb-3">
+                            <i class="bi bi-briefcase me-1"></i>This document will be shared with lawyers you send hire requests to.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted small mb-3">
+                            <i class="bi bi-briefcase me-1"></i>Not shared for hire request evaluation.
+                        </div>
+                    }
+                }
+                else if (!IsLawyer && _isPrivate)
+                {
+                    <div class="mb-3"></div>
+                }
+
                 <!-- Lawyer-wise sharing (client only, not private, multiple lawyers) -->
                 @if (!IsLawyer && !_isPrivate && AssignedLawyers.Count > 1)
                 {
@@ -125,6 +157,31 @@
                     </div>
                 }
 
+                <!-- Link to Activity Timeline (lawyer only, optional) -->
+                @if (IsLawyer && Activities.Any())
+                {
+                    <div class="mb-3">
+                        <label class="form-label form-label-sm">
+                            <i class="bi bi-clock-history me-1"></i>Link to Activity Timeline
+                            <span class="text-muted fw-normal">(optional)</span>
+                        </label>
+                        <select class="form-select form-select-sm" @bind="_selectedActivityId">
+                            <option value="">— None —</option>
+                            @foreach (var act in Activities.OrderByDescending(a => a.ActivityDate))
+                            {
+                                <option value="@act.Id">
+                                    @act.ActivityDate.ToString("d MMM yyyy") —
+                                    @(string.IsNullOrWhiteSpace(act.Title) ? act.ActivityTypeName : act.Title)
+                                    @if (!string.IsNullOrWhiteSpace(act.Category) && act.Category != "Other")
+                                    {
+                                        <text> (@act.Category)</text>
+                                    }
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+
                 @if (_uploading)
                 {
                     <div class="mt-3">
@@ -154,14 +211,17 @@
     [Parameter, EditorRequired] public int CaseId { get; set; }
     [Parameter] public bool IsLawyer { get; set; } = true;
     [Parameter] public List<CaseLawyerDto> AssignedLawyers { get; set; } = [];
+    [Parameter] public List<CaseActivityDto> Activities { get; set; } = [];
     [Parameter] public EventCallback OnUploadSuccess { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
     private IBrowserFile? _selectedFile;
     private string _documentType = "";
     private bool _isPrivate;
+    private bool _isAvailableForDeal;
     private bool _shareWithAll = true;
     private readonly HashSet<int> _selectedLawyerIds = [];
+    private string _selectedActivityId = "";
     private bool _uploading;
     private string? _fileError;
 
@@ -197,6 +257,7 @@
         {
             _shareWithAll = true;
             _selectedLawyerIds.Clear();
+            _isAvailableForDeal = false;
         }
     }
 
@@ -224,6 +285,7 @@
             content.Add(fileContent, "file", _selectedFile.Name);
             content.Add(new StringContent(_documentType), "DocumentType");
             content.Add(new StringContent(_isPrivate.ToString().ToLower()), "IsPrivate");
+            content.Add(new StringContent(_isAvailableForDeal.ToString().ToLower()), "IsAvailableForDeal");
 
             // Lawyer-wise sharing: send selected IDs if not sharing with all
             if (!IsLawyer && !_isPrivate && AssignedLawyers.Count > 1 && !_shareWithAll)
@@ -238,7 +300,21 @@
 
             if (result?.Success == true)
             {
-                Toast.ShowSuccess("Document uploaded successfully.");
+                // Link to activity if one was selected
+                if (!string.IsNullOrEmpty(_selectedActivityId)
+                    && int.TryParse(_selectedActivityId, out var actId)
+                    && result.Data?.Id > 0)
+                {
+                    var linkResp = await CaseService.LinkDocumentToActivityAsync(CaseId, actId, result.Data.Id);
+                    if (linkResp?.Success == true)
+                        Toast.ShowSuccess("Document uploaded and linked to activity.");
+                    else
+                        Toast.ShowSuccess("Document uploaded. (Activity link failed — try linking manually.)");
+                }
+                else
+                {
+                    Toast.ShowSuccess("Document uploaded successfully.");
+                }
                 await OnUploadSuccess.InvokeAsync();
             }
             else
